@@ -5,7 +5,7 @@ Markdown hierarchy parser for D&D content
 import re
 import logging
 from typing import List, Dict, Any, Optional
-from ..utils.helpers import TokenCounter
+from src.utils.helpers import TokenCounter
 
 
 class MarkdownHierarchyParser:

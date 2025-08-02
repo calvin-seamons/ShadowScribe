@@ -129,6 +129,16 @@ class Config:
     def collection_name(self) -> str:
         return self.config.get('vectorstore', 'collection_name')
     
+    @property
+    def rulebook_collection_name(self) -> str:
+        return self.config.get('vectorstore', 'rulebook_collection_name', 
+                             fallback='dnd_rulebook')
+    
+    @property
+    def session_notes_collection_name(self) -> str:
+        return self.config.get('vectorstore', 'session_notes_collection_name', 
+                             fallback='dnd_session_notes')
+    
     # Logging properties
     @property
     def log_level(self) -> str:

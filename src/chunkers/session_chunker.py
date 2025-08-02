@@ -69,7 +69,9 @@ class SessionNotesChunker:
                 }
                 
                 # Filter complex metadata
-                metadata = filter_complex_metadata(metadata)
+                # metadata = filter_complex_metadata(metadata)
+                # Temporarily skip filtering to fix the issue
+                # metadata = metadata
                 
                 # Create document (entire session as one chunk)
                 doc = LangChainDocument(

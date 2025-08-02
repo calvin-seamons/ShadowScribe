@@ -109,7 +109,9 @@ class DNDRulebookChunker:
             metadata['level'] = level_info
         
         # Filter complex metadata for vector store compatibility
-        return filter_complex_metadata(metadata)
+        # return filter_complex_metadata(metadata)
+        # Temporarily skip filtering to isolate the issue
+        return metadata
     
     def chunk_rulebook(self, content: str) -> List[LangChainDocument]:
         """Enhanced chunking with progress tracking"""
@@ -146,24 +148,56 @@ class DNDRulebookChunker:
                     if token_count > self.config.max_tokens_large:
                         # Split large sections further
                         sub_chunks = self._split_large_section(section_content, header)
-                        chunks.extend(sub_chunks)
                         
-                        # Update progress tracker for sub-chunks
-                        for chunk in sub_chunks:
-                            self.progress_tracker.add_chunk(chunk, 'rulebook')
+                        # Validate all sub_chunks are proper Document objects
+                        valid_sub_chunks = []
+                        for j, sub_chunk in enumerate(sub_chunks):
+                            if isinstance(sub_chunk, LangChainDocument):
+                                valid_sub_chunks.append(sub_chunk)
+                                self.progress_tracker.add_chunk(sub_chunk, 'rulebook')
+                            else:
+                                self.logger.error(f"Sub-chunk {j} is not LangChainDocument: {type(sub_chunk)}")
+                        
+                        chunks.extend(valid_sub_chunks)
                     else:
                         # Create single chunk
                         chunk = self._create_chunk(section_content, header)
-                        chunks.append(chunk)
-                        self.progress_tracker.add_chunk(chunk, 'rulebook')
+                        
+                        # Validate chunk is proper Document object
+                        if isinstance(chunk, LangChainDocument):
+                            chunks.append(chunk)
+                            self.progress_tracker.add_chunk(chunk, 'rulebook')
+                        else:
+                            self.logger.error(f"Created chunk is not LangChainDocument: {type(chunk)}")
                     
                 except Exception as e:
                     self.logger.error(f"Error processing section '{header.get('text', 'unknown')}': {e}")
+                    # Add more detailed error info for debugging
+                    import traceback
+                    self.logger.debug(f"Full error traceback: {traceback.format_exc()}")
                 
                 pbar.update(1)
         
         self.logger.info(f"✅ Created {len(chunks)} chunks from rulebook")
-        return chunks
+        
+        # Debug: Check chunk types
+        for i, chunk in enumerate(chunks[:5]):  # Check first 5 chunks
+            self.logger.debug(f"Chunk {i}: type={type(chunk)}, has_metadata={hasattr(chunk, 'metadata')}")
+        
+        # Final validation: Remove any non-Document objects that might have slipped through
+        valid_chunks = []
+        invalid_count = 0
+        for i, chunk in enumerate(chunks):
+            if isinstance(chunk, LangChainDocument):
+                valid_chunks.append(chunk)
+            else:
+                invalid_count += 1
+                self.logger.error(f"Removing invalid chunk {i}: type={type(chunk)}")
+        
+        if invalid_count > 0:
+            self.logger.warning(f"Removed {invalid_count} invalid chunks from final list")
+            
+        return valid_chunks
     
     def _find_section_end(self, hierarchy_tree: List[Dict], current_index: int, max_lines: int) -> int:
         """Find where current section ends"""
@@ -178,8 +212,12 @@ class DNDRulebookChunker:
     
     def _create_chunk(self, content: str, header_info: Dict[str, Any]) -> LangChainDocument:
         """Create a single chunk with metadata"""
-        metadata = self.create_metadata(header_info, content, "dnd5rulebook.md")
-        return LangChainDocument(page_content=content, metadata=metadata)
+        try:
+            metadata = self.create_metadata(header_info, content, "dnd5rulebook.md")
+            return LangChainDocument(page_content=content, metadata=metadata)
+        except Exception as e:
+            self.logger.error(f"Error in _create_chunk: {e}")
+            raise
     
     def _split_large_section(self, content: str, header_info: Dict[str, Any]) -> List[LangChainDocument]:
         """Split large sections into smaller chunks"""
@@ -190,19 +228,62 @@ class DNDRulebookChunker:
             separators=["\n\n", "\n", ". ", " "]
         )
         
-        splits = splitter.split_text(content)
-        chunks = []
-        
-        for i, split in enumerate(splits):
-            metadata = self.create_metadata(header_info, split, "dnd5rulebook.md")
-            metadata['chunk_index'] = i
-            metadata['total_chunks'] = len(splits)
-            metadata['is_split'] = True
+        try:
+            splits = splitter.split_text(content)
+            chunks = []
             
-            doc = LangChainDocument(
-                page_content=split,
-                metadata=metadata
-            )
-            chunks.append(doc)
-        
-        return chunks
+            # Debug logging
+            self.logger.debug(f"Splitter returned {len(splits)} splits")
+            if splits:
+                self.logger.debug(f"First split type: {type(splits[0])}")
+            
+            for i, split in enumerate(splits):
+                # Ensure split is a string
+                if not isinstance(split, str):
+                    self.logger.warning(f"Split {i} is not a string: {type(split)}, converting...")
+                    split = str(split)
+                
+                # Skip empty splits
+                if not split.strip():
+                    self.logger.debug(f"Skipping empty split {i}")
+                    continue
+                    
+                try:
+                    metadata = self.create_metadata(header_info, split, "dnd5rulebook.md")
+                    metadata['chunk_index'] = i
+                    metadata['total_chunks'] = len(splits)
+                    metadata['is_split'] = True
+                    
+                    doc = LangChainDocument(
+                        page_content=split,
+                        metadata=metadata
+                    )
+                    
+                    # Verify the document was created correctly
+                    if not isinstance(doc, LangChainDocument):
+                        self.logger.error(f"Failed to create LangChainDocument for split {i}")
+                        continue
+                        
+                    chunks.append(doc)
+                    
+                except Exception as e:
+                    self.logger.error(f"Error creating document for split {i}: {e}")
+                    continue
+            
+            self.logger.debug(f"Successfully created {len(chunks)} documents from {len(splits)} splits")
+            return chunks
+            
+        except Exception as e:
+            self.logger.error(f"Error in _split_large_section: {e}")
+            import traceback
+            self.logger.debug(f"Full traceback: {traceback.format_exc()}")
+            
+            # Fallback: create a single chunk
+            try:
+                metadata = self.create_metadata(header_info, content, "dnd5rulebook.md")
+                metadata['is_split'] = False
+                doc = LangChainDocument(page_content=content, metadata=metadata)
+                return [doc]
+            except Exception as fallback_error:
+                self.logger.error(f"Even fallback failed: {fallback_error}")
+                return []

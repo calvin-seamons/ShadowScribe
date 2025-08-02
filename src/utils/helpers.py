@@ -38,6 +38,11 @@ class ProgressTracker:
     
     def add_chunk(self, chunk: LangChainDocument, source_type: str):
         """Add chunk statistics"""
+        # Add type checking to prevent errors
+        if not hasattr(chunk, 'metadata'):
+            print(f"WARNING: Invalid chunk object passed to add_chunk: {type(chunk)}")
+            return
+            
         self.stats['total_chunks'] += 1
         
         if source_type == 'rulebook':
