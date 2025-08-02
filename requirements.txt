@@ -1,0 +1,30 @@
+# D&D RAG Chunker Requirements
+# Core dependencies for LangChain-based RAG system
+
+# LangChain and related packages
+langchain>=0.2.0
+langchain-community>=0.2.0
+langchain-openai>=0.1.0
+
+# Vector stores
+chromadb>=0.4.0
+faiss-cpu>=1.7.4
+
+# OpenAI for embeddings
+openai>=1.0.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# Text processing and tokenization
+tiktoken>=0.5.0
+
+# Data handling
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Progress bars
+tqdm>=4.64.0
+
+# File handling and utilities
+pathlib

@@ -1,0 +1,340 @@
+{
+  "features_and_traits": {
+    "class_features": {
+      "paladin": {
+        "level": 8,
+        "features": [
+          {
+            "name": "Hit Points",
+            "source": "PHB, pg. 84",
+            "description": "Hit Dice: 1d10 per paladin level"
+          },
+          {
+            "name": "Divine Sense",
+            "source": "PHB, pg. 84",
+            "action_type": "action",
+            "uses": {
+              "current": 8,
+              "maximum": 8,
+              "reset": "long_rest"
+            },
+            "range": "60 ft",
+            "effect": "Detect celestials, fiends, undead, and hallowed/unhallowed areas until end of next turn"
+          },
+          {
+            "name": "Lay on Hands",
+            "source": "PHB, pg. 84",
+            "action_type": "action",
+            "pool": {
+              "current": 0,
+              "maximum": 40,
+              "reset": "long_rest"
+            },
+            "effects": [
+              "Heal touched creature for any amount from pool",
+              "Spend 5 HP to cure one disease",
+              "Spend 5 HP to neutralize one poison"
+            ]
+          },
+          {
+            "name": "Fighting Style: Dueling",
+            "source": "PHB, pg. 84",
+            "passive": true,
+            "effect": "+2 bonus to damage rolls when wielding melee weapon in one hand with no other weapons"
+          },
+          {
+            "name": "Spellcasting",
+            "source": "PHB, pg. 84",
+            "ability": "Charisma",
+            "spell_save_dc": 20,
+            "spell_attack_bonus": 12,
+            "focus": "Holy symbol",
+            "preparation": "Prepare CHA modifier + half paladin level spells"
+          },
+          {
+            "name": "Divine Smite",
+            "source": "PHB, pg. 85",
+            "action_type": "no_action",
+            "trigger": "On hit with melee weapon attack",
+            "cost": "1 spell slot",
+            "damage": {
+              "base": "2d8 radiant",
+              "scaling": "+1d8 per spell level above 1st",
+              "maximum": "5d8 (6d8 vs undead/fiends)",
+              "bonus_vs": ["undead", "fiends"]
+            }
+          },
+          {
+            "name": "Harness Divine Power",
+            "source": "TCoE, pg. 53",
+            "action_type": "bonus_action",
+            "uses": {
+              "maximum": 1,
+              "reset": "long_rest"
+            },
+            "cost": "1 Channel Divinity use",
+            "effect": "Regain one expended spell slot (max 3rd level)"
+          },
+          {
+            "name": "Divine Health",
+            "source": "PHB, pg. 85",
+            "passive": true,
+            "effect": "Immune to disease"
+          },
+          {
+            "name": "Sacred Oath: Oath of Redemption",
+            "source": "PHB, pg. 85",
+            "subclass": true,
+            "channel_divinity": {
+              "uses": {
+                "maximum": 1,
+                "reset": "short_rest"
+              },
+              "save_dc": 20
+            }
+          },
+          {
+            "name": "Channel Divinity: Emissary of Peace",
+            "source": "XGtE, pg. 39",
+            "action_type": "bonus_action",
+            "duration": "10 minutes",
+            "effect": "+5 bonus to Charisma (Persuasion) checks"
+          },
+          {
+            "name": "Channel Divinity: Rebuke the Violent",
+            "source": "XGtE, pg. 39",
+            "action_type": "reaction",
+            "trigger": "Attacker within 30 ft deals damage to creature other than you",
+            "range": "30 ft",
+            "save": {
+              "type": "Wisdom",
+              "dc": 20
+            },
+            "effect": "On failed save, attacker takes radiant damage equal to damage dealt (half on success)"
+          },
+          {
+            "name": "Extra Attack",
+            "source": "PHB, pg. 85",
+            "level_gained": 5,
+            "effect": "Attack twice when taking Attack action"
+          },
+          {
+            "name": "Aura of Protection",
+            "source": "PHB, pg. 85",
+            "level_gained": 6,
+            "range": "10 ft",
+            "passive": true,
+            "effect": "You and friendly creatures within range gain +7 bonus to all saving throws while you're conscious"
+          },
+          {
+            "name": "Aura of the Guardian",
+            "source": "XGtE, pg. 39",
+            "level_gained": 7,
+            "action_type": "reaction",
+            "range": "10 ft",
+            "trigger": "Creature within range takes damage",
+            "effect": "Magically take that damage instead"
+          }
+        ]
+      },
+      "warlock": {
+        "level": 5,
+        "patron": "The Hexblade",
+        "features": [
+          {
+            "name": "Hit Points",
+            "source": "PHB, pg. 106",
+            "description": "Hit Dice: 1d8 per warlock level"
+          },
+          {
+            "name": "Otherworldly Patron: The Hexblade",
+            "source": "PHB, pg. 107",
+            "subclass": true,
+            "description": "You have struck a bargain with a mysterious entity from the Shadowfell"
+          },
+          {
+            "name": "Pact Magic",
+            "source": "PHB, pg. 107",
+            "ability": "Charisma",
+            "spell_save_dc": 20,
+            "spell_attack_bonus": 12,
+            "focus": "Arcane focus",
+            "spell_slots": {
+              "level": 3,
+              "quantity": 2
+            },
+            "spells_known": 9
+          },
+          {
+            "name": "Hexblade's Curse",
+            "source": "XGtE, pg. 55",
+            "action_type": "bonus_action",
+            "uses": {
+              "maximum": 1,
+              "reset": "short_rest"
+            },
+            "range": "30 ft",
+            "duration": "1 minute",
+            "effects": [
+              "+5 bonus to damage rolls against cursed target",
+              "Critical hit on 19-20 against cursed target",
+              "Regain 12 HP when cursed target dies"
+            ]
+          },
+          {
+            "name": "Hex Warrior",
+            "source": "XGtE, pg. 55",
+            "passive": true,
+            "proficiencies": ["Medium armor", "Shields", "Martial weapons"],
+            "special": "Choose one weapon on long rest to use CHA for attack/damage (can't have two-handed property)",
+            "pact_weapon_bonus": "Always use CHA for pact weapons"
+          },
+          {
+            "name": "Pact Boon: Pact of the Blade",
+            "source": "PHB, pg. 107",
+            "level_gained": 3,
+            "action_type": "action",
+            "effects": [
+              "Create pact weapon in hand (choose form, proficient, counts as magical)",
+              "Transform magic weapon into pact weapon via ritual"
+            ]
+          },
+          {
+            "name": "Eldritch Versatility",
+            "source": "TCoE, pg. 70",
+            "level_gained": 4,
+            "trigger": "When gaining Ability Score Improvement",
+            "options": [
+              "Replace one cantrip with another warlock cantrip",
+              "Replace Pact Boon with another option",
+              "Replace Mystic Arcanum spell (12th level+)"
+            ]
+          }
+        ]
+      }
+    },
+    "species_traits": {
+      "species": "Dwarf",
+      "subrace": "Mountain Dwarf",
+      "traits": [
+        {
+          "name": "Ability Score Increase",
+          "source": "BR",
+          "effects": [
+            "Choose one ability score to increase by 2: Wisdom",
+            "Choose one ability score to increase by 1: Strength"
+          ]
+        },
+        {
+          "name": "Darkvision",
+          "source": "BR, pg. 20",
+          "range": "60 ft",
+          "effect": "See in darkness (shades of gray)"
+        },
+        {
+          "name": "Dwarven Resilience",
+          "source": "BR, pg. 20",
+          "effects": [
+            "Advantage on saves against poison",
+            "Resistance to poison damage"
+          ]
+        },
+        {
+          "name": "Tool Proficiencies",
+          "source": "BR",
+          "proficiencies": [
+            "Smith's Tools",
+            "Herbalism Kit",
+            "Poisoner's Kit",
+            "Tinker's Tools"
+          ]
+        },
+        {
+          "name": "Weapon Proficiency",
+          "source": "BR",
+          "proficiencies": ["Warhammer"]
+        },
+        {
+          "name": "Stonecunning",
+          "source": "BR, pg. 20",
+          "effect": "Double proficiency bonus on Intelligence (History) checks related to origin of stonework"
+        },
+        {
+          "name": "Dwarven Toughness",
+          "source": "BR, pg. 20",
+          "effect": "HP maximum increases by 1, and by 1 each level"
+        }
+      ]
+    },
+    "feats": [
+      {
+        "name": "Fey Touched",
+        "source": "TCoE, pg. 79",
+        "from_class": "Warlock",
+        "ability_increase": {
+          "ability": "Wisdom",
+          "amount": 1,
+          "maximum": 20
+        },
+        "spells": [
+          {
+            "name": "Misty Step",
+            "level": 2,
+            "legacy": true,
+            "uses": {
+              "maximum": 1,
+              "reset": "long_rest"
+            }
+          },
+          {
+            "name": "Bane",
+            "level": 1,
+            "legacy": true,
+            "school": "enchantment",
+            "uses": {
+              "maximum": 1,
+              "reset": "long_rest"
+            }
+          }
+        ],
+        "spellcasting_ability": "Wisdom",
+        "special": "Can also cast these spells using spell slots"
+      },
+      {
+        "name": "Lucky",
+        "source": "PHB, pg. 167",
+        "action_type": "no_action",
+        "uses": {
+          "maximum": 3,
+          "reset": "long_rest"
+        },
+        "trigger": "When making attack roll, ability check, saving throw, or being attacked",
+        "effect": "Spend 1 luck point to roll additional d20 and choose which to use",
+        "timing": "Can decide after rolling but before outcome determined"
+      }
+    ],
+    "calculated_features": {
+      "total_level": 13,
+      "proficiency_bonus": 5,
+      "aura_ranges": {
+        "protection": "10 ft",
+        "guardian": "10 ft"
+      },
+      "save_bonuses": {
+        "from_aura_of_protection": 7
+      },
+      "hp_bonus_per_level": 1
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2025-08-02",
+    "notes": [
+      "Character is multiclass Paladin 8/Warlock 5",
+      "All save DCs and attack bonuses are pre-calculated",
+      "Species traits include both base dwarf and mountain dwarf features",
+      "Feats are integrated into appropriate sections",
+      "Some features modify or enhance others (noted in descriptions)"
+    ]
+  }
+}
