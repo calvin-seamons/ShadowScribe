@@ -205,3 +205,13 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Vector store and database files
+vector_store/
+*.sqlite3
+*.db
+chroma.sqlite3
+
+# Large output files
+chunks_output.json
+*.log
