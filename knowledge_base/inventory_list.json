@@ -1,0 +1,382 @@
+{
+  "inventory": {
+    "total_weight": 138.5,
+    "weight_unit": "lb",
+    "equipped_items": {
+      "weapons": [
+        {
+          "name": "Eldaryth of Regret (I)",
+          "type": "Weapon (Longsword)",
+          "rarity": "Artifact",
+          "requires_attunement": true,
+          "attunement_process": "Undo the Moment - To attune to the Sword of Regret, the character must: Enter a memory—real or magically induced—of a deep personal mistake or betrayal. Re-experience the moment and attempt to change the outcome. No matter what they choose, they awaken with blood on their hands and the sword bound to them.",
+          "proficient": true,
+          "attack_type": "Melee",
+          "reach": "5 ft",
+          "damage": {
+            "one_handed": "1d8+12",
+            "two_handed": "1d10+10"
+          },
+          "damage_type": "Slashing",
+          "weight": 3,
+          "cost": null,
+          "properties": ["Versatile (1d10)", "Sap", "Hex Weapon", "Pact Weapon"],
+          "version": 1,
+          "magical_bonus": "+3",
+          "special_features": {
+            "critical_range": "19-20",
+            "extra_damage": "2d10 slashing on hit",
+            "curse": {
+              "trigger": "If not bathed in tears or blood within 1 minute of being drawn",
+              "save": "DC 20 Charisma",
+              "success_effect": "3d6 psychic damage",
+              "failure_effect": "Dominated by sword (as dominate monster spell)"
+            },
+            "random_properties": [
+              "Immunity to cold damage",
+              "Charisma score increased by 2 (max 24)",
+              "Cannot smell",
+              "All magical potions within 10 feet become diluted and non-magical",
+              "All magical scrolls within 10 feet become erased"
+            ],
+            "spirit_of_regret": {
+              "initiative_bonus": "Add d10 to initiative",
+              "defensive_stance": {
+                "effect": "Transfer attack bonus to AC",
+                "save": "DC 20 Charisma",
+                "failure": "Sword weeps and compels sheathing until next turn"
+              }
+            }
+          },
+          "spell_charges": {
+            "save_dc": 18,
+            "recharge": "dawn",
+            "spells": [
+              {
+                "name": "Call Lightning",
+                "level": 3,
+                "legacy": true,
+                "charges": 1
+              },
+              {
+                "name": "Divine Word",
+                "level": 7,
+                "legacy": true,
+                "charges": 1
+              },
+              {
+                "name": "Finger of Death",
+                "level": 7,
+                "legacy": true,
+                "charges": 1
+              }
+            ]
+          },
+          "lore": "When [REDACTED] grew in power, he appointed an evil and ruthless lieutenant, [REDACTED], to act as his bodyguard and right hand. This despicable villain served as advisor, warlord, and assassin. His successes earned him [REDACTED] admiration and a reward: a sword with as dark a pedigree as the man who would wield it. For a long time, [REDACTED] faithfully served the [REDACTED], but as [REDACTED] power grew, so did his hubris. He aimed to supplant [REDACTED], so that they could rule the [REDACTED] empire in [REDACTED] stead. Legend says [REDACTED] destruction came at [REDACTED] hand, but [REDACTED] also wrought his rebellious lieutenant's doom, leaving only [REDACTED] sword behind. The world was made brighter thereby.",
+          "tags": ["Damage", "Buff", "Debuff", "Combat", "Cursed"]
+        },
+        {
+          "name": "Dagger",
+          "type": "Weapon",
+          "rarity": "Common",
+          "equipped": false
+        }
+      ],
+      "armor": [
+        {
+          "name": "Splint, +1",
+          "type": "Armor (Splint)",
+          "rarity": "Rare",
+          "armor_class": 18,
+          "weight": 60,
+          "cost": null,
+          "magical_bonus": "+1 to AC",
+          "source": "Dungeon Master's Guide",
+          "tags": ["Combat", "Warding"]
+        },
+        {
+          "name": "Shield",
+          "type": "Armor",
+          "rarity": "Common",
+          "armor_class_bonus": "+2",
+          "weight": 6,
+          "cost": "10 gp",
+          "special": "Requires Utilize action to Don or Doff",
+          "source": "D&D Beyond Basic Rules",
+          "tags": ["Warding"]
+        }
+      ],
+      "wondrous_items": [
+        {
+          "name": "Nightwarden's Hammer",
+          "type": "Wondrous Item",
+          "equipped": true
+        },
+        {
+          "name": "Amulet of Ethernea",
+          "type": "Wondrous Item",
+          "equipped": true
+        },
+        {
+          "name": "Mantle of Shadow",
+          "type": "Wondrous Item",
+          "rarity": "Very Rare",
+          "requires_attunement": "by a warlock or a character bound to a Patron",
+          "weight": null,
+          "cost": null,
+          "version": "Mantle of Shadows",
+          "description": "This black and shimmering mantle seems to drink in the light around it, its edges shifting as though alive with shadow. When donned, it binds the wearer to their Patron's will, granting abilities that blur the line between light and darkness.",
+          "features": {
+            "veil_of_obscurity": {
+              "immunity": "Divination magic from creatures of CR 10 or below unless empowered by Patron",
+              "tracking_defense": "Creatures must succeed on DC 18 Intelligence (Arcana) check to track magically"
+            },
+            "gift_of_shadows": {
+              "invisibility_of_the_void": "Cast Greater Invisibility at will, 2/long rest"
+            },
+            "eclipse_of_mortality": "When reduced to 0 HP, drop to 1 HP instead (recharge at Patron's discretion)",
+            "balance_price": "Patron may revoke features for defiance",
+            "beacon_of_power": "CR 15+ entities may sense presence"
+          },
+          "spells": [
+            {
+              "name": "Greater Invisibility",
+              "level": 4,
+              "uses": "At Will (2/long rest)"
+            }
+          ]
+        },
+        {
+          "name": "Amulet of Proof against Detection and Location",
+          "type": "Wondrous Item",
+          "rarity": "Uncommon",
+          "requires_attunement": true,
+          "weight": null,
+          "cost": null,
+          "effect": "Can't be targeted by Divination spells or perceived through magical scrying sensors unless you allow it",
+          "source": "Dungeon Master's Guide, pg. 150",
+          "tags": ["Deception", "Jewelry"]
+        },
+        {
+          "name": "Gauntlets of Ogre Power",
+          "type": "Wondrous Item",
+          "equipped": true
+        },
+        {
+          "name": "Helm of Telepathy",
+          "type": "Wondrous Item",
+          "rarity": "Uncommon",
+          "legacy": true,
+          "requires_attunement": true,
+          "weight": null,
+          "cost": null,
+          "spells": [
+            {
+              "name": "Detect Thoughts",
+              "level": 2,
+              "legacy": true,
+              "uses": "At Will",
+              "save_dc": 13
+            },
+            {
+              "name": "Suggestion",
+              "level": 2,
+              "legacy": true,
+              "uses": "1/dawn",
+              "save_dc": 13,
+              "requirement": "Must be focusing on creature with detect thoughts"
+            }
+          ],
+          "special": "Can send telepathic messages as bonus action while concentrating on detect thoughts",
+          "source": "Player's Handbook (2014), pg. 174",
+          "tags": ["Communication", "Detection", "Headwear"]
+        },
+        {
+          "name": "Ring of Water Walking",
+          "type": "Ring",
+          "rarity": "Uncommon",
+          "legacy": true,
+          "weight": null,
+          "cost": null,
+          "effect": "Can stand on and move across any liquid surface as if it were solid ground",
+          "source": "Player's Handbook (2014), pg. 193",
+          "tags": ["Movement", "Jewelry"]
+        }
+      ],
+      "rods": [
+        {
+          "name": "Rod of the Pact Keeper, +2",
+          "type": "Rod",
+          "rarity": "Rare",
+          "legacy": true,
+          "requires_attunement": "by a Warlock",
+          "weight": null,
+          "cost": null,
+          "effects": [
+            "+2 bonus to spell attack rolls",
+            "+2 bonus to saving throw DCs of warlock spells",
+            "Regain 1 warlock spell slot as an action (1/long rest)"
+          ],
+          "source": "Dungeon Master's Guide (2014)",
+          "tags": ["Buff"]
+        }
+      ]
+    },
+    "consumables": [
+      {
+        "name": "Bag of Beans",
+        "type": "Wondrous Item",
+        "rarity": "Rare",
+        "legacy": true,
+        "weight": 0.5,
+        "cost": null,
+        "contents": "3d4 dry beans",
+        "weight_formula": "1/2 pound plus 1/4 pound per bean",
+        "effects": {
+          "dump_all": "Explode in 10-foot radius, DC 15 DEX save or 5d4 fire damage",
+          "plant_bean": "Various effects after 1 minute (see effect table)"
+        },
+        "source": "Player's Handbook (2014), pg. 152",
+        "tags": ["Damage", "Control", "Utility", "Combat"]
+      },
+      {
+        "name": "Dust of Dryness",
+        "type": "Wondrous Item",
+        "rarity": "Uncommon",
+        "legacy": true,
+        "weight": null,
+        "cost": null,
+        "quantity": "1d6 + 4 pinches",
+        "effects": [
+          "Turn 15-foot cube of water into marble-sized pellet",
+          "Water elemental: DC 13 CON save or 10d6 necrotic damage"
+        ],
+        "source": "Player's Handbook (2014), pg. 166",
+        "tags": ["Damage", "Control", "Combat", "Consumable"]
+      },
+      {
+        "name": "Dust of Sneezing and Choking",
+        "type": "Wondrous Item",
+        "rarity": "Uncommon",
+        "legacy": true,
+        "weight": null,
+        "cost": null,
+        "quantity": 1,
+        "special": "Appears as dust of disappearance to identify spell",
+        "effect": "30-foot radius, DC 15 CON save or incapacitated and suffocating",
+        "source": "Player's Handbook (2014), pg. 166",
+        "tags": ["Control", "Debuff"]
+      },
+      {
+        "name": "Potion of Acid Resistance",
+        "type": "Potion",
+        "rarity": "Uncommon",
+        "quantity": 1,
+        "weight": null,
+        "cost": null,
+        "effect": "Resistance to acid damage for 1 hour",
+        "source": "Dungeon Master's Guide",
+        "tags": ["Warding", "Consumable"]
+      },
+      {
+        "name": "Potion of Healing (Greater)",
+        "type": "Potion",
+        "rarity": "Uncommon",
+        "quantity": 1,
+        "weight": 0.5,
+        "cost": null,
+        "effect": "Regain 4d4 + 4 Hit Points",
+        "description": "The potion's red liquid glimmers when agitated",
+        "source": "Dungeon Master's Guide",
+        "tags": ["Healing", "Consumable"]
+      },
+      {
+        "name": "Potion of Healing",
+        "type": "Gear",
+        "rarity": "Common",
+        "legacy": true,
+        "quantity": 3,
+        "weight": 1.5,
+        "cost": "150 gp",
+        "effect": "Regain 2d4 + 2 hit points",
+        "source": "Player's Handbook (2014)",
+        "tags": ["Healing", "Combat", "Consumable"]
+      }
+    ],
+    "utility_items": [
+      {
+        "name": "Eversmoking Bottle",
+        "type": "Wondrous Item",
+        "rarity": "Uncommon",
+        "legacy": true,
+        "weight": 1,
+        "cost": null,
+        "effect": "Creates 60-foot radius heavily obscured smoke cloud, increases by 10 feet/minute to max 120 feet",
+        "command_word": "Required to close",
+        "source": "Player's Handbook (2014), pg. 168",
+        "tags": ["Control", "Utility", "Deception"]
+      },
+      {
+        "name": "Amulet (Holy Symbol)",
+        "type": "Holy Symbol",
+        "rarity": "Common",
+        "legacy": true,
+        "quantity": 2,
+        "weight": 1,
+        "cost": "5 gp",
+        "description": "A holy symbol is a representation of a god or pantheon. A cleric or paladin can use a holy symbol as a spellcasting focus",
+        "source": "Player's Handbook (2014)",
+        "tags": ["Utility"]
+      }
+    ],
+    "clothing": [
+      {
+        "name": "Chain Mail",
+        "type": "Armor",
+        "rarity": "Common",
+        "armor_class": 16,
+        "weight": 55,
+        "cost": "75 gp",
+        "description": "Made of interlocking metal rings, includes quilted fabric underneath and gauntlets",
+        "source": "D&D Beyond Basic Rules",
+        "tags": ["Warding"],
+        "equipped": false
+      },
+      {
+        "name": "Clothes, Common",
+        "type": "Adventuring Gear",
+        "rarity": "Common",
+        "legacy": true,
+        "quantity": 1,
+        "weight": 3,
+        "cost": "0.5 gp",
+        "description": "Loose shirt and baggy breeches, or loose shirt and skirt/overdress. Cloth wrappings for shoes",
+        "source": "Player's Handbook (2014)",
+        "tags": ["Social", "Outerwear"]
+      },
+      {
+        "name": "Vestments",
+        "type": "Adventuring Gear",
+        "rarity": "Common",
+        "legacy": true,
+        "quantity": 1,
+        "weight": null,
+        "cost": null,
+        "description": "Religious clothing, typically found in a priest's pack",
+        "source": "Player's Handbook (2014)",
+        "tags": ["Social", "Utility"]
+      }
+    ]
+  },
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2025-08-02",
+    "notes": [
+      "Weight is tracked in pounds (lb)",
+      "Items marked as 'equipped' are currently worn/wielded",
+      "Legacy items use older D&D 5e rules",
+      "Some items have restricted information marked as [REDACTED]",
+      "Consumable quantities are tracked separately"
+    ]
+  }
+}
