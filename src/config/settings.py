@@ -52,7 +52,8 @@ class Config:
         self.config['vectorstore'] = {
             'vector_store_type': 'chroma',
             'embedding_model': 'text-embedding-3-large',
-            'collection_name': 'dnd_knowledge_base'
+            'rulebook_collection_name': 'dnd_rulebook',
+            'session_notes_collection_name': 'dnd_session_notes'
         }
         
         self.config['logging'] = {
@@ -124,10 +125,6 @@ class Config:
     def openai_api_key(self) -> Optional[str]:
         """Get OpenAI API key from environment variables"""
         return os.getenv('OPENAI_API_KEY')
-    
-    @property
-    def collection_name(self) -> str:
-        return self.config.get('vectorstore', 'collection_name')
     
     @property
     def rulebook_collection_name(self) -> str:

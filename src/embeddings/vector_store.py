@@ -53,7 +53,7 @@ class VectorStoreManager:
     def create_vector_store(self, chunks: List[LangChainDocument], collection_name: str = None) -> Any:
         """Create and populate vector store with batch processing"""
         if collection_name is None:
-            collection_name = self.config.collection_name
+            raise ValueError("collection_name must be provided")
             
         self.logger.info(f"🔮 Creating {self.config.vector_store_type} vector store '{collection_name}' with {len(chunks)} chunks")
         
@@ -68,8 +68,8 @@ class VectorStoreManager:
         total_tokens = sum(chunk.metadata.get('token_count', 0) for chunk in chunks if hasattr(chunk, 'metadata'))
         avg_tokens_per_chunk = total_tokens / len(chunks) if chunks else 0
         
-        # Aim for ~150k tokens per batch (well under 300k limit)
-        batch_size = max(50, min(500, int(150000 / avg_tokens_per_chunk))) if avg_tokens_per_chunk > 0 else 200
+        # Aim for ~50k tokens per batch (conservative to avoid timeouts)
+        batch_size = max(25, min(200, int(50000 / avg_tokens_per_chunk))) if avg_tokens_per_chunk > 0 else 100
         
         self.logger.info(f"📊 Average tokens per chunk: {avg_tokens_per_chunk:.0f}, using batch size: {batch_size}")
         
@@ -245,7 +245,7 @@ class VectorStoreManager:
     def load_vector_store(self, collection_name: str = None) -> Any:
         """Load existing vector store for a specific collection"""
         if collection_name is None:
-            collection_name = self.config.collection_name
+            raise ValueError("collection_name must be provided")
             
         if self.config.vector_store_type.lower() == "chroma":
             return Chroma(
