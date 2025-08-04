@@ -1,0 +1,241 @@
+ShadowScribe Debug Log - Session Started: 2025-08-04 09:24:45.530447
+================================================================================
+
+[09:24:45] INITIALIZATION
+----------------------------------------
+Starting ShadowScribe engine initialization
+
+================================================================================
+
+[09:24:45] ENGINE_INIT
+----------------------------------------
+ShadowScribe engine created successfully
+
+================================================================================
+
+[09:24:45] VALIDATION - Character Data
+----------------------------------------
+Character data validation completed
+
+Additional Data:
+{
+  "status": "success",
+  "checks": {
+    "has_name": true,
+    "has_class": true,
+    "has_level": true,
+    "has_hp": true,
+    "has_ability_scores": true,
+    "reasonable_ac": true,
+    "reasonable_level": true
+  },
+  "warnings": []
+}
+
+================================================================================
+
+[09:24:45] VALIDATION - Rulebook Data
+----------------------------------------
+Rulebook data validation completed
+
+Additional Data:
+{
+  "status": "success",
+  "checks": {
+    "has_sections": true,
+    "reasonable_section_count": true,
+    "has_categories": true,
+    "has_query_helper": true,
+    "searchable_index_exists": true
+  },
+  "stats": {
+    "total_sections": 2098,
+    "main_categories": 17
+  }
+}
+
+================================================================================
+
+[09:24:45] VALIDATION - Session Data
+----------------------------------------
+Session data validation completed
+
+Additional Data:
+{
+  "status": "success",
+  "checks": {
+    "has_sessions": true,
+    "has_latest_session": true,
+    "sessions_have_dates": true,
+    "most_sessions_have_summaries": true
+  },
+  "stats": {
+    "total_sessions": 1,
+    "latest_date": "06-30-25",
+    "sessions_with_summaries": 1
+  }
+}
+
+================================================================================
+
+[09:24:45] AVAILABLE_SOURCES
+----------------------------------------
+Retrieved available sources
+
+Additional Data:
+{
+  "dnd_rulebook": {
+    "description": "D&D 5e System Reference Document",
+    "total_sections": 2098,
+    "categories": [
+      "Legal Information",
+      "Races",
+      "Classes",
+      "Using Ability Scores",
+      "Beyond 1st Level",
+      "Feats",
+      "The Planes of Existence",
+      "Pantheons",
+      "Adventuring",
+      "Combat",
+      "Spellcasting",
+      "Spell Lists",
+      "Equipment",
+      "Magic Items",
+      "Monsters",
+      "Miscellaneous Creatures",
+      "Nonplayer Characters"
+    ],
+    "status": "loaded"
+  },
+  "character_data": {
+    "description": "Duskryn Nightwarden character information",
+    "available_files": [
+      "character.json",
+      "inventory_list.json",
+      "feats_and_traits.json",
+      "spell_list.json",
+      "action_list.json",
+      "character_background.json",
+      "objectives_and_contracts.json"
+    ],
+    "character_name": "Duskryn Nightwarden",
+    "status": "loaded"
+  },
+  "session_notes": {
+    "description": "Campaign session history",
+    "available_sessions": [
+      "06-30-25"
+    ],
+    "latest_session": "06-30-25",
+    "status": "loaded"
+  }
+}
+
+================================================================================
+
+[09:24:52] Query_1 - USER_INPUT
+----------------------------------------
+User Query: What is my character's total health?
+
+================================================================================
+
+[09:24:52] PASS_1_START
+----------------------------------------
+Starting source selection
+
+Additional Data:
+{
+  "query": "What is my character's total health?",
+  "query_id": "Query_1"
+}
+
+================================================================================
+
+[09:24:54] PASS_1_COMPLETE
+----------------------------------------
+Source selection completed
+
+Additional Data:
+{
+  "selected_sources": [
+    "SourceType.CHARACTER_DATA"
+  ],
+  "reasoning": "The query specifically asks for the character's total health, which is a character-specific question. Therefore, the character_data source is needed to retrieve the health information for Duskryn Nightwarden. The dnd_rulebook and session_notes are not required for this query as they do not pertain directly to the character's health status.",
+  "query_id": "Query_1"
+}
+
+================================================================================
+
+[09:24:54] PASS_2_START
+----------------------------------------
+Starting content targeting
+
+Additional Data:
+{
+  "sources": "SourceSelection(sources_needed=[<SourceType.CHARACTER_DATA: 'character_data'>], reasoning=\"The query specifically asks for the character's total health, which is a character-specific question. Therefore, the character_data source is needed to retrieve the health information for Duskryn Nightwarden. The dnd_rulebook and session_notes are not required for this query as they do not pertain directly to the character's health status.\")",
+  "query_id": "Query_1"
+}
+
+================================================================================
+
+[09:25:00] PASS_2_COMPLETE
+----------------------------------------
+Content targeting completed
+
+Additional Data:
+{
+  "targets": "[ContentTarget(source_type=<SourceType.CHARACTER_DATA: 'character_data'>, specific_targets={'character.json': ['ability_scores', 'combat_stats'], 'inventory_list.json': ['armor'], 'feats_and_traits.json': ['class_features']}, reasoning=\"To calculate total health, I need to access the character's ability scores for Constitution, combat stats for hit points, and any class features that may affect health, such as those from the Paladin and Warlock classes.\")]",
+  "query_id": "Query_1"
+}
+
+================================================================================
+
+[09:25:00] PASS_3_START
+----------------------------------------
+Starting content retrieval
+
+Additional Data:
+{
+  "targets": "[ContentTarget(source_type=<SourceType.CHARACTER_DATA: 'character_data'>, specific_targets={'character.json': ['ability_scores', 'combat_stats'], 'inventory_list.json': ['armor'], 'feats_and_traits.json': ['class_features']}, reasoning=\"To calculate total health, I need to access the character's ability scores for Constitution, combat stats for hit points, and any class features that may affect health, such as those from the Paladin and Warlock classes.\")]",
+  "query_id": "Query_1"
+}
+
+================================================================================
+
+[09:25:00] PASS_3_COMPLETE
+----------------------------------------
+Content retrieval completed
+
+Additional Data:
+{
+  "content_summary": {
+    "retrieved_items": 1,
+    "source_types": [
+      "character_data"
+    ]
+  },
+  "query_id": "Query_1"
+}
+
+================================================================================
+
+[09:25:00] ERROR
+----------------------------------------
+Error in query processing: 'list' object has no attribute 'keys'
+
+Additional Data:
+{
+  "error_type": "AttributeError",
+  "error_message": "'list' object has no attribute 'keys'",
+  "query_id": "Query_1"
+}
+
+================================================================================
+
+[09:25:00] Query_1 - FINAL_RESPONSE
+----------------------------------------
+Generated Response: Error processing query: 'list' object has no attribute 'keys'
+
+================================================================================
+

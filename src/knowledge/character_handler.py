@@ -27,7 +27,8 @@ class CharacterHandler:
             "feats_and_traits.json": "feats_and_traits.json",
             "spell_list.json": "spell_list.json",
             "action_list.json": "action_list.json",
-            "character_background.json": "character_background.json"
+            "character_background.json": "character_background.json",
+            "objectives_and_contracts.json": "objectives_and_contracts.json"
         }
         
         self.data: Dict[str, Any] = {}
@@ -241,6 +242,41 @@ class CharacterHandler:
         
         # D&D 5e proficiency bonus calculation
         return 2 + ((level - 1) // 4)
+    
+    def get_objectives_and_contracts(self) -> Dict[str, Any]:
+        """Get character's objectives and contracts."""
+        if not self.is_loaded():
+            self.load_data()
+        
+        return self.data.get("objectives_and_contracts.json", {})
+    
+    def get_active_objectives(self) -> List[Dict[str, Any]]:
+        """Get currently active objectives and contracts."""
+        objectives_data = self.get_objectives_and_contracts()
+        objectives_section = objectives_data.get("objectives_and_contracts", {})
+        
+        active = []
+        active.extend(objectives_section.get("active_contracts", []))
+        active.extend(objectives_section.get("current_objectives", []))
+        
+        return active
+    
+    def get_completed_objectives(self) -> List[Dict[str, Any]]:
+        """Get completed objectives and contracts."""
+        objectives_data = self.get_objectives_and_contracts()
+        objectives_section = objectives_data.get("objectives_and_contracts", {})
+        
+        return objectives_section.get("completed_objectives", [])
+    
+    def get_covenant_details(self) -> Dict[str, Any]:
+        """Get details about the covenant with Ghul'Vor."""
+        completed = self.get_completed_objectives()
+        
+        for objective in completed:
+            if objective.get("id") == "covenant_eternal_service":
+                return objective
+        
+        return {}
     
     def validate(self) -> Dict[str, Any]:
         """Validate the integrity of character data."""

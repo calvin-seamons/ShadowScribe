@@ -111,7 +111,10 @@ class ContentRetriever:
         content = {}
         metadata = {"source": "character_data", "files_accessed": []}
         
-        file_fields = target.specific_targets.get("file_fields", {})
+        # Handle both formats: direct file_fields or nested under "file_fields"
+        file_fields = target.specific_targets
+        if "file_fields" in target.specific_targets:
+            file_fields = target.specific_targets["file_fields"]
         
         for filename, fields in file_fields.items():
             try:

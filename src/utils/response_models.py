@@ -81,7 +81,8 @@ class CharacterTargetResponse(BaseModel):
     def validate_file_fields(cls, v):
         valid_files = {
             "character.json", "inventory_list.json", "feats_and_traits.json",
-            "spell_list.json", "action_list.json", "character_background.json"
+            "spell_list.json", "action_list.json", "character_background.json",
+            "objectives_and_contracts.json"
         }
         
         for filename in v.keys():

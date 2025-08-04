@@ -31,3 +31,4 @@ tqdm>=4.64.0
 
 # File handling and utilities
 pathlib
+python-dotenv
