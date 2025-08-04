@@ -9,16 +9,19 @@ from openai import AsyncOpenAI
 import os
 from pydantic import BaseModel, ValidationError
 
+from .output_parsers import RobustJSONParser
+from .error_handling import retry_on_failure, LLMError
+
 T = TypeVar('T', bound=BaseModel)
 
 
 class LLMClient:
     """
     Handles communication with language models for the ShadowScribe engine.
-    Supports structured responses with Pydantic validation.
+    Supports structured responses with Pydantic validation and OpenAI function calling.
     """
     
-    def __init__(self, model: str = "gpt-4", api_key: Optional[str] = None):
+    def __init__(self, model: str = "gpt-4o-mini", api_key: Optional[str] = None):
         """Initialize LLM client with model and API configuration."""
         self.model = model
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
@@ -28,15 +31,90 @@ class LLMClient:
         
         self.client = AsyncOpenAI(api_key=self.api_key)
         
-        # Default parameters
+        # Default parameters optimized for gpt-4o-mini
         self.default_params = {
             "temperature": 0.3,  # Lower for more consistent structured responses
-            "max_tokens": 2000,
+            "max_tokens": 4000,  # gpt-4o-mini supports higher token limits
             "top_p": 1.0,
             "frequency_penalty": 0.0,
             "presence_penalty": 0.0
         }
     
+    async def generate_structured_response(
+        self, 
+        prompt: str, 
+        response_model: Type[T],
+        use_function_calling: bool = True
+    ) -> T:
+        """
+        Generate response with guaranteed structure using function calling or validation.
+        
+        Args:
+            prompt: The prompt to send to the LLM
+            response_model: Pydantic model class to validate against
+            use_function_calling: Whether to use OpenAI function calling (recommended)
+            
+        Returns:
+            Validated Pydantic model instance
+            
+        Raises:
+            ValidationError: If response doesn't match model after all retries
+        """
+        if use_function_calling and self.model.startswith('gpt-4'):
+            return await self._generate_with_function_calling(prompt, response_model)
+        else:
+            # Fallback to prompt-based validation for older models
+            return await self.generate_validated_response(prompt, response_model)
+    
+    @retry_on_failure(max_retries=3, delay=1.0, exceptions=(LLMError,))
+    async def _generate_with_function_calling(
+        self, 
+        prompt: str, 
+        response_model: Type[T]
+    ) -> T:
+        """
+        Generate response using OpenAI function calling for guaranteed structure.
+        
+        This approach forces the LLM to return data in the exact format needed.
+        """
+        # Convert Pydantic model to OpenAI function schema
+        function_schema = self._pydantic_to_function_schema(response_model)
+        
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                tools=[{
+                    "type": "function",
+                    "function": function_schema
+                }],
+                tool_choice={"type": "function", "function": {"name": function_schema["name"]}}
+            )
+            
+            # Extract the function call arguments
+            tool_call = response.choices[0].message.tool_calls[0]
+            arguments = json.loads(tool_call.function.arguments)
+            
+            # Validate with Pydantic
+            return response_model(**arguments)
+            
+        except Exception as e:
+            raise LLMError(f"Error generating structured response with function calling: {str(e)}")
+    
+    def _pydantic_to_function_schema(self, model: Type[BaseModel]) -> Dict[str, Any]:
+        """Convert Pydantic model to OpenAI function schema."""
+        schema = model.schema()
+        
+        return {
+            "name": model.__name__.lower(),
+            "description": f"Extract {model.__name__} data from the provided context",
+            "parameters": {
+                "type": "object",
+                "properties": schema.get("properties", {}),
+                "required": schema.get("required", [])
+            }
+        }
+
     async def generate_validated_response(self, prompt: str, response_model: Type[T], 
                                         max_retries: int = 3) -> T:
         """
@@ -67,13 +145,10 @@ class LLMClient:
                 
                 content = response.choices[0].message.content.strip()
                 
-                # Clean up response (remove markdown code blocks if present)
-                content = self._clean_json_response(content)
-                
-                # Parse JSON
+                # Use robust JSON parser instead of basic cleaning
                 try:
-                    json_data = json.loads(content)
-                except json.JSONDecodeError as e:
+                    json_data = RobustJSONParser.parse(content)
+                except ValueError as e:
                     if attempt < max_retries - 1:
                         # Retry with clearer instructions
                         schema_prompt = self._enhance_prompt_with_schema(
@@ -101,10 +176,10 @@ class LLMClient:
                 if attempt < max_retries - 1:
                     continue
                 else:
-                    raise Exception(f"LLM generation failed after {max_retries} attempts: {e}")
+                    raise LLMError(f"LLM generation failed after {max_retries} attempts: {e}")
         
         # This should never be reached
-        raise Exception("Unexpected error in generate_validated_response")
+        raise LLMError("Unexpected error in generate_validated_response")
     
     def _enhance_prompt_with_schema(self, prompt: str, response_model: Type[BaseModel], 
                                   include_error_instruction: bool = False) -> str:
@@ -135,28 +210,6 @@ IMPORTANT: Your previous response had formatting errors. Please ensure:
 
         return enhanced_prompt
     
-    def _clean_json_response(self, content: str) -> str:
-        """Clean up LLM response to extract valid JSON."""
-        # Remove markdown code blocks
-        if content.startswith("```json"):
-            content = content[7:]
-        if content.startswith("```"):
-            content = content[3:]
-        if content.endswith("```"):
-            content = content[:-3]
-        
-        # Remove any leading/trailing whitespace
-        content = content.strip()
-        
-        # Find JSON object boundaries
-        start_idx = content.find('{')
-        end_idx = content.rfind('}')
-        
-        if start_idx != -1 and end_idx != -1 and start_idx <= end_idx:
-            content = content[start_idx:end_idx + 1]
-        
-        return content
-    
     async def generate_response(self, prompt: str, **kwargs) -> str:
         """
         Generate a standard text response.
@@ -180,52 +233,7 @@ IMPORTANT: Your previous response had formatting errors. Please ensure:
             return response.choices[0].message.content
             
         except Exception as e:
-            raise Exception(f"Error generating LLM response: {str(e)}")
-    
-    async def generate_structured_response(self, prompt: str, response_format: str = "json", **kwargs) -> str:
-        """
-        Generate a structured response (JSON, etc.).
-        
-        Args:
-            prompt: The prompt to send to the LLM
-            response_format: Expected response format ("json", "yaml", etc.)
-            **kwargs: Additional parameters to override defaults
-            
-        Returns:
-            Generated response in the specified format
-        """
-        # Add format instruction to prompt
-        if response_format == "json":
-            format_instruction = "\n\nPlease respond with valid JSON only, no additional text."
-            enhanced_prompt = prompt + format_instruction
-        else:
-            enhanced_prompt = prompt
-        
-        params = {**self.default_params, **kwargs}
-        
-        # Lower temperature for structured responses to improve consistency
-        params["temperature"] = 0.3
-        
-        try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": enhanced_prompt}],
-                **params
-            )
-            
-            content = response.choices[0].message.content
-            
-            # Validate JSON if requested
-            if response_format == "json":
-                try:
-                    json.loads(content)  # Validate JSON
-                except json.JSONDecodeError as e:
-                    raise Exception(f"LLM returned invalid JSON: {str(e)}")
-            
-            return content
-            
-        except Exception as e:
-            raise Exception(f"Error generating structured LLM response: {str(e)}")
+            raise LLMError(f"Error generating LLM response: {str(e)}")
     
     async def generate_with_system_message(self, system_message: str, user_prompt: str, **kwargs) -> str:
         """
@@ -254,7 +262,7 @@ IMPORTANT: Your previous response had formatting errors. Please ensure:
             return response.choices[0].message.content
             
         except Exception as e:
-            raise Exception(f"Error generating LLM response with system message: {str(e)}")
+            raise LLMError(f"Error generating LLM response with system message: {str(e)}")
     
     def set_default_params(self, **params):
         """Update default parameters for LLM calls."""

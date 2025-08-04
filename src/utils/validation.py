@@ -16,6 +16,23 @@ class ValidationHelper:
     """
     
     @staticmethod
+    def validate_json_syntax(json_string: str) -> bool:
+        """
+        Validate JSON syntax from a string.
+        
+        Args:
+            json_string: JSON string to validate
+            
+        Returns:
+            True if valid JSON syntax, False otherwise
+        """
+        try:
+            json.loads(json_string)
+            return True
+        except (json.JSONDecodeError, TypeError):
+            return False
+    
+    @staticmethod
     def validate_json_file(file_path: str) -> Dict[str, Any]:
         """
         Validate a JSON file for syntax and basic structure.

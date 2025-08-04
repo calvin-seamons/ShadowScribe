@@ -477,8 +477,7 @@ class TestLLMClient(unittest.TestCase):
         self.assertIsNotNone(self.llm_client, "LLM client should be initialized")
         print("  ✅ LLM client initialized")
     
-    @patch('utils.llm_client.openai.ChatCompletion.acreate')
-    async def test_validated_response(self, mock_create):
+    def test_validated_response(self):
         """Test validated response generation (mocked)"""
         print("\n🔧 Testing validated response...")
         
@@ -486,22 +485,31 @@ class TestLLMClient(unittest.TestCase):
             print("  ⚠️  LLM client not available - skipping test")
             return
         
-        # Mock successful response
-        mock_create.return_value = Mock(
-            choices=[Mock(message=Mock(content='{"sources_needed": ["dnd_rulebook"], "reasoning": "test"}'))]
-        )
+        # Run async test properly without problematic decorators
+        async def run_async_test():
+            with patch('src.utils.llm_client.openai.ChatCompletion.acreate') as mock_create:
+                # Mock successful response
+                mock_create.return_value = Mock(
+                    choices=[Mock(message=Mock(content='{"sources_needed": ["dnd_rulebook"], "reasoning": "Need spell rules for counterspell information"}'))]
+                )
+                
+                try:
+                    # Test with SourceSelectionResponse model
+                    prompt = "Test prompt"
+                    response = await self.llm_client.generate_validated_response(
+                        prompt, SourceSelectionResponse
+                    )
+                    
+                    self.assertIsInstance(response, SourceSelectionResponse)
+                    print("  ✅ Validated response generation works")
+                except Exception as e:
+                    print(f"  ⚠️  Validated response test failed: {e}")
         
+        # Run the async test
         try:
-            # Test with SourceSelectionResponse model
-            prompt = "Test prompt"
-            response = await self.llm_client.generate_validated_response(
-                prompt, SourceSelectionResponse
-            )
-            
-            self.assertIsInstance(response, SourceSelectionResponse)
-            print("  ✅ Validated response generation works")
+            asyncio.run(run_async_test())
         except Exception as e:
-            print(f"  ⚠️  Validated response test failed: {e}")
+            print(f"  ⚠️  Async test execution failed: {e}")
 
 
 class TestResponseModels(unittest.TestCase):
@@ -544,8 +552,8 @@ class TestResponseModels(unittest.TestCase):
         try:
             rulebook_data = {
                 "section_ids": ["test_id"],
-                "search_keywords": ["spell"],
-                "reasoning": "test"
+                "keywords": ["spell"],  # Fixed field name from "search_keywords" to "keywords"
+                "reasoning": "Need spell information from these sections to answer the query"  # Fixed length
             }
             RulebookTargetResponse(**rulebook_data)
             print("  ✅ RulebookTargetResponse validation")
@@ -555,8 +563,8 @@ class TestResponseModels(unittest.TestCase):
         # Test CharacterTargetResponse  
         try:
             character_data = {
-                "target_files": {"character.json": ["name", "level"]},
-                "reasoning": "test"
+                "file_fields": {"character.json": ["name", "level"]},  # Fixed field name from "target_files" to "file_fields"
+                "reasoning": "Need character name and level information to answer the query"  # Fixed length
             }
             CharacterTargetResponse(**character_data)
             print("  ✅ CharacterTargetResponse validation")
@@ -605,8 +613,7 @@ class TestQueryRouter(unittest.TestCase):
         except Exception as e:
             print(f"Warning: Could not initialize query router: {e}")
     
-    @patch('engine.query_router.LLMClient')
-    async def test_source_selection(self, mock_llm):
+    def test_source_selection(self):
         """Test source selection (Pass 1)"""
         print("\n🎯 Testing query routing...")
         
@@ -614,19 +621,28 @@ class TestQueryRouter(unittest.TestCase):
             print("  ⚠️  Query router not available - skipping test")
             return
         
-        # Mock LLM response
-        mock_response = SourceSelectionResponse(
-            sources_needed=["dnd_rulebook"],
-            reasoning="Need spell information"
-        )
-        mock_llm.return_value.generate_validated_response = AsyncMock(return_value=mock_response)
+        # Run async test properly without problematic decorators
+        async def run_async_test():
+            with patch('src.engine.query_router.LLMClient') as mock_llm:
+                # Mock LLM response
+                mock_response = SourceSelectionResponse(
+                    sources_needed=["dnd_rulebook"],
+                    reasoning="Need spell information for counterspell mechanics"
+                )
+                mock_llm.return_value.generate_validated_response = AsyncMock(return_value=mock_response)
+                
+                try:
+                    sources = await self.router.select_sources("How does counterspell work?")
+                    self.assertIsInstance(sources, SourceSelectionResponse)
+                    print("  ✅ Source selection works")
+                except Exception as e:
+                    print(f"  ⚠️  Source selection test failed: {e}")
         
+        # Run the async test
         try:
-            sources = await self.router.select_sources("How does counterspell work?")
-            self.assertIsInstance(sources, SourceSelectionResponse)
-            print("  ✅ Source selection works")
+            asyncio.run(run_async_test())
         except Exception as e:
-            print(f"  ⚠️  Source selection test failed: {e}")
+            print(f"  ⚠️  Async test execution failed: {e}")
 
 
 class TestContentRetriever(unittest.TestCase):

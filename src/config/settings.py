@@ -32,14 +32,17 @@ class Config:
             print(f"⚠️  Configuration file {config_file} not found, using defaults")
     
     def _set_defaults(self):
-        """Set default configuration values"""
+        """Set default configuration values with cross-platform paths"""
+        # Get base directory dynamically
+        base_dir = self._get_base_dir()
+        
         self.config['paths'] = {
-            'base_dir': '/Users/calvinseamons/ShadowScribe',
-            'knowledge_base_dir': '%(base_dir)s/knowledge_base',
-            'rulebook_file': '%(knowledge_base_dir)s/dnd5rulebook.md',
-            'session_notes_dir': '%(knowledge_base_dir)s/session_notes',
-            'output_dir': '%(base_dir)s/vector_store',
-            'chunks_output_file': '%(base_dir)s/chunks_output.json'
+            'base_dir': str(base_dir),
+            'knowledge_base_dir': str(base_dir / 'knowledge_base'),
+            'rulebook_file': str(base_dir / 'knowledge_base' / 'dnd5rulebook.md'),
+            'session_notes_dir': str(base_dir / 'knowledge_base' / 'session_notes'),
+            'output_dir': str(base_dir / 'vector_store'),
+            'chunks_output_file': str(base_dir / 'chunks_output.json')
         }
         
         self.config['chunking'] = {
@@ -65,6 +68,15 @@ class Config:
             'test_queries': 'How does rage work for barbarians?, What are the racial traits of dragonborn?, What happened with Duskryn in the last session?, How do spell slots work?, What is the Theater of Blood?'
         }
     
+    def _get_base_dir(self) -> Path:
+        """Get base directory dynamically for cross-platform compatibility."""
+        # Try environment variable first
+        if os.getenv('SHADOWSCRIBE_BASE_DIR'):
+            return Path(os.getenv('SHADOWSCRIBE_BASE_DIR'))
+        
+        # Otherwise use current working directory
+        return Path.cwd()
+
     # Path properties
     @property
     def base_dir(self) -> Path:
