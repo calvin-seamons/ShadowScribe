@@ -1,9 +1,15 @@
 """
-D&D RAG Chunker Package
-
-A modular system for chunking D&D 5e content and creating vector embeddings
-for Retrieval-Augmented Generation (RAG) systems.
+ShadowScribe - Intelligent D&D 5e Assistant with Multi-Pass LLM Engine
 """
 
+from .engine import ShadowScribeEngine
+from .knowledge import KnowledgeBase
+from .utils import LLMClient, ValidationHelper
+
 __version__ = "1.0.0"
-__author__ = "AI Assistant"
+__all__ = [
+    'ShadowScribeEngine',
+    'KnowledgeBase', 
+    'LLMClient',
+    'ValidationHelper'
+]

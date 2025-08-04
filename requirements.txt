@@ -10,8 +10,11 @@ langchain-openai>=0.1.0
 chromadb>=0.4.0
 faiss-cpu>=1.7.4
 
-# OpenAI for embeddings
+# OpenAI for embeddings and LLM calls
 openai>=1.0.0
+
+# Structured validation for LLM responses
+pydantic>=2.0.0
 
 # Environment variable management
 python-dotenv>=1.0.0
