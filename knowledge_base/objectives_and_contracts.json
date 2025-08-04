@@ -1,0 +1,109 @@
+{
+  "objectives_and_contracts": {
+    "active_contracts": [],
+    "current_objectives": [],
+    "completed_objectives": [
+      {
+        "id": "covenant_eternal_service",
+        "name": "The Covenant of Eternal Service and Balance",
+        "type": "Divine Covenant",
+        "status": "Completed",
+        "completion_date": "Unknown",
+        "description": "Entered into eternal binding agreement with Ghul'Vor, The Fallen One",
+        "parties": {
+          "patron": {
+            "name": "Ghul'Vor",
+            "title": "The Fallen One, Harbinger of Shadows and Balance"
+          },
+          "bound": {
+            "name": "Duskryn Nightwarden",
+            "title": "The Bound"
+          }
+        },
+        "outcome": "Successfully bound in eternal covenant",
+        "rewards": [
+          "The Mantle of Shadows - Mastery of light and darkness",
+          "The Power of Restoration - Ability to right imbalances",
+          "The Equilibrium's Gift - Insight into cosmic balance",
+          "The Voice of Command - Charisma raised to 22",
+          "Other Undefined Boons - Situational gifts"
+        ],
+        "obligations_accepted": [
+          "Eternal loyalty and servitude",
+          "Aid in reclaiming The Patron's throne",
+          "Execution of balance at any cost",
+          "Maintain secrecy about allegiance",
+          "Periodic essence tributes"
+        ],
+        "lasting_effects": [
+          "The Mark of Ghul'Vor - Visible to divine energies",
+          "Eternal enforcement beyond mortal life",
+          "Cannot be severed without dire consequences",
+          "Subject to The Patron's interpretation of terms"
+        ]
+      }
+    ],
+    "contract_templates": {
+      "quest": {
+        "id": "",
+        "name": "",
+        "type": "Quest",
+        "status": "",
+        "priority": "",
+        "quest_giver": "",
+        "location": "",
+        "description": "",
+        "objectives": [],
+        "rewards": [],
+        "deadline": "",
+        "notes": ""
+      },
+      "contract": {
+        "id": "",
+        "name": "",
+        "type": "Contract",
+        "status": "",
+        "client": "",
+        "contractor": "",
+        "terms": "",
+        "payment": "",
+        "deadline": "",
+        "penalties": "",
+        "special_conditions": []
+      },
+      "divine_mission": {
+        "id": "",
+        "name": "",
+        "type": "Divine Mission",
+        "status": "",
+        "deity": "",
+        "purpose": "",
+        "signs_received": [],
+        "objectives": [],
+        "divine_favor": "",
+        "consequences_of_failure": []
+      },
+      "personal_goal": {
+        "id": "",
+        "name": "",
+        "type": "Personal Goal",
+        "status": "",
+        "motivation": "",
+        "steps": [],
+        "obstacles": [],
+        "deadline": "",
+        "importance": ""
+      }
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2025-08-02",
+    "notes": [
+      "Status options: Active, In Progress, Completed, Failed, Suspended, Abandoned",
+      "Priority levels: Absolute, Critical, High, Medium, Low",
+      "Contract types: Divine Covenant, Quest, Contract, Divine Mission, Personal Goal, Guild Assignment",
+      "Templates provided for easy addition of new objectives"
+    ]
+  }
+}
