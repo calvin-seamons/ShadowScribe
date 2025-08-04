@@ -30,6 +30,7 @@ class LLMClient:
             raise ValueError("OpenAI API key not found. Set OPENAI_API_KEY environment variable.")
         
         self.client = AsyncOpenAI(api_key=self.api_key)
+        self.debug_callback = None  # Optional debug callback
         
         # Default parameters optimized for gpt-4o-mini
         self.default_params = {
@@ -39,6 +40,10 @@ class LLMClient:
             "frequency_penalty": 0.0,
             "presence_penalty": 0.0
         }
+    
+    def set_debug_callback(self, callback):
+        """Set a callback function for debug logging."""
+        self.debug_callback = callback
     
     async def generate_structured_response(
         self, 
@@ -80,6 +85,15 @@ class LLMClient:
         # Convert Pydantic model to OpenAI function schema
         function_schema = self._pydantic_to_function_schema(response_model)
         
+        # Log the structured prompt if debug callback is available
+        if self.debug_callback:
+            self.debug_callback("LLM_STRUCTURED_PROMPT_SENT", "Sending structured prompt to LLM", {
+                "model": self.model,
+                "prompt": prompt,
+                "response_model": response_model.__name__,
+                "function_schema": function_schema
+            })
+        
         try:
             response = await self.client.chat.completions.create(
                 model=self.model,
@@ -96,9 +110,28 @@ class LLMClient:
             arguments = json.loads(tool_call.function.arguments)
             
             # Validate with Pydantic
-            return response_model(**arguments)
+            validated_response = response_model(**arguments)
+            
+            # Log the structured response if debug callback is available
+            if self.debug_callback:
+                self.debug_callback("LLM_STRUCTURED_RESPONSE_RECEIVED", "Received structured response from LLM", {
+                    "model": self.model,
+                    "response_model": response_model.__name__,
+                    "function_call": tool_call.function.name,
+                    "arguments": arguments,
+                    "usage": getattr(response, 'usage', {})
+                })
+            
+            return validated_response
             
         except Exception as e:
+            if self.debug_callback:
+                self.debug_callback("LLM_STRUCTURED_ERROR", f"Error generating structured LLM response: {str(e)}", {
+                    "model": self.model,
+                    "response_model": response_model.__name__,
+                    "prompt": prompt[:200] + "..." if len(prompt) > 200 else prompt,
+                    "error": str(e)
+                })
             raise LLMError(f"Error generating structured response with function calling: {str(e)}")
     
     def _pydantic_to_function_schema(self, model: Type[BaseModel]) -> Dict[str, Any]:
@@ -134,6 +167,16 @@ class LLMClient:
         # Add schema to prompt
         schema_prompt = self._enhance_prompt_with_schema(prompt, response_model)
         
+        # Log the validated prompt if debug callback is available
+        if self.debug_callback:
+            self.debug_callback("LLM_VALIDATED_PROMPT_SENT", "Sending validated prompt to LLM", {
+                "model": self.model,
+                "original_prompt": prompt,
+                "enhanced_prompt": schema_prompt,
+                "response_model": response_model.__name__,
+                "max_retries": max_retries
+            })
+        
         for attempt in range(max_retries):
             try:
                 # Generate response
@@ -154,12 +197,35 @@ class LLMClient:
                         schema_prompt = self._enhance_prompt_with_schema(
                             prompt, response_model, include_error_instruction=True
                         )
+                        if self.debug_callback:
+                            self.debug_callback("LLM_VALIDATION_RETRY", f"JSON parsing failed, retrying (attempt {attempt + 1})", {
+                                "error": str(e),
+                                "raw_response": content,
+                                "attempt": attempt + 1
+                            })
                         continue
                     else:
+                        if self.debug_callback:
+                            self.debug_callback("LLM_VALIDATION_ERROR", f"JSON parsing failed after all retries", {
+                                "error": str(e),
+                                "raw_response": content,
+                                "max_retries": max_retries
+                            })
                         raise ValidationError(f"Invalid JSON after {max_retries} attempts: {e}")
                 
                 # Validate against Pydantic model
                 validated_response = response_model(**json_data)
+                
+                # Log successful validation if debug callback is available
+                if self.debug_callback:
+                    self.debug_callback("LLM_VALIDATED_RESPONSE_RECEIVED", "Received and validated response from LLM", {
+                        "model": self.model,
+                        "response_model": response_model.__name__,
+                        "attempt": attempt + 1,
+                        "validated_data": json_data,
+                        "usage": getattr(response, 'usage', {})
+                    })
+                
                 return validated_response
                 
             except ValidationError as e:
@@ -167,15 +233,35 @@ class LLMClient:
                     # Add validation error to prompt for next attempt
                     error_prompt = f"{schema_prompt}\n\nPREVIOUS ATTEMPT FAILED WITH ERROR: {str(e)}\nPlease fix the format and try again."
                     schema_prompt = error_prompt
+                    if self.debug_callback:
+                        self.debug_callback("LLM_VALIDATION_RETRY", f"Validation failed, retrying (attempt {attempt + 1})", {
+                            "validation_error": str(e),
+                            "attempt": attempt + 1
+                        })
                     continue
                 else:
                     # Final attempt failed
+                    if self.debug_callback:
+                        self.debug_callback("LLM_VALIDATION_ERROR", f"Validation failed after all retries", {
+                            "validation_error": str(e),
+                            "max_retries": max_retries
+                        })
                     raise ValidationError(f"Response validation failed after {max_retries} attempts: {e}")
             
             except Exception as e:
                 if attempt < max_retries - 1:
+                    if self.debug_callback:
+                        self.debug_callback("LLM_GENERATION_RETRY", f"LLM generation failed, retrying (attempt {attempt + 1})", {
+                            "error": str(e),
+                            "attempt": attempt + 1
+                        })
                     continue
                 else:
+                    if self.debug_callback:
+                        self.debug_callback("LLM_GENERATION_ERROR", f"LLM generation failed after all retries", {
+                            "error": str(e),
+                            "max_retries": max_retries
+                        })
                     raise LLMError(f"LLM generation failed after {max_retries} attempts: {e}")
         
         # This should never be reached
@@ -223,6 +309,14 @@ IMPORTANT: Your previous response had formatting errors. Please ensure:
         """
         params = {**self.default_params, **kwargs}
         
+        # Log the prompt if debug callback is available
+        if self.debug_callback:
+            self.debug_callback("LLM_PROMPT_SENT", "Sending prompt to LLM", {
+                "model": self.model,
+                "prompt": prompt,
+                "parameters": params
+            })
+        
         try:
             response = await self.client.chat.completions.create(
                 model=self.model,
@@ -230,9 +324,25 @@ IMPORTANT: Your previous response had formatting errors. Please ensure:
                 **params
             )
             
-            return response.choices[0].message.content
+            response_content = response.choices[0].message.content
+            
+            # Log the response if debug callback is available
+            if self.debug_callback:
+                self.debug_callback("LLM_RESPONSE_RECEIVED", "Received response from LLM", {
+                    "model": self.model,
+                    "response": response_content,
+                    "usage": getattr(response, 'usage', {})
+                })
+            
+            return response_content
             
         except Exception as e:
+            if self.debug_callback:
+                self.debug_callback("LLM_ERROR", f"Error generating LLM response: {str(e)}", {
+                    "model": self.model,
+                    "prompt": prompt[:200] + "..." if len(prompt) > 200 else prompt,
+                    "error": str(e)
+                })
             raise LLMError(f"Error generating LLM response: {str(e)}")
     
     async def generate_with_system_message(self, system_message: str, user_prompt: str, **kwargs) -> str:
@@ -249,6 +359,15 @@ IMPORTANT: Your previous response had formatting errors. Please ensure:
         """
         params = {**self.default_params, **kwargs}
         
+        # Log the system message prompt if debug callback is available
+        if self.debug_callback:
+            self.debug_callback("LLM_SYSTEM_PROMPT_SENT", "Sending system message prompt to LLM", {
+                "model": self.model,
+                "system_message": system_message,
+                "user_prompt": user_prompt,
+                "parameters": params
+            })
+        
         try:
             response = await self.client.chat.completions.create(
                 model=self.model,
@@ -259,9 +378,26 @@ IMPORTANT: Your previous response had formatting errors. Please ensure:
                 **params
             )
             
-            return response.choices[0].message.content
+            response_content = response.choices[0].message.content
+            
+            # Log the response if debug callback is available
+            if self.debug_callback:
+                self.debug_callback("LLM_SYSTEM_RESPONSE_RECEIVED", "Received response from LLM with system message", {
+                    "model": self.model,
+                    "response": response_content,
+                    "usage": getattr(response, 'usage', {})
+                })
+            
+            return response_content
             
         except Exception as e:
+            if self.debug_callback:
+                self.debug_callback("LLM_SYSTEM_ERROR", f"Error generating LLM response with system message: {str(e)}", {
+                    "model": self.model,
+                    "system_message": system_message[:200] + "..." if len(system_message) > 200 else system_message,
+                    "user_prompt": user_prompt[:200] + "..." if len(user_prompt) > 200 else user_prompt,
+                    "error": str(e)
+                })
             raise LLMError(f"Error generating LLM response with system message: {str(e)}")
     
     def set_default_params(self, **params):

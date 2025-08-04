@@ -4,6 +4,7 @@ Main ShadowScribe Engine - Orchestrates the multi-pass query routing system.
 
 from typing import Dict, Any, List
 import asyncio
+import traceback
 from ..knowledge.knowledge_base import KnowledgeBase
 from .query_router import QueryRouter
 from .content_retriever import ContentRetriever
@@ -30,6 +31,9 @@ class ShadowScribeEngine:
     def set_debug_callback(self, callback):
         """Set a callback function for debug logging."""
         self.debug_callback = callback
+        # Pass the callback to all components that use LLM clients
+        self.query_router.set_debug_callback(callback)
+        self.response_generator.set_debug_callback(callback)
     
     async def process_query(self, user_query: str) -> str:
         """
@@ -90,8 +94,10 @@ class ShadowScribeEngine:
             
             # Pass 4: Response Generation
             if self.debug_callback:
+                # Fix: Handle list of RetrievedContent objects
+                content_types = [item.source_type.value for item in content] if isinstance(content, list) else []
                 self.debug_callback("PASS_4_START", "Starting response generation", {
-                    "content_available": list(content.keys()) if content else []
+                    "content_available": content_types
                 })
                 
             response = await self.response_generator.generate_response(
@@ -110,7 +116,8 @@ class ShadowScribeEngine:
             if self.debug_callback:
                 self.debug_callback("ERROR", f"Error in query processing: {str(e)}", {
                     "error_type": type(e).__name__,
-                    "error_message": str(e)
+                    "error_message": str(e),
+                    "traceback": traceback.format_exc()
                 })
             return f"Error processing query: {str(e)}"
     

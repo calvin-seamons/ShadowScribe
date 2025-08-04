@@ -13,6 +13,19 @@ class ResponsePrompts:
     - Specialized prompts for combat, roleplay, etc.
     """
     
+    def get_response_prompt(self, query: str, formatted_context: Dict[str, Any]) -> str:
+        """
+        Main entry point for generating response prompts.
+        Routes to appropriate specialized prompt based on available context.
+        """
+        character_info = formatted_context.get("character_data", {}).get("content")
+        rulebook_sections = formatted_context.get("dnd_rulebook", {}).get("content")
+        session_context = formatted_context.get("session_notes", {}).get("content")
+        
+        return self.get_synthesis_prompt(
+            query, character_info, rulebook_sections, session_context
+        )
+    
     def get_synthesis_prompt(self, query: str, character_info: Optional[Dict[str, Any]] = None, 
                            rulebook_sections: Optional[Dict[str, Any]] = None,
                            session_context: Optional[Dict[str, Any]] = None) -> str:

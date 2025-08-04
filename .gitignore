@@ -215,3 +215,4 @@ chroma.sqlite3
 # Large output files
 chunks_output.json
 *.log
+shadowscribe_debug.txt

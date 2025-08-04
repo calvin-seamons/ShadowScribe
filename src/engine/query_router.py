@@ -52,6 +52,10 @@ class QueryRouter:
         self.llm_client = LLMClient()
         self.router_prompts = RouterPrompts()
     
+    def set_debug_callback(self, callback):
+        """Set a callback function for debug logging."""
+        self.llm_client.set_debug_callback(callback)
+    
     async def select_sources(self, user_query: str) -> SourceSelection:
         """
         Pass 1: Analyze query and determine which knowledge sources are needed.
