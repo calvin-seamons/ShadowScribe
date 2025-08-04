@@ -16,6 +16,7 @@ class CharacterHandler:
     - spell_list.json (available spells)
     - action_list.json (combat actions)
     - character_background.json (backstory and roleplay)
+    - objectives_and_contracts.json (quests, goals, and divine covenants)
     """
     
     def __init__(self, knowledge_base_path: str):
@@ -73,7 +74,7 @@ class CharacterHandler:
         
         Args:
             filename: Name of the file to retrieve data from
-            fields: Specific fields to retrieve (None for all)
+            fields: Specific fields to retrieve (None for all, supports dot notation for nested fields)
             
         Returns:
             Dictionary containing the requested data
@@ -90,17 +91,34 @@ class CharacterHandler:
         result = {}
         for field in fields:
             if field in file_data:
+                # Direct field access
                 result[field] = file_data[field]
             else:
-                # Try nested field access (e.g., "character_base.name")
+                # Try nested field access (e.g., "character_base.name" or "objectives_and_contracts.active_contracts")
                 current = file_data
                 field_parts = field.split('.')
                 try:
                     for part in field_parts:
                         current = current[part]
+                    # Store with the full path as key for clarity
                     result[field] = current
                 except (KeyError, TypeError):
-                    # Field not found, skip it
+                    # Field not found, try to be helpful and log what's available
+                    if len(field_parts) > 1:
+                        # For nested paths, check if the parent exists
+                        try:
+                            parent = file_data
+                            for part in field_parts[:-1]:
+                                parent = parent[part]
+                            if isinstance(parent, dict):
+                                available_keys = list(parent.keys())
+                                print(f"Debug: Field '{field}' not found in {filename}. Available keys in '{'.'.join(field_parts[:-1])}': {available_keys}")
+                        except (KeyError, TypeError):
+                            print(f"Debug: Parent path '{'.'.join(field_parts[:-1])}' not found in {filename}")
+                    else:
+                        if isinstance(file_data, dict):
+                            available_keys = list(file_data.keys())
+                            print(f"Debug: Field '{field}' not found in {filename}. Available root keys: {available_keys}")
                     continue
         
         return result

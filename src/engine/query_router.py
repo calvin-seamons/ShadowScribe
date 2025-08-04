@@ -47,9 +47,9 @@ class QueryRouter:
     - Pass 2: Target specific content within those sources
     """
     
-    def __init__(self):
+    def __init__(self, model: str = "gpt-4.1-nano"):
         """Initialize the query router with LLM client and prompt templates."""
-        self.llm_client = LLMClient()
+        self.llm_client = LLMClient(model=model)
         self.router_prompts = RouterPrompts()
     
     def set_debug_callback(self, callback):
@@ -69,9 +69,9 @@ class QueryRouter:
         prompt = self.router_prompts.get_source_selection_prompt(user_query)
         
         try:
-            # Use validated response with Pydantic model
-            validated_response = await self.llm_client.generate_validated_response(
-                prompt, SourceSelectionResponse
+            # Use structured response with function calling for better reliability
+            validated_response = await self.llm_client.generate_structured_response(
+                prompt, SourceSelectionResponse, use_function_calling=True
             )
             
             # Convert enum values back to our internal SourceType enum
@@ -127,9 +127,9 @@ class QueryRouter:
         prompt = self.router_prompts.get_rulebook_targeting_prompt(user_query)
         
         try:
-            # Use validated response with Pydantic model
-            validated_response = await self.llm_client.generate_validated_response(
-                prompt, RulebookTargetResponse
+            # Use structured response with function calling for better reliability
+            validated_response = await self.llm_client.generate_structured_response(
+                prompt, RulebookTargetResponse, use_function_calling=True
             )
             
             return ContentTarget(
@@ -155,9 +155,9 @@ class QueryRouter:
         prompt = self.router_prompts.get_character_targeting_prompt(user_query)
         
         try:
-            # Use validated response with Pydantic model
-            validated_response = await self.llm_client.generate_validated_response(
-                prompt, CharacterTargetResponse
+            # Use structured response with function calling for better reliability
+            validated_response = await self.llm_client.generate_structured_response(
+                prompt, CharacterTargetResponse, use_function_calling=True
             )
             
             return ContentTarget(
@@ -167,14 +167,12 @@ class QueryRouter:
             )
             
         except Exception as e:
-            # Fallback: include basic character info
+            # Improved fallback: include inventory and other relevant files based on query
+            fallback_targets = self._get_smart_fallback_targets(user_query)
             return ContentTarget(
                 source_type=SourceType.CHARACTER_DATA,
-                specific_targets={
-                    "character.json": ["name", "class", "level", "ability_scores", "combat_stats"],
-                    "spell_list.json": ["all"]
-                },
-                reasoning=f"Fallback basic character data due to validation error: {str(e)}"
+                specific_targets=fallback_targets,
+                reasoning=f"Fallback character data due to validation error: {str(e)}"
             )
     
     async def _target_session_content(self, user_query: str) -> ContentTarget:
@@ -182,9 +180,9 @@ class QueryRouter:
         prompt = self.router_prompts.get_session_targeting_prompt(user_query)
         
         try:
-            # Use validated response with Pydantic model
-            validated_response = await self.llm_client.generate_validated_response(
-                prompt, SessionTargetResponse
+            # Use structured response with function calling for better reliability
+            validated_response = await self.llm_client.generate_structured_response(
+                prompt, SessionTargetResponse, use_function_calling=True
             )
             
             return ContentTarget(
@@ -203,6 +201,46 @@ class QueryRouter:
                 specific_targets={"session_dates": ["latest"]},
                 reasoning=f"Fallback to latest session due to validation error: {str(e)}"
             )
+    
+    def _get_smart_fallback_targets(self, user_query: str) -> Dict[str, List[str]]:
+        """Generate smart fallback targets based on query content."""
+        query_lower = user_query.lower()
+        targets = {
+            "character.json": ["name", "class", "level", "ability_scores", "combat_stats"]
+        }
+        
+        # Inventory/equipment related queries
+        if any(word in query_lower for word in ["weapon", "inventory", "equipment", "armor", "item", "gear", "eldaryth"]):
+            targets["inventory_list.json"] = ["all"]
+        
+        # Spell related queries
+        if any(word in query_lower for word in ["spell", "cantrip", "magic", "cast", "slot"]):
+            targets["spell_list.json"] = ["all"]
+        
+        # Combat/action related queries
+        if any(word in query_lower for word in ["attack", "action", "combat", "damage", "smite", "hex"]):
+            targets["action_list.json"] = ["all"]
+            if "inventory_list.json" not in targets:  # Include weapons for combat
+                targets["inventory_list.json"] = ["inventory.equipped_items.weapons"]
+        
+        # Character abilities/traits
+        if any(word in query_lower for word in ["feat", "trait", "ability", "feature", "class", "paladin", "warlock"]):
+            targets["feats_and_traits.json"] = ["all"]
+        
+        # Background/roleplay queries
+        if any(word in query_lower for word in ["background", "story", "personality", "history", "ally", "enemy"]):
+            targets["character_background.json"] = ["all"]
+        
+        # Objectives/contracts/quest related queries
+        if any(word in query_lower for word in ["objective", "contract", "quest", "goal", "mission", "covenant", "ghul'vor", "patron", "obligation"]):
+            targets["objectives_and_contracts.json"] = ["all"]
+        
+        # Default fallback - if nothing specific matched, include inventory anyway
+        if len(targets) == 1:  # Only has basic character.json
+            targets["inventory_list.json"] = ["all"]
+            targets["spell_list.json"] = ["all"]
+        
+        return targets
     
     def _extract_keywords_from_query(self, query: str) -> List[str]:
         """Extract potential D&D keywords from the query."""

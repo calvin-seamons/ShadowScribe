@@ -16,9 +16,9 @@ class ResponseGenerator:
     - Formats response for user consumption
     """
     
-    def __init__(self):
+    def __init__(self, model: str = "gpt-4.1-nano"):
         """Initialize response generator with LLM client."""
-        self.llm_client = LLMClient()
+        self.llm_client = LLMClient(model=model)
         self.response_prompts = ResponsePrompts()
         self.debug_callback = None
     

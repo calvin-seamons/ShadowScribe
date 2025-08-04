@@ -119,6 +119,30 @@ class ContentRetriever:
         for filename, fields in file_fields.items():
             try:
                 file_data = self.knowledge_base.get_character_data(filename, fields)
+                
+                # If we got empty data and this is objectives_and_contracts.json, try legacy field mapping
+                if not file_data and filename == "objectives_and_contracts.json":
+                    # Check if fields are legacy (non-dotted) format
+                    legacy_fields = [f for f in fields if '.' not in f]
+                    if legacy_fields:
+                        # Map legacy fields to correct nested paths
+                        corrected_fields = []
+                        for field in legacy_fields:
+                            if field in ["active_contracts", "current_objectives", "completed_objectives", "completed_contracts"]:
+                                # Handle "completed_contracts" -> "completed_objectives" mapping
+                                if field == "completed_contracts":
+                                    corrected_fields.append("objectives_and_contracts.completed_objectives")
+                                else:
+                                    corrected_fields.append(f"objectives_and_contracts.{field}")
+                            else:
+                                corrected_fields.append(field)
+                        
+                        # Add any correctly formatted fields (with dots)
+                        corrected_fields.extend([f for f in fields if '.' in f])
+                        
+                        print(f"Debug: Retrying {filename} with corrected fields: {corrected_fields}")
+                        file_data = self.knowledge_base.get_character_data(filename, corrected_fields)
+                
                 content[filename] = file_data
                 metadata["files_accessed"].append(filename)
             except Exception as e:
@@ -130,6 +154,14 @@ class ContentRetriever:
             basic_data = self.knowledge_base.get_basic_character_info()
             content["basic_info"] = basic_data
             metadata["files_accessed"] = ["character.json"]
+        
+        # Debug: Log what was actually retrieved
+        for filename, data in content.items():
+            if isinstance(data, dict):
+                if not data:
+                    print(f"Debug: {filename} returned empty data")
+                else:
+                    print(f"Debug: {filename} returned {len(data)} top-level keys: {list(data.keys())}")
         
         result = RetrievedContent(
             source_type=SourceType.CHARACTER_DATA,

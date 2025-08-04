@@ -301,7 +301,8 @@ class TestCharacterHandler(unittest.TestCase):
             "feats_and_traits.json",
             "spell_list.json",
             "action_list.json",
-            "character_background.json"
+            "character_background.json",
+            "objectives_and_contracts.json"
         ]
         
         for expected_file in expected_files:

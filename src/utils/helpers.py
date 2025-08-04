@@ -11,7 +11,7 @@ from langchain.schema import Document as LangChainDocument
 class TokenCounter:
     """Utility class for counting tokens"""
     
-    def __init__(self, model_name: str = "gpt-3.5-turbo"):
+    def __init__(self, model_name: str = "gpt-4o-mini"):
         try:
             self.encoding = tiktoken.encoding_for_model(model_name)
         except KeyError:

@@ -22,6 +22,7 @@ Our knowledge base consists of the following structured data sources:
 - **spell_list.json** - Available spells organized by class (Paladin/Warlock) and level
 - **action_list.json** - Combat actions, attack options, and special abilities
 - **character_background.json** - Backstory, personality, allies, enemies, and roleplay elements
+- **objectives_and_contracts.json** - Active and completed quests, divine covenants, and character obligations
 
 #### 3. Campaign Data
 - **session_notes/** - Markdown files containing session summaries, key events, NPCs, and story hooks
@@ -109,7 +110,8 @@ Return section IDs you need:
   "feats_and_traits.json": ["class_features", "species_traits", "feats"],
   "spell_list.json": ["paladin_spells", "warlock_spells", "cantrips"],
   "action_list.json": ["attacks", "bonus_actions", "reactions", "special_abilities"],
-  "character_background.json": ["backstory", "personality", "allies", "enemies"]
+  "character_background.json": ["backstory", "personality", "allies", "enemies"],
+  "objectives_and_contracts.json": ["active_contracts", "current_objectives", "completed_objectives"]
 }
 ```
 

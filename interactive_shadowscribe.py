@@ -8,6 +8,7 @@ import asyncio
 import os
 import sys
 import traceback
+import configparser
 from datetime import datetime
 from typing import Dict, Any, List
 
@@ -72,6 +73,24 @@ class InteractiveShadowScribe:
         self.engine = None
         self.debug_logger = DebugLogger()
         self.session_queries = 0
+        self.config = self._load_config()
+    
+    def _load_config(self):
+        """Load configuration from config.ini file."""
+        config = configparser.ConfigParser()
+        config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
+        
+        if os.path.exists(config_path):
+            config.read(config_path)
+            return config
+        else:
+            # Return default config if file doesn't exist
+            print(f"⚠️ Config file not found at {config_path}, using defaults")
+            config.add_section('llm')
+            config.set('llm', 'model', 'gpt-4o-mini')
+            config.set('llm', 'temperature', '0.3')
+            config.set('llm', 'max_tokens', '4000')
+            return config
     
     def debug_callback(self, stage: str, message: str, data: Dict[str, Any] = None):
         """Callback function for engine debug logging with progress indicators."""
@@ -116,8 +135,23 @@ class InteractiveShadowScribe:
         self.debug_logger.log("INITIALIZATION", "Starting ShadowScribe engine initialization")
         
         try:
-            # Initialize engine
-            self.engine = ShadowScribeEngine(knowledge_base_path="./knowledge_base")
+            # Load configuration to get model settings
+            config = configparser.ConfigParser()
+            config_file = os.path.join(os.path.dirname(__file__), 'config.ini')
+            
+            if os.path.exists(config_file):
+                config.read(config_file)
+                model = config.get('llm', 'model', fallback='gpt-4o-mini')
+                print(f"🤖 Using AI Model: {model}")
+            else:
+                model = 'gpt-4o-mini'
+                print(f"🤖 Using AI Model: {model} (default - no config.ini found)")
+            
+            # Initialize engine with configured model
+            self.engine = ShadowScribeEngine(
+                knowledge_base_path="./knowledge_base",
+                model=model
+            )
             
             # Set up debug callback
             self.engine.set_debug_callback(self.debug_callback)

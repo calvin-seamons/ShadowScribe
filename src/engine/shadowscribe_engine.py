@@ -20,12 +20,12 @@ class ShadowScribeEngine:
     4. Response Generation
     """
     
-    def __init__(self, knowledge_base_path: str = "./knowledge_base"):
+    def __init__(self, knowledge_base_path: str = "./knowledge_base", model: str = "gpt-4.1-nano"):
         """Initialize the ShadowScribe engine with all components."""
         self.knowledge_base = KnowledgeBase(knowledge_base_path)
-        self.query_router = QueryRouter()
+        self.query_router = QueryRouter(model=model)
         self.content_retriever = ContentRetriever(self.knowledge_base)
-        self.response_generator = ResponseGenerator()
+        self.response_generator = ResponseGenerator(model=model)
         self.debug_callback = None  # Optional callback for debug logging
         
     def set_debug_callback(self, callback):

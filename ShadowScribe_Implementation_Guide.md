@@ -94,6 +94,7 @@ response = await engine.process_query("What's my character's AC?")
 - `spell_list.json` - Available spells by class
 - `action_list.json` - Combat actions and abilities
 - `character_background.json` - Backstory and roleplay info
+- `objectives_and_contracts.json` - Quests, goals, and divine covenants
 
 **Key Features**:
 - Selective field retrieval to minimize data transfer
@@ -307,7 +308,7 @@ engine = ShadowScribeEngine()
 engine.response_generator.llm_client.set_default_params(
     temperature=0.5,  # Lower = more consistent
     max_tokens=3000,  # Longer responses
-    model="gpt-4"     # Use GPT-4 for better reasoning
+    model="gpt-4o-mini"     # Use GPT-4o-mini for efficient reasoning
 )
 ```
 
