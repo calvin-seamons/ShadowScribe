@@ -1,3 +1,26 @@
+export interface SourceDetails {
+  count: number | string;
+  description?: string;
+}
+
+export interface Character {
+  name: string;
+  class_info: string;
+  race: string;
+  hit_points: {
+    current: number;
+    max: number;
+  };
+  armor_class: number;
+  key_stats: Record<string, number>;
+}
+
+export interface HistoryItem {
+  query: string;
+  response: string;
+  timestamp: string;
+}
+
 export interface Message {
   id: string;
   type: 'user' | 'assistant';
@@ -13,20 +36,13 @@ export interface Progress {
 }
 
 export interface WebSocketData {
-  type: 'acknowledgment' | 'progress' | 'response' | 'error';
+  type: 'query' | 'progress' | 'response' | 'error' | 'acknowledgment';
   sessionId: string;
   data: {
-    status?: string;
-    progress?: Progress;
+    query?: string;
     response?: string;
     error?: string;
-  };
-}
-
-export interface WebSocketMessage {
-  type: 'query';
-  sessionId: string;
-  data: {
-    query: string;
+    status?: string;
+    progress?: Progress;
   };
 }

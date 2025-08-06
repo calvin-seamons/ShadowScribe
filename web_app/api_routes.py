@@ -85,16 +85,16 @@ async def get_character_summary(engine=Depends(get_engine)):
         if not character_data:
             raise HTTPException(status_code=404, detail="Character data not found")
         
-        # Extract key information
+        # Extract key information - fix HP access
         return CharacterSummary(
             name=character_data.get("name", "Unknown"),
             class_info=f"{character_data.get('class', 'Unknown')} {character_data.get('level', '?')}",
-            race=character_data.get('race', "Unknown"),
+            race=character_data.get("race", "Unknown"),
             hit_points={
-                "current": character_data.get("hit_points", {}).get("current", 0),
-                "max": character_data.get("hit_points", {}).get("max", 0)
+                "current": character_data.get("combat_stats", {}).get("current_hp", 0),
+                "max": character_data.get("combat_stats", {}).get("max_hp", 0)
             },
-            armor_class=character_data.get("armor_class", 0),
+            armor_class=character_data.get("combat_stats", {}).get("armor_class", 0),
             key_stats=character_data.get("ability_scores", {})
         )
     except HTTPException:

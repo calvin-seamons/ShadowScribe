@@ -83,8 +83,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                     # Set the active websocket for progress updates
                     websocket_manager.set_active_session(session_id)
                     
-                    # Process the query
-                    response = await engine.process_query(query)
+                    # Process the query - run in executor since it's not async
+                    loop = asyncio.get_event_loop()
+                    response = await loop.run_in_executor(None, engine.process_query, query)
                     
                     # Send the final response
                     await websocket_manager.send_personal_message({

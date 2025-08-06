@@ -1,30 +1,27 @@
-import axios from 'axios';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+export async function getAvailableSources() {
+  const response = await fetch(`${API_BASE_URL}/sources`);
+  if (!response.ok) throw new Error('Failed to fetch sources');
+  return response.json();
+}
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+export async function getCharacterSummary() {
+  const response = await fetch(`${API_BASE_URL}/character`);
+  if (!response.ok) throw new Error('Failed to fetch character');
+  return response.json();
+}
 
-export const getAvailableSources = async () => {
-  const response = await api.get('/sources');
-  return response.data;
-};
+export async function getSessionHistory(sessionId: string) {
+  const response = await fetch(`${API_BASE_URL}/session-history/${sessionId}`);
+  if (!response.ok) throw new Error('Failed to fetch session history');
+  return response.json();
+}
 
-export const validateSystem = async () => {
-  const response = await api.post('/validate');
-  return response.data;
-};
-
-export const getCharacterSummary = async () => {
-  const response = await api.get('/character');
-  return response.data;
-};
-
-export const getSessionHistory = async (sessionId: string) => {
-  const response = await api.get(`/session-history/${sessionId}`);
-  return response.data;
-};
+export async function validateSystem() {
+  const response = await fetch(`${API_BASE_URL}/validate`, {
+    method: 'POST',
+  });
+  if (!response.ok) throw new Error('Failed to validate system');
+  return response.json();
+}

@@ -1,17 +1,17 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 
-interface SessionState {
+interface SessionStore {
   sessionId: string;
+  setSessionId: (id: string) => void;
   initializeSession: () => void;
 }
 
-export const useSessionStore = create<SessionState>((set) => ({
-  sessionId: '',
+export const useSessionStore = create<SessionStore>((set) => ({
+  sessionId: generateSessionId(),
+  setSessionId: (id) => set({ sessionId: id }),
   initializeSession: () => {
-    // Check if session exists in localStorage
     const existingSession = localStorage.getItem('shadowscribe_session');
-    
     if (existingSession) {
       set({ sessionId: existingSession });
     } else {
@@ -21,3 +21,7 @@ export const useSessionStore = create<SessionState>((set) => ({
     }
   },
 }));
+
+function generateSessionId(): string {
+  return `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}

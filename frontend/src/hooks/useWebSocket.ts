@@ -1,67 +1,60 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
-import type { WebSocketMessage } from '../types/index';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
-export const useWebSocket = (sessionId: string) => {
+const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws';
+
+interface WebSocketMessage {
+  type: string;
+  sessionId?: string;
+  data: any;
+}
+
+export function useWebSocket(sessionId: string) {
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<number | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const connect = useCallback(() => {
     if (!sessionId) return;
 
-    try {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.hostname}:8000/ws/${sessionId}`;
-      
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
+    const ws = new WebSocket(`${WS_URL}/${sessionId}`);
+    wsRef.current = ws;
 
-      ws.onopen = () => {
-        console.log('WebSocket connected');
-        setConnectionStatus('connected');
-        
-        // Clear any reconnection timeout
-        if (reconnectTimeoutRef.current) {
-          window.clearTimeout(reconnectTimeoutRef.current);
-          reconnectTimeoutRef.current = null;
-        }
-      };
+    ws.onopen = () => {
+      setConnectionStatus('connected');
+      console.log('WebSocket connected');
+    };
 
-      ws.onmessage = (event) => {
-        setLastMessage(event.data);
-      };
+    ws.onmessage = (event) => {
+      setLastMessage(event.data);
+    };
 
-      ws.onclose = () => {
-        console.log('WebSocket disconnected');
-        setConnectionStatus('disconnected');
-        wsRef.current = null;
-        
-        // Attempt to reconnect after 3 seconds
-        reconnectTimeoutRef.current = window.setTimeout(() => {
-          setConnectionStatus('connecting');
-          connect();
-        }, 3000);
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-    } catch (error) {
-      console.error('Failed to connect WebSocket:', error);
+    ws.onclose = () => {
       setConnectionStatus('disconnected');
-    }
+      console.log('WebSocket disconnected');
+      
+      // Attempt to reconnect after 3 seconds
+      reconnectTimeoutRef.current = setTimeout(() => {
+        connect();
+      }, 3000);
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    return ws;
   }, [sessionId]);
 
   useEffect(() => {
-    connect();
+    const ws = connect();
 
     return () => {
       if (reconnectTimeoutRef.current) {
-        window.clearTimeout(reconnectTimeoutRef.current);
+        clearTimeout(reconnectTimeoutRef.current);
       }
-      if (wsRef.current) {
-        wsRef.current.close();
+      if (ws) {
+        ws.close();
       }
     };
   }, [connect]);
@@ -79,4 +72,4 @@ export const useWebSocket = (sessionId: string) => {
     lastMessage,
     sendMessage,
   };
-};
+}
