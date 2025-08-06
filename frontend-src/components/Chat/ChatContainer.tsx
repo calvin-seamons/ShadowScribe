@@ -76,6 +76,10 @@ export const ChatContainer: React.FC = () => {
       timestamp: new Date()
     }]);
 
+    // Reset progress state for new query
+    setCurrentProgress(null);
+    setIsProcessing(true);
+
     // Send via WebSocket
     sendMessage({
       type: 'query',
@@ -96,7 +100,7 @@ export const ChatContainer: React.FC = () => {
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto">
         <MessageList messages={messages} />
-        {isProcessing && currentProgress && (
+        {isProcessing && (
           <div className="px-4 py-2">
             <ProgressIndicator progress={currentProgress} />
           </div>

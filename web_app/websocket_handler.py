@@ -146,7 +146,7 @@ class WebSocketManager:
             # Create the coroutine
             coro = self.broadcast_progress(stage, message, data)
             
-            # Try to get the current event loop
+            # Try to get the current event loop and run the coroutine
             try:
                 loop = asyncio.get_running_loop()
                 # We're in an async context, create a task and track it
@@ -163,12 +163,18 @@ class WebSocketManager:
                 task.add_done_callback(cleanup_callback)
                 
             except RuntimeError:
-                # No running loop, we're in a sync context
-                # This shouldn't happen in our FastAPI context, but handle it
-                print(f"Warning: No event loop running for callback: {stage}")
+                # No running loop - this shouldn't happen in FastAPI but handle gracefully
+                # Try to run synchronously as last resort
+                try:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(coro)
+                    loop.close()
+                except Exception as sync_error:
+                    print(f"❌ Failed to run sync callback for {stage}: {sync_error}")
                 
         except Exception as e:
-            print(f"Error in sync callback wrapper: {e}")
+            print(f"❌ Error in sync callback wrapper for {stage}: {e}")
     
     def get_sync_callback(self):
         """Get a synchronous callback function that wraps the async broadcast_progress."""

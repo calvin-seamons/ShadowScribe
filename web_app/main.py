@@ -46,7 +46,7 @@ session_manager = SessionManager()
 # Initialize ShadowScribe engine
 engine = ShadowScribeEngine(
     knowledge_base_path="../knowledge_base",
-    model="gpt-4o-mini"
+    model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 )
 
 # Set dependencies for API routes

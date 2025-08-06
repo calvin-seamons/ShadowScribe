@@ -21,18 +21,36 @@ export default function ProgressIndicator({ progress }: ProgressIndicatorProps) 
   useEffect(() => {
     if (progress) {
       if (progress.status === 'complete') {
-        setCompletedPasses(prev => new Set([...prev, progress.pass]));
+        setCompletedPasses(prev => {
+          const newCompleted = new Set([...prev, progress.pass]);
+          return newCompleted;
+        });
         setAnimatingPass(progress.pass);
         setTimeout(() => setAnimatingPass(null), 500);
+        
+        // When a pass completes, clear the current pass
+        // The next pass will be set when it starts
+        setCurrentPass(0);
       } else if (progress.status === 'starting') {
         setCurrentPass(progress.pass);
       }
     }
   }, [progress]);
 
+  // Reset state when new query starts (when progress resets to pass 1 starting)
+  useEffect(() => {
+    if (progress?.status === 'starting' && progress.pass === 1) {
+      setCompletedPasses(new Set());
+      setCurrentPass(1);
+      setAnimatingPass(null);
+    }
+  }, [progress]);
+
   const getPassStatus = (passNumber: number) => {
     if (completedPasses.has(passNumber)) return 'complete';
-    if (currentPass === passNumber && progress?.status === 'starting') return 'active';
+    if (currentPass === passNumber) return 'active';
+    // If we haven't started yet but we're processing, show pass 1 as preparing
+    if (currentPass === 0 && passNumber === 1 && !progress) return 'preparing';
     return 'pending';
   };
 
@@ -40,11 +58,6 @@ export default function ProgressIndicator({ progress }: ProgressIndicatorProps) 
     <div className="bg-gray-800 rounded-lg p-4 space-y-3">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-medium text-gray-300">Processing Query</h3>
-        {progress && (
-          <span className="text-xs text-purple-400 animate-pulse">
-            {progress.message}
-          </span>
-        )}
       </div>
 
       <div className="space-y-2">
@@ -64,10 +77,10 @@ export default function ProgressIndicator({ progress }: ProgressIndicatorProps) 
                 {status === 'complete' ? (
                   <CheckCircle
                     className={`w-5 h-5 text-green-500 ${
-                      isAnimating ? 'animate-bounce' : ''
+                      isAnimating ? 'animate-bounce-right' : ''
                     }`}
                   />
-                ) : status === 'active' ? (
+                ) : status === 'active' || status === 'preparing' ? (
                   <Loader className="w-5 h-5 text-purple-500 animate-spin" />
                 ) : (
                   <Circle className="w-5 h-5 text-gray-600" />
@@ -81,7 +94,7 @@ export default function ProgressIndicator({ progress }: ProgressIndicatorProps) 
                     className={`text-sm font-medium transition-colors ${
                       status === 'complete'
                         ? 'text-green-400'
-                        : status === 'active'
+                        : status === 'active' || status === 'preparing'
                         ? 'text-purple-400'
                         : 'text-gray-500'
                     }`}
@@ -93,31 +106,27 @@ export default function ProgressIndicator({ progress }: ProgressIndicatorProps) 
                 <p className="text-xs text-gray-500 mt-0.5">{pass.description}</p>
 
                 {/* Show details for current pass */}
-                {status === 'active' && progress?.details && (
+                {(status === 'active' || status === 'preparing') && (
                   <div className="mt-1 text-xs text-gray-400 animate-fade-in">
-                    {progress.details}
+                    {status === 'preparing' ? 'Preparing...' : progress?.details || progress?.message}
                   </div>
                 )}
 
                 {/* Show metadata for completed passes */}
-                {status === 'complete' &&
-                  progress?.pass === pass.number &&
-                  progress.metadata && (
-                    <div className="mt-1 text-xs text-gray-400">
-                      {pass.number === 1 && progress.metadata.sources && (
-                        <span>Sources: {progress.metadata.sources.join(', ')}</span>
-                      )}
-                      {pass.number === 3 && progress.metadata.content && (
-                        <span>
-                          Retrieved {progress.metadata.content.retrieved_items || 0} items
-                        </span>
-                      )}
-                    </div>
-                  )}
+                {status === 'complete' && (
+                  <div className="mt-1 text-xs text-gray-400">
+                    {pass.number === 1 && (
+                      <span>Sources identified</span>
+                    )}
+                    {pass.number === 3 && (
+                      <span>Content retrieved</span>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Progress Bar for Active Pass */}
-              {status === 'active' && (
+              {(status === 'active' || status === 'preparing') && (
                 <div className="absolute left-0 right-0 bottom-0 h-0.5 bg-gray-700">
                   <div className="h-full bg-purple-500 animate-progress" />
                 </div>
@@ -166,12 +175,31 @@ export default function ProgressIndicator({ progress }: ProgressIndicatorProps) 
           }
         }
 
+        @keyframes bounce-right {
+          0%, 20%, 53%, 80%, 100% {
+            transform: translateX(0);
+          }
+          40%, 43% {
+            transform: translateX(8px);
+          }
+          70% {
+            transform: translateX(4px);
+          }
+          90% {
+            transform: translateX(2px);
+          }
+        }
+
         .animate-progress {
           animation: progress 2s ease-in-out infinite;
         }
 
         .animate-fade-in {
           animation: fade-in 0.3s ease-out;
+        }
+
+        .animate-bounce-right {
+          animation: bounce-right 0.5s ease-in-out;
         }
       `}</style>
     </div>

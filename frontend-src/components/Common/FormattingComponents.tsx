@@ -83,7 +83,10 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
     <div className={clsx('mb-4', className)}>
       {title && (
         <div className="bg-gray-700 px-4 py-2 text-sm font-medium text-purple-300 rounded-t-lg border border-gray-600 border-b-0">
-          {title}
+          <span>{title}</span>
+          {language !== 'text' && (
+            <span className="ml-2 text-xs text-gray-400">({language})</span>
+          )}
         </div>
       )}
       <pre className={clsx(
