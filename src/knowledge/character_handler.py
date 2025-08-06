@@ -132,6 +132,21 @@ class CharacterHandler:
             "personality_traits": ["characteristics.personality_traits"],
             "faith": ["characteristics.faith"],
             
+            # Backstory and family aliases
+            "backstory": ["backstory"],
+            "family_backstory": ["backstory.family_backstory"],
+            "parents": ["backstory.family_backstory.parents"],
+            "family": ["backstory.family_backstory"],
+            "family_history": ["backstory.family_backstory"],
+            "father": ["backstory.family_backstory.parents"],
+            "mother": ["backstory.family_backstory.parents"],
+            "thaldrin": ["backstory.family_backstory.parents"],
+            "brenna": ["backstory.family_backstory.parents"],
+            "organizations": ["organizations"],
+            "allies": ["allies"],
+            "enemies": ["enemies"],
+            "character_background": ["background", "backstory", "characteristics"],
+            
             # Physical characteristics aliases
             "age": ["characteristics.age"],
             "height": ["characteristics.height"],
@@ -250,7 +265,7 @@ class CharacterHandler:
         
         file_data = self.data[filename]
         
-        if fields is None or "all" in fields:
+        if fields is None or "all" in fields or "*" in fields:
             return file_data
         
         # Extract specific fields

@@ -1,5 +1,5 @@
 """
-Simplified LLM Client - Streamlined communication with language models
+Simplified LLM Client - Fixed to handle gpt-4o-mini responses better
 """
 
 from typing import Dict, Any, Optional, Type, TypeVar, Union
@@ -16,6 +16,7 @@ T = TypeVar('T', bound=BaseModel)
 class LLMClient:
     """
     Simplified LLM client with improved structured output handling.
+    FIXED: Better handling of gpt-4o-mini function calling responses.
     """
     
     def __init__(self, model: str = "gpt-4o-mini", api_key: Optional[str] = None):
@@ -57,13 +58,7 @@ class LLMClient:
     ) -> T:
         """
         Generate a structured response using function calling.
-        Primary method for getting structured data from the LLM.
-        
-        Args:
-            prompt: The prompt to send
-            response_model: Pydantic model for response validation
-            max_retries: Number of retries before fallback
-            use_fallback: Whether to use intelligent fallback on failure
+        FIXED: Better parsing and error recovery for gpt-4o-mini.
         """
         function_schema = self._create_function_schema(response_model)
         
@@ -79,17 +74,34 @@ class LLMClient:
             try:
                 start_time = time.time()
                 
-                # Enhance prompt on retries
+                # Enhance prompt on retries with more specific instructions
                 retry_prompt = prompt
                 if attempt > 0 and last_error:
-                    retry_prompt += f"\n\nIMPORTANT: Previous attempt failed with: {last_error}\nPlease ensure all required fields are included."
+                    # More explicit instructions for gpt-4o-mini
+                    if "file_fields" in str(last_error):
+                        retry_prompt += """
+
+CRITICAL: You MUST return a JSON object with EXACTLY these two fields:
+1. "file_fields": A dictionary mapping filenames to lists of field names
+2. "reasoning": A string explaining your choices (at least 10 characters)
+
+Example format:
+{
+  "file_fields": {
+    "character_background.json": ["backstory", "backstory.family_backstory"],
+    "character.json": ["character_base"]
+  },
+  "reasoning": "Selected background file for backstory information"
+}"""
+                    else:
+                        retry_prompt += f"\n\nIMPORTANT: Previous attempt failed with: {last_error}\nPlease ensure all required fields are included."
                 
                 # Make the API call with function calling
                 response = await self.client.chat.completions.create(
                     model=self.model,
                     messages=[{
                         "role": "system",
-                        "content": "You are a D&D assistant that provides accurate, complete JSON responses for game queries."
+                        "content": "You are a D&D assistant that provides accurate, complete JSON responses. Always include all required fields in your response."
                     }, {
                         "role": "user",
                         "content": retry_prompt
@@ -108,7 +120,23 @@ class LLMClient:
                     raise ValueError("No function call in response")
                 
                 tool_call = response.choices[0].message.tool_calls[0]
-                arguments = json.loads(tool_call.function.arguments)
+                arguments_str = tool_call.function.arguments
+                
+                # Log raw arguments for debugging
+                await self._log_debug("LLM_RAW_ARGS", "Raw function arguments", {
+                    "arguments": arguments_str[:500]  # First 500 chars
+                })
+                
+                # Parse JSON with error recovery
+                try:
+                    arguments = json.loads(arguments_str)
+                except json.JSONDecodeError as je:
+                    # Try to fix common JSON issues
+                    fixed_str = self._fix_json_string(arguments_str)
+                    arguments = json.loads(fixed_str)
+                
+                # FIX: Handle common response format issues from gpt-4o-mini
+                arguments = self._normalize_arguments(arguments, response_model)
                 
                 # Validate required fields are present
                 self._validate_arguments(arguments, response_model)
@@ -128,22 +156,20 @@ class LLMClient:
             except (json.JSONDecodeError, ValidationError, ValueError) as e:
                 last_error = str(e)
                 
+                await self._log_debug("LLM_FUNCTION_CALL_RETRY", f"Attempt {attempt + 1} failed", {
+                    "error": str(e),
+                    "error_type": type(e).__name__
+                })
+                
                 if attempt < max_retries - 1:
-                    await self._log_debug("LLM_FUNCTION_CALL_RETRY", f"Retrying due to: {str(e)}", {
-                        "attempt": attempt + 1,
-                        "error": str(e),
-                        "error_type": type(e).__name__
-                    })
                     await asyncio.sleep(0.3 * (attempt + 1))  # Exponential backoff
                 else:
-                    await self._log_debug("LLM_FUNCTION_CALL_FAILED", f"Failed after {max_retries} attempts", {
-                        "error": str(e),
-                        "model": response_model.__name__
+                    await self._log_debug("LLM_FUNCTION_CALL_FAILED", f"All attempts failed", {
+                        "final_error": str(e)
                     })
                     
                     if use_fallback:
-                        # Use intelligent fallback
-                        return self._create_fallback_response(response_model, prompt)
+                        return self._create_enhanced_fallback_response(response_model, prompt)
                     else:
                         raise
             
@@ -154,9 +180,57 @@ class LLMClient:
                 })
                 
                 if use_fallback:
-                    return self._create_fallback_response(response_model, prompt)
+                    return self._create_enhanced_fallback_response(response_model, prompt)
                 else:
                     raise
+    
+    def _normalize_arguments(self, arguments: Dict[str, Any], model: Type[BaseModel]) -> Dict[str, Any]:
+        """
+        Normalize arguments to handle common formatting issues from gpt-4o-mini.
+        """
+        from ..utils.response_models import CharacterTargetResponse
+        
+        # Special handling for CharacterTargetResponse
+        if model == CharacterTargetResponse:
+            # Sometimes the LLM nests the response
+            if "file_fields" not in arguments and len(arguments) == 1:
+                # Check if there's a nested structure
+                first_key = list(arguments.keys())[0]
+                if isinstance(arguments[first_key], dict) and "file_fields" in arguments[first_key]:
+                    arguments = arguments[first_key]
+            
+            # Ensure file_fields exists and is a dict
+            if "file_fields" not in arguments:
+                # Try to find anything that looks like file fields
+                for key, value in arguments.items():
+                    if isinstance(value, dict) and any(".json" in k for k in value.keys()):
+                        arguments["file_fields"] = value
+                        if "reasoning" not in arguments:
+                            arguments["reasoning"] = "Extracted file fields from response"
+                        break
+            
+            # Ensure reasoning exists
+            if "reasoning" not in arguments:
+                arguments["reasoning"] = "Selected files based on query requirements"
+        
+        return arguments
+    
+    def _fix_json_string(self, json_str: str) -> str:
+        """
+        Attempt to fix common JSON formatting issues.
+        """
+        # Remove any markdown code blocks
+        if "```json" in json_str:
+            json_str = json_str.split("```json")[1].split("```")[0]
+        elif "```" in json_str:
+            json_str = json_str.split("```")[1].split("```")[0]
+        
+        # Fix trailing commas
+        import re
+        json_str = re.sub(r',\s*}', '}', json_str)
+        json_str = re.sub(r',\s*]', ']', json_str)
+        
+        return json_str.strip()
     
     def _validate_arguments(self, arguments: Dict[str, Any], model: Type[BaseModel]) -> None:
         """Validate that required fields are present in arguments."""
@@ -182,8 +256,11 @@ class LLMClient:
             }
         }
     
-    def _create_fallback_response(self, model: Type[BaseModel], prompt: str) -> BaseModel:
-        """Create a sensible fallback response when LLM fails."""
+    def _create_enhanced_fallback_response(self, model: Type[BaseModel], prompt: str) -> BaseModel:
+        """
+        Create a sensible fallback response when LLM fails.
+        ENHANCED: Now includes ALL character files for backstory queries.
+        """
         from ..utils.response_models import (
             SourceSelectionResponse, 
             RulebookTargetResponse,
@@ -213,21 +290,52 @@ class LLMClient:
             )
         
         elif model == CharacterTargetResponse:
-            # Smart defaults based on query type
-            fields = {"character.json": ["name", "class", "level", "combat_stats"]}
+            # ENHANCED: Include ALL 7 character files in fallback
+            fields = {
+                "character.json": ["character_base", "combat_stats", "ability_scores"],
+                "spell_list.json": ["character_spells"],
+                "inventory_list.json": ["inventory"],
+                "action_list.json": ["character_actions"],
+                # ADD THE MISSING FILES
+                "feats_and_traits.json": ["features_and_traits"],
+                "character_background.json": ["background", "characteristics", "backstory", "backstory.family_backstory"],
+                "objectives_and_contracts.json": ["objectives_and_contracts"]
+            }
             
-            if any(word in prompt_lower for word in ["spell", "cast", "magic"]):
-                fields["spell_list.json"] = ["character_spells"]
+            # Emphasize specific files based on query keywords
+            if any(word in prompt_lower for word in ["backstory", "background", "family", "parents", "history", "past", "thaldrin", "brenna"]):
+                # Expand background fields for family queries
+                fields["character_background.json"] = [
+                    "background",
+                    "characteristics", 
+                    "backstory",
+                    "backstory.family_backstory",
+                    "backstory.family_backstory.parents",
+                    "organizations",
+                    "allies",
+                    "enemies",
+                    "notes"
+                ]
             
-            if any(word in prompt_lower for word in ["item", "weapon", "armor", "equipment"]):
-                fields["inventory_list.json"] = ["inventory"]
+            if any(word in prompt_lower for word in ["spell", "cast", "magic", "warlock", "paladin"]):
+                fields["spell_list.json"] = ["character_spells", "character_spells.paladin_spells", "character_spells.warlock_spells"]
             
-            if any(word in prompt_lower for word in ["action", "attack", "damage"]):
-                fields["action_list.json"] = ["character_actions"]
+            if any(word in prompt_lower for word in ["item", "weapon", "armor", "equipment", "eldaryth"]):
+                fields["inventory_list.json"] = ["inventory.equipped_items", "inventory.weapons", "inventory.armor"]
+            
+            if any(word in prompt_lower for word in ["action", "attack", "damage", "combat", "smite"]):
+                fields["action_list.json"] = ["character_actions.action_economy", "character_actions.attacks_per_action"]
+            
+            if any(word in prompt_lower for word in ["objective", "contract", "quest", "covenant", "ghul"]):
+                fields["objectives_and_contracts.json"] = [
+                    "objectives_and_contracts.active_contracts",
+                    "objectives_and_contracts.current_objectives",
+                    "objectives_and_contracts.completed_objectives"
+                ]
             
             return CharacterTargetResponse(
                 file_fields=fields,
-                reasoning="Fallback: Selected common fields based on query"
+                reasoning="Fallback: Selected all character files to ensure comprehensive data access"
             )
         
         elif model == RulebookTargetResponse:
@@ -257,6 +365,10 @@ class LLMClient:
             fallback_data[field] = [] if "list" in str(model.model_fields[field].annotation) else ""
         
         return model(**fallback_data)
+    
+    def _create_fallback_response(self, model: Type[BaseModel], prompt: str) -> BaseModel:
+        """Deprecated: Use _create_enhanced_fallback_response instead."""
+        return self._create_enhanced_fallback_response(model, prompt)
     
     async def generate_response(self, prompt: str, **kwargs) -> str:
         """

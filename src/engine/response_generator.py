@@ -1,28 +1,28 @@
 """
-Simplified Response Generator - Cleaner Pass 4 implementation
+Simplified Response Generator - Uses direct JSON parsing for all LLM interactions
 """
 
 from typing import Dict, Any, List, Optional
 import json
-from ..utils.llm_client import LLMClient
+from ..utils.direct_llm_client import DirectLLMClient
 from .content_retriever import RetrievedContent
 
 
 class ResponseGenerator:
     """
-    Simplified response generator that provides clear context to the LLM.
+    Simplified response generator that provides clear context to the LLM using direct JSON parsing.
     """
     
     def __init__(self, model: str = "gpt-4o-mini"):
         """Initialize response generator."""
-        self.llm_client = LLMClient(model=model)
+        self.direct_client = DirectLLMClient(model=model)
         self.debug_callback = None
     
     def set_debug_callback(self, callback):
         """Set debug callback."""
         self.debug_callback = callback
-        if self.llm_client:
-            self.llm_client.set_debug_callback(callback)
+        if self.direct_client:
+            self.direct_client.set_debug_callback(callback)
     
     async def generate_response(self, user_query: str, content: List[RetrievedContent]) -> str:
         """
@@ -35,8 +35,8 @@ class ResponseGenerator:
         # Create a clear, structured prompt
         prompt = self._create_response_prompt(user_query, organized_content)
         
-        # Generate response
-        response = await self.llm_client.generate_response(
+        # Generate response using direct client
+        response = await self.direct_client.generate_natural_response(
             prompt,
             temperature=0.7,  # Slightly higher for more natural responses
             max_tokens=1500

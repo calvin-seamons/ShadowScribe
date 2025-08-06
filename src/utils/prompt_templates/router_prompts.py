@@ -81,8 +81,8 @@ Available character files and their contents:
   - Fields: character_spells.paladin_spells, character_spells.warlock_spells, character_spells.cantrips
 - action_list.json: Combat actions (attacks, spells, Channel Divinity, special abilities)
   - Fields: character_actions.action_economy, character_actions.attacks_per_action
-- character_background.json: Backstory, personality, allies, enemies (includes Battle of Shadow's Edge)
-  - Fields: background, personality, allies, enemies
+- character_background.json: Backstory, personality, allies, enemies, family history (includes Battle of Shadow's Edge, parents Thaldrin and Brenna)
+  - Fields: background, characteristics, backstory, backstory.family_backstory, backstory.family_backstory.parents, organizations, allies, enemies, notes
 - objectives_and_contracts.json: Active contracts, completed objectives, divine covenants (including The Covenant of Eternal Service with Ghul'Vor)
   - Fields: objectives_and_contracts.active_contracts, objectives_and_contracts.current_objectives, objectives_and_contracts.completed_objectives
 
