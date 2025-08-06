@@ -178,12 +178,24 @@ QUERY: {query}
         
         prompt += """=== INSTRUCTIONS ===
 1. Answer the query directly and accurately using the data provided
-2. Include specific numbers, modifiers, and mechanics when relevant
-3. Reference character abilities, items, or spells by name
-4. Be helpful and concise
-5. If data is missing, work with what's available
+2. Format your response using proper Markdown for better readability:
+   - Use headers (##, ###) to organize different sections
+   - Use **bold** for important stats, modifiers, and key terms
+   - Use *italics* for spell names, item names, and abilities
+   - Use tables for comparing stats, spell slots, or item lists
+   - Use bullet points for lists of abilities, actions, or options
+   - Use code blocks (```text) for stat blocks or complex game mechanics
+   - Use line breaks to separate logical sections
+3. Include specific numbers, modifiers, and mechanics when relevant
+4. Reference character abilities, items, or spells by name with proper formatting
+5. When presenting multiple options or comparisons, use tables or organized lists
+6. For combat actions or spell effects, use clear step-by-step formatting
+7. If providing build advice or optimization, organize it with clear headers
+8. Always include a brief summary at the end if the response is long
 
-Character Summary: Duskryn is a Level 13 Hill Dwarf (Warlock 5/Paladin 8) with divine obligations to Ghul'Vor."""
+**Character Context:** Duskryn is a Level 13 Hill Dwarf (Warlock 5/Paladin 8) with divine obligations to Ghul'Vor.
+
+Remember: Your response will be rendered as Markdown, so use formatting to make it clear and visually appealing."""
         
         return prompt
     

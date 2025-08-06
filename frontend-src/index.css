@@ -24,3 +24,77 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-gray-500;
 }
+
+/* Enhanced Markdown Styles */
+.enhanced-markdown {
+  line-height: 1.7;
+  word-wrap: break-word;
+}
+
+/* Table enhancements */
+.enhanced-markdown table {
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+}
+
+.enhanced-markdown table th,
+.enhanced-markdown table td {
+  border: 1px solid rgb(75, 85, 99); /* gray-600 */
+}
+
+/* Code block enhancements */
+.enhanced-markdown pre {
+  font-family: 'SF Mono', Monaco, 'Inconsolata', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.enhanced-markdown code {
+  font-family: 'SF Mono', Monaco, 'Inconsolata', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+/* Blockquote improvements */
+.enhanced-markdown blockquote {
+  position: relative;
+}
+
+.enhanced-markdown blockquote::before {
+  content: '"';
+  font-size: 2rem;
+  color: rgb(168, 85, 247); /* purple-500 */
+  position: absolute;
+  left: -0.5rem;
+  top: -0.5rem;
+}
+
+/* Task list improvements */
+.enhanced-markdown ul.contains-task-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.enhanced-markdown .task-list-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.enhanced-markdown .task-list-item input[type="checkbox"] {
+  margin-right: 0.5rem;
+  margin-top: 0.125rem;
+}
+
+/* Improve spacing for nested lists */
+.enhanced-markdown ul ul,
+.enhanced-markdown ol ol,
+.enhanced-markdown ul ol,
+.enhanced-markdown ol ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Highlight.js theme overrides for better dark mode */
+.hljs {
+  background: rgb(31, 41, 55) !important; /* gray-800 */
+  color: rgb(243, 244, 246) !important; /* gray-100 */
+}
