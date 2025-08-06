@@ -1,21 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { Book, User, ScrollText } from 'lucide-react';
 import { getAvailableSources } from '../../services/api';
+import type { SourceDetails } from '../../types';
 
 const sourceIcons = {
   dnd_rulebook: Book,
   character_data: User,
   session_notes: ScrollText,
-};
+} as const;
+
+interface SourcesData {
+  sources: Record<string, SourceDetails>;
+}
 
 export const SourcesPanel: React.FC = () => {
-  const [sources, setSources] = useState<Record<string, any>>({});
+  const [sources, setSources] = useState<Record<string, SourceDetails>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadSources = async () => {
       try {
-        const data = await getAvailableSources();
+        const data: SourcesData = await getAvailableSources();
         setSources(data.sources);
       } catch (error) {
         console.error('Failed to load sources:', error);

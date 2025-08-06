@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Clock } from 'lucide-react';
 import { getSessionHistory } from '../../services/api';
+import type { HistoryItem } from '../../types';
 
 interface SessionHistoryProps {
   sessionId: string;
 }
 
+interface SessionHistoryData {
+  history: HistoryItem[];
+}
+
 export const SessionHistory: React.FC<SessionHistoryProps> = ({ sessionId }) => {
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,7 +20,7 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({ sessionId }) => 
       if (!sessionId) return;
       
       try {
-        const data = await getSessionHistory(sessionId);
+        const data: SessionHistoryData = await getSessionHistory(sessionId);
         setHistory(data.history);
       } catch (error) {
         console.error('Failed to load history:', error);

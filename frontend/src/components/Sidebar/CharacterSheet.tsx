@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Shield, Heart, Zap } from 'lucide-react';
+import { Shield, Heart } from 'lucide-react';
 import { getCharacterSummary } from '../../services/api';
+import type { Character } from '../../types';
 
 export const CharacterSheet: React.FC = () => {
-  const [character, setCharacter] = useState<any>(null);
+  const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

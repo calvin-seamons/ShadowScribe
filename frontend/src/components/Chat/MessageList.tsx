@@ -2,13 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { User, Bot } from 'lucide-react';
 import clsx from 'clsx';
-
-interface Message {
-  id: string;
-  type: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
+import type { Message } from '../../types';
 
 interface MessageListProps {
   messages: Message[];

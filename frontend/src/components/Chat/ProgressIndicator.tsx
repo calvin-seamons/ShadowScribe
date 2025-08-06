@@ -1,13 +1,10 @@
 import React from 'react';
 import { Loader2, CheckCircle } from 'lucide-react';
 import clsx from 'clsx';
+import type { Progress } from '../../types';
 
 interface ProgressIndicatorProps {
-  progress: {
-    pass: number;
-    status: string;
-    details: string;
-  };
+  progress: Progress;
 }
 
 const passNames = [

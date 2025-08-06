@@ -1,16 +1,11 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-
-interface WebSocketMessage {
-  type: string;
-  sessionId: string;
-  data: any;
-}
+import type { WebSocketMessage } from '../types';
 
 export const useWebSocket = (sessionId: string) => {
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
 
   const connect = useCallback(() => {
     if (!sessionId) return;
@@ -28,7 +23,7 @@ export const useWebSocket = (sessionId: string) => {
         
         // Clear any reconnection timeout
         if (reconnectTimeoutRef.current) {
-          clearTimeout(reconnectTimeoutRef.current);
+          window.clearTimeout(reconnectTimeoutRef.current);
           reconnectTimeoutRef.current = null;
         }
       };
@@ -43,7 +38,7 @@ export const useWebSocket = (sessionId: string) => {
         wsRef.current = null;
         
         // Attempt to reconnect after 3 seconds
-        reconnectTimeoutRef.current = setTimeout(() => {
+        reconnectTimeoutRef.current = window.setTimeout(() => {
           setConnectionStatus('connecting');
           connect();
         }, 3000);
@@ -63,7 +58,7 @@ export const useWebSocket = (sessionId: string) => {
 
     return () => {
       if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
+        window.clearTimeout(reconnectTimeoutRef.current);
       }
       if (wsRef.current) {
         wsRef.current.close();

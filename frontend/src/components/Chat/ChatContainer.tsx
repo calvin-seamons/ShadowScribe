@@ -4,20 +4,12 @@ import { MessageInput } from './MessageInput';
 import { ProgressIndicator } from './ProgressIndicator';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useSessionStore } from '../../stores/sessionStore';
+import type { Message, Progress, WebSocketData } from '../../types';
 
 export const ChatContainer: React.FC = () => {
-  const [messages, setMessages] = useState<Array<{
-    id: string;
-    type: 'user' | 'assistant';
-    content: string;
-    timestamp: Date;
-  }>>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [currentProgress, setCurrentProgress] = useState<{
-    pass: number;
-    status: string;
-    details: string;
-  } | null>(null);
+  const [currentProgress, setCurrentProgress] = useState<Progress | null>(null);
 
   const { sessionId } = useSessionStore();
   const { sendMessage, lastMessage, connectionStatus } = useWebSocket(sessionId);
@@ -26,38 +18,46 @@ export const ChatContainer: React.FC = () => {
   useEffect(() => {
     // Handle incoming WebSocket messages
     if (lastMessage) {
-      const data = JSON.parse(lastMessage);
-      
-      switch (data.type) {
-        case 'acknowledgment':
-          setIsProcessing(true);
-          break;
-          
-        case 'progress':
-          setCurrentProgress(data.data.progress);
-          break;
-          
-        case 'response':
-          setIsProcessing(false);
-          setCurrentProgress(null);
-          setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            type: 'assistant',
-            content: data.data.response,
-            timestamp: new Date()
-          }]);
-          break;
-          
-        case 'error':
-          setIsProcessing(false);
-          setCurrentProgress(null);
-          setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            type: 'assistant',
-            content: `Error: ${data.data.error}`,
-            timestamp: new Date()
-          }]);
-          break;
+      try {
+        const data: WebSocketData = JSON.parse(lastMessage);
+        
+        switch (data.type) {
+          case 'acknowledgment':
+            setIsProcessing(true);
+            break;
+            
+          case 'progress':
+            if (data.data.progress) {
+              setCurrentProgress(data.data.progress);
+            }
+            break;
+            
+          case 'response':
+            setIsProcessing(false);
+            setCurrentProgress(null);
+            if (data.data.response) {
+              setMessages(prev => [...prev, {
+                id: Date.now().toString(),
+                type: 'assistant',
+                content: data.data.response!,
+                timestamp: new Date()
+              }]);
+            }
+            break;
+            
+          case 'error':
+            setIsProcessing(false);
+            setCurrentProgress(null);
+            setMessages(prev => [...prev, {
+              id: Date.now().toString(),
+              type: 'assistant',
+              content: `Error: ${data.data.error || 'Unknown error'}`,
+              timestamp: new Date()
+            }]);
+            break;
+        }
+      } catch (error) {
+        console.error('Failed to parse WebSocket message:', error);
       }
     }
   }, [lastMessage]);
