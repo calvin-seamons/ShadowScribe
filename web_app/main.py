@@ -1,0 +1,109 @@
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+import asyncio
+import json
+from typing import List
+import uuid
+import os
+import sys
+
+# Add src to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from src.engine.shadowscribe_engine import ShadowScribeEngine
+from .websocket_handler import WebSocketManager
+from .api_routes import router as api_router
+from .session_manager import SessionManager
+
+# Initialize FastAPI app
+app = FastAPI(title="ShadowScribe API", version="1.0.0")
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Initialize managers
+websocket_manager = WebSocketManager()
+session_manager = SessionManager()
+
+# Initialize ShadowScribe engine
+engine = ShadowScribeEngine(
+    knowledge_base_path="../knowledge_base",
+    model="gpt-4o-mini"
+)
+
+# Include API routes
+app.include_router(api_router, prefix="/api")
+
+# Serve static files in production
+if os.path.exists("../frontend/build"):
+    app.mount("/", StaticFiles(directory="../frontend/build", html=True), name="static")
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize the application on startup."""
+    print("🌙 ShadowScribe Web Server Starting...")
+    # Set up debug callback for engine
+    engine.set_debug_callback(websocket_manager.broadcast_progress)
+
+@app.websocket("/ws/{session_id}")
+async def websocket_endpoint(websocket: WebSocket, session_id: str):
+    """WebSocket endpoint for real-time chat."""
+    await websocket_manager.connect(websocket, session_id)
+    
+    try:
+        while True:
+            # Receive message from client
+            data = await websocket.receive_json()
+            
+            if data["type"] == "query":
+                # Process the query
+                query = data["data"]["query"]
+                
+                # Send acknowledgment
+                await websocket_manager.send_personal_message({
+                    "type": "acknowledgment",
+                    "sessionId": session_id,
+                    "data": {"status": "processing"}
+                }, websocket)
+                
+                # Process query with engine
+                try:
+                    # Set the active websocket for progress updates
+                    websocket_manager.set_active_session(session_id)
+                    
+                    # Process the query
+                    response = await engine.process_query(query)
+                    
+                    # Send the final response
+                    await websocket_manager.send_personal_message({
+                        "type": "response",
+                        "sessionId": session_id,
+                        "data": {"response": response}
+                    }, websocket)
+                    
+                    # Save to session history
+                    session_manager.add_to_history(session_id, query, response)
+                    
+                except Exception as e:
+                    # Send error message
+                    await websocket_manager.send_personal_message({
+                        "type": "error",
+                        "sessionId": session_id,
+                        "data": {"error": str(e)}
+                    }, websocket)
+                    
+    except WebSocketDisconnect:
+        websocket_manager.disconnect(websocket, session_id)
+
+# Export app and managers for use in other modules
+app.engine = engine
+app.session_manager = session_manager
+app.websocket_manager = websocket_manager
