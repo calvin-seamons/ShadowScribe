@@ -163,6 +163,17 @@ QUERY: {query}
                     prompt += f"Recent Events: {session.get('summary', str(session))}\n"
                 else:
                     prompt += f"Recent Events: {session}\n"
+            
+            # Add party member information if available
+            if "party_members" in content["sessions"]:
+                party_info = content["sessions"]["party_members"]
+                if party_info:
+                    prompt += "\nKnown Party Members:\n"
+                    for member, actions in party_info.items():
+                        prompt += f"  {member}:\n"
+                        for action in actions[:3]:  # Limit to 3 most recent
+                            prompt += f"    - {action}\n"
+            
             prompt += "\n"
         
         prompt += """=== INSTRUCTIONS ===

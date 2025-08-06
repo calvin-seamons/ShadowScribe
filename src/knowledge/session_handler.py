@@ -144,6 +144,46 @@ class SessionHandler:
         
         return npcs_by_session
     
+    def get_party_members_mentioned(self) -> Dict[str, List[str]]:
+        """
+        Extract all party member references from all sessions.
+        
+        Returns:
+            Dictionary mapping party member names to their mentioned actions/context
+        """
+        if not self.is_loaded():
+            return {}
+        
+        party_members = {}
+        known_members = ["Elarion", "Pork", "Albrit", "Willow", "Zivu", "Duskryn", "Alaman"]
+        
+        for date, session in self.sessions.items():
+            # Check character decisions
+            for decision in session.get("character_decisions", []):
+                for member in known_members:
+                    if member.lower() in decision.lower():
+                        if member not in party_members:
+                            party_members[member] = []
+                        party_members[member].append(f"Session {date}: {decision}")
+            
+            # Check spells/abilities used
+            for ability in session.get("spells_abilities_used", []):
+                for member in known_members:
+                    if member.lower() in ability.lower():
+                        if member not in party_members:
+                            party_members[member] = []
+                        party_members[member].append(f"Session {date}: {ability}")
+            
+            # Check fun moments/quotes for character mentions
+            for moment in session.get("fun_moments", []):
+                for member in known_members:
+                    if member.lower() in moment.lower():
+                        if member not in party_members:
+                            party_members[member] = []
+                        party_members[member].append(f"Session {date}: {moment}")
+        
+        return party_members
+
     def get_locations_visited(self) -> Dict[str, List[str]]:
         """Get all locations visited across sessions."""
         locations_by_session = {}

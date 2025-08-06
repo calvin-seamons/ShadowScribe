@@ -210,6 +210,13 @@ class ContentRetriever:
             search_results = self.knowledge_base.search_sessions_by_keywords(keywords)
             content["keyword_matches"] = search_results
             metadata["keywords_used"] = keywords
+            
+            # If keywords suggest party member questions, include party info
+            party_keywords = ["party", "characters", "elarion", "pork", "albrit", "willow", "zivu", "alaman", "who else", "other"]
+            if any(pk in " ".join(keywords).lower() for pk in party_keywords):
+                party_info = self.knowledge_base.get_party_members_info()
+                content["party_members"] = party_info
+                metadata["party_members_included"] = True
         
         result = RetrievedContent(
             source_type=SourceType.SESSION_NOTES,

@@ -54,7 +54,7 @@ class QueryRouter:
         self.hint_patterns = {
             'rules': re.compile(r'\b(rule|spell|action|attack|damage|save|dc|ac|hp|concentration|ritual)\b', re.I),
             'character': re.compile(r'\b(my|i|character|stats|equipment|inventory|eldaryth)\b', re.I),
-            'session': re.compile(r'\b(last session|previous session|story|npc|quest|ghul\'?vor|mirror)\b', re.I),
+            'session': re.compile(r'\b(last session|previous session|story|npc|quest|ghul\'?vor|mirror|party|campaign|elarion|pork|albrit|willow|alaman|zivu|characters from|who else|other party members|party members)\b', re.I),
             'combat': re.compile(r'\b(attack|damage|initiative|combat|fight|smite|hex)\b', re.I),
             'complex': re.compile(r'\b(how can i|what if|combination|together with|and also)\b', re.I)
         }
@@ -133,13 +133,14 @@ Available Sources:
    - Use for: character-specific questions, build optimization, equipment, personal abilities
    
 3. session_notes: Campaign history and narrative
-   - Contains: NPCs (Ghul'Vor, etc.), story events, quest progress, past decisions
-   - Use for: story context, NPC information, campaign-specific events
+   - Contains: NPCs (Ghul'Vor, etc.), story events, quest progress, past decisions, OTHER PARTY MEMBERS (Elarion, Pork, Albrit, Willow, Zivu), character interactions, party dynamics
+   - Use for: story context, NPC information, campaign-specific events, questions about other party members, who's in the party, character relationships
 
 Important considerations:
 - "My" or "I" in the query usually refers to Duskryn's character
 - Combat optimization often needs both rules AND character data
 - Story questions need session notes even if they mention character actions
+- Questions about "party", "characters from campaign", "who else", "other party members" need session_notes
 - Spell questions may need rules (general) AND character data (specific spells known)
 - Always include all sources that could contribute to a complete answer
 
@@ -282,10 +283,16 @@ Session notes contain:
 - Player decisions and consequences
 - Location descriptions
 - Quest updates
+- PARTY MEMBER INFORMATION: Elarion, Pork, Albrit, Willow, Zivu and their actions/abilities/interactions
+
+Common party member targeting:
+- For questions about "party", "characters", "who else": target "latest" session + keywords ["party", "Elarion", "Pork", "Albrit", "Willow", "Zivu"]
+- For questions about specific characters: include their names in keywords
+- For story/campaign questions: target recent sessions + relevant story keywords
 
 Specify:
 1. Session dates (or "latest" for most recent)
-2. Keywords to search for (NPC names, locations, events)
+2. Keywords to search for (NPC names, locations, events, party member names)
 
 Be {'specific' if confidence > 0.7 else 'broad'} in your targeting."""
         

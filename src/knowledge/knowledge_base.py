@@ -106,6 +106,10 @@ class KnowledgeBase:
         """Search session notes by keywords."""
         return self.sessions.search_by_keywords(keywords)
     
+    def get_party_members_info(self) -> Dict[str, List[str]]:
+        """Get information about all party members mentioned in sessions."""
+        return self.sessions.get_party_members_mentioned()
+    
     def get_session_summaries(self) -> List[Dict[str, Any]]:
         """Get brief summaries of all sessions."""
         return self.sessions.get_session_summaries()
