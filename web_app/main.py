@@ -63,8 +63,8 @@ if os.path.exists("../frontend/build"):
 async def startup_event():
     """Initialize the application on startup."""
     print("🌙 ShadowScribe Web Server Starting...")
-    # Set up debug callback for engine
-    engine.set_debug_callback(websocket_manager.broadcast_progress)
+    # Set up debug callback for engine - use sync wrapper for non-async LLM calls
+    engine.set_debug_callback(websocket_manager.get_sync_callback())
 
 @app.websocket("/ws/{session_id}")
 async def websocket_endpoint(websocket: WebSocket, session_id: str):
@@ -92,9 +92,8 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                     # Set the active websocket for progress updates
                     websocket_manager.set_active_session(session_id)
                     
-                    # Process the query - run in executor since it's not async
-                    loop = asyncio.get_event_loop()
-                    response = await loop.run_in_executor(None, engine.process_query, query)
+                    # Process the query - it's already async, so call directly
+                    response = await engine.process_query(query)
                     
                     # Send the final response
                     await websocket_manager.send_personal_message({

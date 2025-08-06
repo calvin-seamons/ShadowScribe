@@ -1,6 +1,25 @@
 from typing import Dict, List
 from fastapi import WebSocket
 import json
+import asyncio
+from enum import Enum
+
+
+def make_json_serializable(obj):
+    """Convert objects to JSON-serializable format."""
+    if isinstance(obj, Enum):
+        return obj.value
+    elif isinstance(obj, dict):
+        return {k: make_json_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [make_json_serializable(item) for item in obj]
+    elif hasattr(obj, '__dict__'):
+        # Convert dataclass or object to dict, then recurse
+        return make_json_serializable(obj.__dict__)
+    else:
+        # For basic types (str, int, float, bool, None), return as-is
+        return obj
+import asyncio
 
 
 class WebSocketManager:
@@ -10,6 +29,27 @@ class WebSocketManager:
         # Store active connections by session ID
         self.active_connections: Dict[str, WebSocket] = {}
         self.active_session_id: str = None
+        
+    def _sync_callback_wrapper(self, stage: str, message: str, data: dict = None):
+        """
+        Synchronous wrapper for the async broadcast_progress method.
+        This allows the callback to be used in synchronous contexts.
+        """
+        try:
+            # Get the current event loop
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # If we're in an async context, schedule the coroutine
+                asyncio.create_task(self.broadcast_progress(stage, message, data))
+            else:
+                # If we're not in an async context, run the coroutine
+                loop.run_until_complete(self.broadcast_progress(stage, message, data))
+        except Exception as e:
+            print(f"Error in sync callback wrapper: {e}")
+    
+    def get_sync_callback(self):
+        """Get a synchronous callback function that wraps the async broadcast_progress."""
+        return self._sync_callback_wrapper
     
     async def connect(self, websocket: WebSocket, session_id: str):
         """Accept a new WebSocket connection."""
@@ -29,12 +69,15 @@ class WebSocketManager:
     
     async def send_personal_message(self, message: dict, websocket: WebSocket):
         """Send a message to a specific WebSocket connection."""
-        await websocket.send_json(message)
+        serializable_message = make_json_serializable(message)
+        await websocket.send_json(serializable_message)
     
     async def broadcast_to_session(self, session_id: str, message: dict):
         """Send a message to a specific session."""
         if session_id in self.active_connections:
-            await self.active_connections[session_id].send_json(message)
+            # Make the message JSON-serializable before sending
+            serializable_message = make_json_serializable(message)
+            await self.active_connections[session_id].send_json(serializable_message)
     
     async def broadcast_progress(self, stage: str, message: str, data: dict = None):
         """

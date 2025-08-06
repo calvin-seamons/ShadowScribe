@@ -2,9 +2,10 @@
 Main ShadowScribe Engine - Orchestrates the multi-pass query routing system.
 """
 
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Callable
 import asyncio
 import traceback
+import inspect
 from ..knowledge.knowledge_base import KnowledgeBase
 from .query_router import QueryRouter
 from .content_retriever import ContentRetriever
@@ -35,6 +36,19 @@ class ShadowScribeEngine:
         self.query_router.set_debug_callback(callback)
         self.response_generator.set_debug_callback(callback)
     
+    async def _call_debug_callback(self, stage: str, message: str, data: dict = None):
+        """Helper method to call debug callback, handling both sync and async callbacks."""
+        if not self.debug_callback:
+            return
+            
+        try:
+            if inspect.iscoroutinefunction(self.debug_callback):
+                await self.debug_callback(stage, message, data)
+            else:
+                self.debug_callback(stage, message, data)
+        except Exception as e:
+            print(f"Error in debug callback: {e}")
+    
     async def process_query(self, user_query: str) -> str:
         """
         Process a user query through the complete 4-pass system.
@@ -47,78 +61,69 @@ class ShadowScribeEngine:
         """
         try:
             # Pass 1: Source Selection
-            if self.debug_callback:
-                self.debug_callback("PASS_1_START", "Starting source selection", {"query": user_query})
+            await self._call_debug_callback("PASS_1_START", "Starting source selection", {"query": user_query})
             
             sources = await self.query_router.select_sources(user_query)
             
-            if self.debug_callback:
-                self.debug_callback("PASS_1_COMPLETE", "Source selection completed", {
-                    "selected_sources": sources.sources_needed if hasattr(sources, 'sources_needed') else str(sources),
-                    "reasoning": sources.reasoning if hasattr(sources, 'reasoning') else "No reasoning available"
-                })
+            await self._call_debug_callback("PASS_1_COMPLETE", "Source selection completed", {
+                "selected_sources": sources.sources_needed if hasattr(sources, 'sources_needed') else str(sources),
+                "reasoning": sources.reasoning if hasattr(sources, 'reasoning') else "No reasoning available"
+            })
             
             # Pass 2: Content Targeting
-            if self.debug_callback:
-                self.debug_callback("PASS_2_START", "Starting content targeting", {"sources": str(sources)})
+            await self._call_debug_callback("PASS_2_START", "Starting content targeting", {"sources": str(sources)})
                 
             targets = await self.query_router.target_content(user_query, sources)
             
-            if self.debug_callback:
-                self.debug_callback("PASS_2_COMPLETE", "Content targeting completed", {
-                    "targets": str(targets)
-                })
+            await self._call_debug_callback("PASS_2_COMPLETE", "Content targeting completed", {
+                "targets": str(targets)
+            })
             
             # Pass 3: Content Retrieval
-            if self.debug_callback:
-                self.debug_callback("PASS_3_START", "Starting content retrieval", {"targets": str(targets)})
+            await self._call_debug_callback("PASS_3_START", "Starting content retrieval", {"targets": str(targets)})
                 
             content = await self.content_retriever.fetch_content(targets)
             
-            if self.debug_callback:
-                content_summary = {}
-                if isinstance(content, list):
-                    content_summary["retrieved_items"] = len(content)
-                    content_summary["source_types"] = [item.source_type.value if hasattr(item, 'source_type') else str(type(item)) for item in content]
-                else:
-                    # Fallback for dictionary-style content
-                    for key, value in content.items():
-                        if isinstance(value, str):
-                            content_summary[key] = f"{len(value)} characters" if value else "empty"
-                        else:
-                            content_summary[key] = f"{type(value).__name__} object"
-                
-                self.debug_callback("PASS_3_COMPLETE", "Content retrieval completed", {
-                    "content_summary": content_summary
-                })
+            content_summary = {}
+            if isinstance(content, list):
+                content_summary["retrieved_items"] = len(content)
+                content_summary["source_types"] = [item.source_type.value if hasattr(item, 'source_type') else str(type(item)) for item in content]
+            else:
+                # Fallback for dictionary-style content
+                for key, value in content.items():
+                    if isinstance(value, str):
+                        content_summary[key] = f"{len(value)} characters" if value else "empty"
+                    else:
+                        content_summary[key] = f"{type(value).__name__} object"
+            
+            await self._call_debug_callback("PASS_3_COMPLETE", "Content retrieval completed", {
+                "content_summary": content_summary
+            })
             
             # Pass 4: Response Generation
-            if self.debug_callback:
-                # Fix: Handle list of RetrievedContent objects
-                content_types = [item.source_type.value for item in content] if isinstance(content, list) else []
-                self.debug_callback("PASS_4_START", "Starting response generation", {
-                    "content_available": content_types
-                })
+            # Fix: Handle list of RetrievedContent objects
+            content_types = [item.source_type.value for item in content] if isinstance(content, list) else []
+            await self._call_debug_callback("PASS_4_START", "Starting response generation", {
+                "content_available": content_types
+            })
                 
             response = await self.response_generator.generate_response(
                 user_query, content
             )
             
-            if self.debug_callback:
-                self.debug_callback("PASS_4_COMPLETE", "Response generation completed", {
-                    "response_length": len(response),
-                    "response_preview": response[:200] + "..." if len(response) > 200 else response
-                })
+            await self._call_debug_callback("PASS_4_COMPLETE", "Response generation completed", {
+                "response_length": len(response),
+                "response_preview": response[:200] + "..." if len(response) > 200 else response
+            })
             
             return response
             
         except Exception as e:
-            if self.debug_callback:
-                self.debug_callback("ERROR", f"Error in query processing: {str(e)}", {
-                    "error_type": type(e).__name__,
-                    "error_message": str(e),
-                    "traceback": traceback.format_exc()
-                })
+            await self._call_debug_callback("ERROR", f"Error in query processing: {str(e)}", {
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "traceback": traceback.format_exc()
+            })
             return f"Error processing query: {str(e)}"
     
     def get_available_sources(self) -> Dict[str, Any]:

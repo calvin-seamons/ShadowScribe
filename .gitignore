@@ -218,3 +218,4 @@ chunks_output.json
 shadowscribe_debug.txt
 **/node_modules/**
 **/package-lock.json
+web_app/sessions/*
