@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
 import { ProgressIndicator } from './ProgressIndicator';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useSessionStore } from '../../stores/sessionStore';
-import type { Message, Progress, WebSocketData } from '../../types';
+import type { Message, Progress, WebSocketData } from '../../types/index';
 
 export const ChatContainer: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);

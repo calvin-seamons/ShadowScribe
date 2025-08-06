@@ -13,9 +13,9 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from src.engine.shadowscribe_engine import ShadowScribeEngine
-from .websocket_handler import WebSocketManager
-from .api_routes import router as api_router
-from .session_manager import SessionManager
+from websocket_handler import WebSocketManager
+from api_routes import router as api_router
+from session_manager import SessionManager
 
 # Initialize FastAPI app
 app = FastAPI(title="ShadowScribe API", version="1.0.0")
@@ -38,6 +38,10 @@ engine = ShadowScribeEngine(
     knowledge_base_path="../knowledge_base",
     model="gpt-4o-mini"
 )
+
+# Set dependencies for API routes
+from api_routes import set_dependencies
+set_dependencies(engine, session_manager)
 
 # Include API routes
 app.include_router(api_router, prefix="/api")

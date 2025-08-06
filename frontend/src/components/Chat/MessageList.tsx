@@ -1,8 +1,7 @@
-import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { User, Bot } from 'lucide-react';
 import clsx from 'clsx';
-import type { Message } from '../../types';
+import type { Message } from '../../types/index';
 
 interface MessageListProps {
   messages: Message[];

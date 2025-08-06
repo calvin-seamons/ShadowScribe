@@ -1,4 +1,3 @@
-import React from 'react';
 import { Moon, Settings } from 'lucide-react';
 
 export const Header: React.FC = () => {

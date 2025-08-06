@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Clock } from 'lucide-react';
 import { getSessionHistory } from '../../services/api';
-import type { HistoryItem } from '../../types';
+import type { HistoryItem } from '../../types/index';
 
 interface SessionHistoryProps {
   sessionId: string;

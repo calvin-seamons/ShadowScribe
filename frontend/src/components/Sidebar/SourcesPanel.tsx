@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Book, User, ScrollText } from 'lucide-react';
 import { getAvailableSources } from '../../services/api';
-import type { SourceDetails } from '../../types';
+import type { SourceDetails } from '../../types/index';
 
 const sourceIcons = {
   dnd_rulebook: Book,

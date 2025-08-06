@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Shield, Heart } from 'lucide-react';
 import { getCharacterSummary } from '../../services/api';
-import type { Character } from '../../types';
+import type { Character } from '../../types/index';
 
 export const CharacterSheet: React.FC = () => {
   const [character, setCharacter] = useState<Character | null>(null);
@@ -72,7 +72,7 @@ export const CharacterSheet: React.FC = () => {
             {Object.entries(character.key_stats).map(([stat, value]) => (
               <div key={stat} className="text-center">
                 <div className="text-gray-400 uppercase">{stat.slice(0, 3)}</div>
-                <div className="text-white font-medium">{value}</div>
+                <div className="text-white font-medium">{String(value)}</div>
               </div>
             ))}
           </div>

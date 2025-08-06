@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import type { WebSocketMessage } from '../types';
+import type { WebSocketMessage } from '../types/index';
 
 export const useWebSocket = (sessionId: string) => {
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');

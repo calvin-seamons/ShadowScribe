@@ -1,7 +1,6 @@
-import React from 'react';
 import { Loader2, CheckCircle } from 'lucide-react';
 import clsx from 'clsx';
-import type { Progress } from '../../types';
+import type { Progress } from '../../types/index';
 
 interface ProgressIndicatorProps {
   progress: Progress;
