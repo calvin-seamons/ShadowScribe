@@ -24,12 +24,23 @@ class Config:
         # Set defaults
         self._set_defaults()
         
-        # Load from file if exists
-        if os.path.exists(config_file):
-            self.config.read(config_file)
-            print(f"✅ Loaded configuration from {config_file}")
-        else:
-            print(f"⚠️  Configuration file {config_file} not found, using defaults")
+        # Try to find config file in multiple locations
+        config_paths = [
+            config_file,  # Current directory
+            os.path.join('..', config_file),  # Parent directory (for web_app)
+            os.path.join(os.path.dirname(__file__), '..', '..', config_file),  # Root from src
+        ]
+        
+        config_found = False
+        for config_path in config_paths:
+            if os.path.exists(config_path):
+                self.config.read(config_path)
+                print(f"✅ Loaded configuration from {config_path}")
+                config_found = True
+                break
+        
+        if not config_found:
+            print(f"⚠️  Configuration file {config_file} not found in any expected location, using defaults")
     
     def _set_defaults(self):
         """Set default configuration values with cross-platform paths"""

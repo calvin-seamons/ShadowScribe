@@ -19,6 +19,6 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src"],
+  "include": ["frontend-src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

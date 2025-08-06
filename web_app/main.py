@@ -8,6 +8,10 @@ from typing import List
 import uuid
 import os
 import sys
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -21,9 +25,14 @@ from session_manager import SessionManager
 app = FastAPI(title="ShadowScribe API", version="1.0.0")
 
 # Configure CORS
+frontend_port = os.getenv("FRONTEND_PORT", "3000")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_origins=[
+        f"http://localhost:{frontend_port}",  # Frontend dev server
+        "http://localhost:3000",  # Default React port
+        "http://localhost:3001",  # Alternate port
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -112,3 +121,29 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
 app.engine = engine
 app.session_manager = session_manager
 app.websocket_manager = websocket_manager
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    # Get configuration from environment variables
+    host = os.getenv("BACKEND_HOST", "localhost")
+    port = int(os.getenv("BACKEND_PORT", "8000"))
+    
+    print(f"🚀 Starting ShadowScribe backend on {host}:{port}")
+    print(f"📁 Knowledge base path: {engine.knowledge_base.base_path}")
+    
+    # Check if OpenAI API key is loaded
+    from src.config.settings import Config
+    config = Config()
+    if config.openai_api_key:
+        print("✅ OpenAI API key loaded from environment")
+    else:
+        print("⚠️  No OpenAI API key found in .env file")
+    
+    uvicorn.run(
+        "main:app", 
+        host=host, 
+        port=port, 
+        reload=True,
+        log_level="info"
+    )

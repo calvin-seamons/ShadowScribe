@@ -216,5 +216,5 @@ chroma.sqlite3
 chunks_output.json
 *.log
 shadowscribe_debug.txt
-frontend/node_modules/*
-frontend/package-lock.json
+**/node_modules/**
+**/package-lock.json
