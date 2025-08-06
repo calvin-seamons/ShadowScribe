@@ -4,7 +4,9 @@ from models import (
     SourcesResponse, 
     ValidationResponse, 
     CharacterSummary,
-    SessionHistoryResponse
+    SessionHistoryResponse,
+    ModelUpdateRequest,
+    ModelResponse
 )
 
 router = APIRouter()
@@ -111,5 +113,40 @@ async def get_session_history(session_id: str, session_manager=Depends(get_sessi
             session_id=session_id,
             history=history
         )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/models", response_model=ModelResponse)
+async def get_models(engine=Depends(get_engine)):
+    """Get current model and available models."""
+    try:
+        return ModelResponse(
+            current_model=engine.get_current_model(),
+            available_models=engine.get_available_models(),
+            status="success"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/models", response_model=ModelResponse)
+async def update_model(request: ModelUpdateRequest, engine=Depends(get_engine)):
+    """Update the OpenAI model used by the engine."""
+    try:
+        available_models = engine.get_available_models()
+        if request.model not in available_models:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid model '{request.model}'. Available models: {available_models}"
+            )
+        
+        engine.update_model(request.model)
+        
+        return ModelResponse(
+            current_model=engine.get_current_model(),
+            available_models=available_models,
+            status="success"
+        )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

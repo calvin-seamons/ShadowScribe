@@ -24,6 +24,13 @@ class ResponseGenerator:
         if self.direct_client:
             self.direct_client.set_debug_callback(callback)
     
+    def update_model(self, model: str):
+        """Update the OpenAI model used by the direct client."""
+        old_callback = self.direct_client.debug_callback if hasattr(self.direct_client, 'debug_callback') else None
+        self.direct_client = DirectLLMClient(model=model)
+        if old_callback:
+            self.direct_client.set_debug_callback(old_callback)
+    
     async def generate_response(self, user_query: str, content: List[RetrievedContent]) -> str:
         """
         Generate response with retrieved content.

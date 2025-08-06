@@ -4,6 +4,7 @@ import { ChatContainer } from './components/Chat/ChatContainer';
 import { CharacterSheet } from './components/Sidebar/CharacterSheet';
 import { SourcesPanel } from './components/Sidebar/SourcesPanel';
 import { SessionHistory } from './components/Sidebar/SessionHistory';
+import { ModelSelector } from './components/Sidebar/ModelSelector';
 import { useSessionStore } from './stores/sessionStore';
 import { validateSystem } from './services/api';
 
@@ -58,6 +59,7 @@ function App() {
       <div className="flex h-full">
         {/* Sidebar */}
         <div className="w-80 bg-gray-800 border-r border-gray-700 flex flex-col">
+          <ModelSelector />
           <CharacterSheet />
           <SourcesPanel />
           <SessionHistory sessionId={sessionId} />

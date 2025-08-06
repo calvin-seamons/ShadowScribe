@@ -46,6 +46,13 @@ class QueryRouter:
         """Set debug callback for the direct client."""
         self.direct_client.set_debug_callback(callback)
     
+    def update_model(self, model: str):
+        """Update the OpenAI model used by the direct client."""
+        old_callback = self.direct_client.debug_callback if hasattr(self.direct_client, 'debug_callback') else None
+        self.direct_client = DirectLLMClient(model=model)
+        if old_callback:
+            self.direct_client.set_debug_callback(old_callback)
+    
     async def _call_debug_callback(self, event_type: str, message: str, data: Dict[str, Any] = None):
         """Call debug callback if available."""
         if hasattr(self.direct_client, '_call_debug_callback'):

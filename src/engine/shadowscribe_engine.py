@@ -24,6 +24,7 @@ class ShadowScribeEngine:
     
     def __init__(self, knowledge_base_path: str = "./knowledge_base", model: str = "gpt-4o-mini"):
         """Initialize the ShadowScribe engine with all components."""
+        self.current_model = model
         self.knowledge_base = KnowledgeBase(knowledge_base_path)
         self.query_router = QueryRouter(model=model)
         self.content_retriever = ContentRetriever(self.knowledge_base)
@@ -167,3 +168,25 @@ class ShadowScribeEngine:
     async def validate_query(self, user_query: str) -> bool:
         """Validate if a query can be processed by the system."""
         return len(user_query.strip()) > 0
+    
+    def update_model(self, model: str):
+        """Update the OpenAI model used by all components."""
+        self.current_model = model
+        self.query_router.update_model(model)
+        self.response_generator.update_model(model)
+    
+    def get_current_model(self) -> str:
+        """Get the currently configured OpenAI model."""
+        return self.current_model
+    
+    @staticmethod
+    def get_available_models() -> List[str]:
+        """Get list of available OpenAI models."""
+        return [
+            "gpt-4.1",
+            "gpt-4.1-mini",
+            "gpt-4.1-nano",
+            "gpt-4o",
+            "gpt-4o-mini",
+            "o4-mini"
+        ]

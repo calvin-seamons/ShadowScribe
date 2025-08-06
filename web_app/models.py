@@ -44,3 +44,15 @@ class WebSocketMessage(BaseModel):
     type: str  # 'query', 'progress', 'response', 'error'
     sessionId: str
     data: Dict[str, Any]
+
+
+class ModelUpdateRequest(BaseModel):
+    """Request model for updating the OpenAI model."""
+    model: str
+
+
+class ModelResponse(BaseModel):
+    """Response model for model information."""
+    current_model: str
+    available_models: List[str]
+    status: str

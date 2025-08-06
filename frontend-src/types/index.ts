@@ -49,3 +49,9 @@ export interface WebSocketData {
     progress?: Progress;
   };
 }
+
+export interface ModelInfo {
+  current_model: string;
+  available_models: string[];
+  status: string;
+}
