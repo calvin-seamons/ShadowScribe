@@ -1,8 +1,9 @@
 """
 Main ShadowScribe Engine - Orchestrates the multi-pass query routing system.
+IMPROVED VERSION with better async handling and progress updates
 """
 
-from typing import Dict, Any, List, Callable
+from typing import Dict, Any, List, Callable, Optional
 import asyncio
 import traceback
 import inspect
@@ -21,7 +22,7 @@ class ShadowScribeEngine:
     4. Response Generation
     """
     
-    def __init__(self, knowledge_base_path: str = "./knowledge_base", model: str = "gpt-4.1-nano"):
+    def __init__(self, knowledge_base_path: str = "./knowledge_base", model: str = "gpt-4o-mini"):
         """Initialize the ShadowScribe engine with all components."""
         self.knowledge_base = KnowledgeBase(knowledge_base_path)
         self.query_router = QueryRouter(model=model)
@@ -45,7 +46,12 @@ class ShadowScribeEngine:
             if inspect.iscoroutinefunction(self.debug_callback):
                 await self.debug_callback(stage, message, data)
             else:
-                self.debug_callback(stage, message, data)
+                # For sync callbacks, create a task to run it without blocking
+                loop = asyncio.get_event_loop()
+                # Use run_in_executor to avoid blocking the event loop
+                await loop.run_in_executor(None, self.debug_callback, stage, message, data)
+                # Small delay to ensure message is sent
+                await asyncio.sleep(0.01)
         except Exception as e:
             print(f"Error in debug callback: {e}")
     
@@ -63,31 +69,54 @@ class ShadowScribeEngine:
             # Pass 1: Source Selection
             await self._call_debug_callback("PASS_1_START", "Starting source selection", {"query": user_query})
             
-            sources = await self.query_router.select_sources(user_query)
+            # Create task for source selection
+            sources_task = asyncio.create_task(self.query_router.select_sources(user_query))
+            sources = await sources_task
             
             await self._call_debug_callback("PASS_1_COMPLETE", "Source selection completed", {
-                "selected_sources": sources.sources_needed if hasattr(sources, 'sources_needed') else str(sources),
+                "selected_sources": [s.value for s in sources.sources_needed] if hasattr(sources, 'sources_needed') else str(sources),
                 "reasoning": sources.reasoning if hasattr(sources, 'reasoning') else "No reasoning available"
             })
             
             # Pass 2: Content Targeting
-            await self._call_debug_callback("PASS_2_START", "Starting content targeting", {"sources": str(sources)})
+            await self._call_debug_callback("PASS_2_START", "Starting content targeting", {
+                "sources": [s.value for s in sources.sources_needed] if hasattr(sources, 'sources_needed') else str(sources)
+            })
                 
-            targets = await self.query_router.target_content(user_query, sources)
+            targets_task = asyncio.create_task(self.query_router.target_content(user_query, sources))
+            targets = await targets_task
+            
+            # Format targets for debug output
+            targets_info = []
+            for target in targets:
+                targets_info.append({
+                    "source": target.source_type.value,
+                    "targets": list(target.specific_targets.keys()) if isinstance(target.specific_targets, dict) else str(target.specific_targets)
+                })
             
             await self._call_debug_callback("PASS_2_COMPLETE", "Content targeting completed", {
-                "targets": str(targets)
+                "targets": targets_info
             })
             
             # Pass 3: Content Retrieval
-            await self._call_debug_callback("PASS_3_START", "Starting content retrieval", {"targets": str(targets)})
+            await self._call_debug_callback("PASS_3_START", "Starting content retrieval", {
+                "num_targets": len(targets)
+            })
                 
-            content = await self.content_retriever.fetch_content(targets)
+            content_task = asyncio.create_task(self.content_retriever.fetch_content(targets))
+            content = await content_task
             
             content_summary = {}
             if isinstance(content, list):
                 content_summary["retrieved_items"] = len(content)
                 content_summary["source_types"] = [item.source_type.value if hasattr(item, 'source_type') else str(type(item)) for item in content]
+                
+                # Add more detailed summary
+                for item in content:
+                    if hasattr(item, 'source_type') and hasattr(item, 'content'):
+                        source_name = item.source_type.value
+                        if isinstance(item.content, dict):
+                            content_summary[f"{source_name}_files"] = list(item.content.keys())
             else:
                 # Fallback for dictionary-style content
                 for key, value in content.items():
@@ -101,15 +130,16 @@ class ShadowScribeEngine:
             })
             
             # Pass 4: Response Generation
-            # Fix: Handle list of RetrievedContent objects
             content_types = [item.source_type.value for item in content] if isinstance(content, list) else []
             await self._call_debug_callback("PASS_4_START", "Starting response generation", {
-                "content_available": content_types
+                "content_available": content_types,
+                "content_count": len(content) if isinstance(content, list) else 0
             })
                 
-            response = await self.response_generator.generate_response(
+            response_task = asyncio.create_task(self.response_generator.generate_response(
                 user_query, content
-            )
+            ))
+            response = await response_task
             
             await self._call_debug_callback("PASS_4_COMPLETE", "Response generation completed", {
                 "response_length": len(response),
@@ -119,12 +149,16 @@ class ShadowScribeEngine:
             return response
             
         except Exception as e:
-            await self._call_debug_callback("ERROR", f"Error in query processing: {str(e)}", {
+            error_details = {
                 "error_type": type(e).__name__,
                 "error_message": str(e),
                 "traceback": traceback.format_exc()
-            })
-            return f"Error processing query: {str(e)}"
+            }
+            
+            await self._call_debug_callback("ERROR", f"Error in query processing: {str(e)}", error_details)
+            
+            # Return a user-friendly error message
+            return f"I encountered an error while processing your query. Please try rephrasing your question or try again later."
     
     def get_available_sources(self) -> Dict[str, Any]:
         """Get information about available knowledge sources."""
@@ -132,5 +166,4 @@ class ShadowScribeEngine:
     
     async def validate_query(self, user_query: str) -> bool:
         """Validate if a query can be processed by the system."""
-        # TODO: Implement query validation logic
         return len(user_query.strip()) > 0

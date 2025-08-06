@@ -9,6 +9,7 @@ import uuid
 import os
 import sys
 from dotenv import load_dotenv
+import time
 
 # Load environment variables from .env file
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
@@ -63,8 +64,16 @@ if os.path.exists("../frontend/build"):
 async def startup_event():
     """Initialize the application on startup."""
     print("🌙 ShadowScribe Web Server Starting...")
-    # Set up debug callback for engine - use sync wrapper for non-async LLM calls
+    # Set up debug callback for engine
     engine.set_debug_callback(websocket_manager.get_sync_callback())
+    print("✅ Debug callback configured")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Clean up resources on shutdown."""
+    print("🌙 ShadowScribe Web Server Shutting Down...")
+    await websocket_manager.shutdown()
+    print("✅ WebSocket manager shut down")
 
 @app.websocket("/ws/{session_id}")
 async def websocket_endpoint(websocket: WebSocket, session_id: str):
@@ -80,41 +89,84 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                 # Process the query
                 query = data["data"]["query"]
                 
-                # Send acknowledgment
+                # Send immediate acknowledgment
                 await websocket_manager.send_personal_message({
                     "type": "acknowledgment",
                     "sessionId": session_id,
-                    "data": {"status": "processing"}
+                    "data": {
+                        "status": "processing",
+                        "timestamp": time.time()
+                    }
                 }, websocket)
                 
-                # Process query with engine
+                # Set the active websocket for progress updates
+                websocket_manager.set_active_session(session_id)
+                
+                # Process query with engine in a separate task to avoid blocking
                 try:
-                    # Set the active websocket for progress updates
-                    websocket_manager.set_active_session(session_id)
+                    # Create a task for processing the query
+                    process_task = asyncio.create_task(engine.process_query(query))
                     
-                    # Process the query - it's already async, so call directly
-                    response = await engine.process_query(query)
+                    # Wait for the result
+                    response = await process_task
                     
                     # Send the final response
                     await websocket_manager.send_personal_message({
                         "type": "response",
                         "sessionId": session_id,
-                        "data": {"response": response}
+                        "data": {
+                            "response": response,
+                            "timestamp": time.time()
+                        }
                     }, websocket)
                     
-                    # Save to session history
-                    session_manager.add_to_history(session_id, query, response)
+                    # Save to session history (non-blocking)
+                    asyncio.create_task(
+                        asyncio.to_thread(
+                            session_manager.add_to_history, 
+                            session_id, 
+                            query, 
+                            response
+                        )
+                    )
                     
                 except Exception as e:
                     # Send error message
+                    error_msg = str(e)
+                    print(f"Error processing query: {error_msg}")
+                    
                     await websocket_manager.send_personal_message({
                         "type": "error",
                         "sessionId": session_id,
-                        "data": {"error": str(e)}
+                        "data": {
+                            "error": error_msg,
+                            "timestamp": time.time()
+                        }
                     }, websocket)
+                    
+            elif data["type"] == "ping":
+                # Handle ping/pong for connection keepalive
+                await websocket_manager.send_personal_message({
+                    "type": "pong",
+                    "sessionId": session_id,
+                    "data": {"timestamp": time.time()}
+                }, websocket)
                     
     except WebSocketDisconnect:
         websocket_manager.disconnect(websocket, session_id)
+    except Exception as e:
+        print(f"WebSocket error for session {session_id}: {e}")
+        websocket_manager.disconnect(websocket, session_id)
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    return {
+        "status": "healthy",
+        "timestamp": time.time(),
+        "active_sessions": len(websocket_manager.active_connections)
+    }
 
 # Export app and managers for use in other modules
 app.engine = engine

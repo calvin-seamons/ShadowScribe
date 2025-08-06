@@ -1,13 +1,12 @@
 """
-Query Router - Handles Pass 1 (Source Selection) and Pass 2 (Content Targeting).
+Balanced Query Router - Uses function calling with keyword hints for optimization
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Set
 from dataclasses import dataclass
 from enum import Enum
-import json
+import re
 
-from ..utils.prompt_templates.router_prompts import RouterPrompts
 from ..utils.llm_client import LLMClient
 from ..utils.response_models import (
     SourceSelectionResponse, 
@@ -30,6 +29,7 @@ class SourceSelection:
     """Result of Pass 1 - which sources are needed."""
     sources_needed: List[SourceType]
     reasoning: str
+    confidence: float  # 0.0 to 1.0
 
 
 @dataclass
@@ -42,222 +42,335 @@ class ContentTarget:
 
 class QueryRouter:
     """
-    Handles the first two passes of the query routing system:
-    - Pass 1: Determine which knowledge sources are needed
-    - Pass 2: Target specific content within those sources
+    Balanced router that uses function calling as primary method,
+    with keyword hints for optimization and better prompting.
     """
     
-    def __init__(self, model: str = "gpt-4.1-nano"):
-        """Initialize the query router with LLM client and prompt templates."""
+    def __init__(self, model: str = "gpt-4o-mini"):
+        """Initialize the query router."""
         self.llm_client = LLMClient(model=model)
-        self.router_prompts = RouterPrompts()
+        
+        # Keyword patterns used as HINTS, not decisions
+        self.hint_patterns = {
+            'rules': re.compile(r'\b(rule|spell|action|attack|damage|save|dc|ac|hp|concentration|ritual)\b', re.I),
+            'character': re.compile(r'\b(my|i|character|stats|equipment|inventory|eldaryth)\b', re.I),
+            'session': re.compile(r'\b(last session|previous session|story|npc|quest|ghul\'?vor|mirror)\b', re.I),
+            'combat': re.compile(r'\b(attack|damage|initiative|combat|fight|smite|hex)\b', re.I),
+            'complex': re.compile(r'\b(how can i|what if|combination|together with|and also)\b', re.I)
+        }
     
     def set_debug_callback(self, callback):
-        """Set a callback function for debug logging."""
+        """Set debug callback."""
         self.llm_client.set_debug_callback(callback)
     
     async def select_sources(self, user_query: str) -> SourceSelection:
         """
-        Pass 1: Analyze query and determine which knowledge sources are needed.
-        
-        Args:
-            user_query: The user's question or request
-            
-        Returns:
-            SourceSelection indicating which sources to use
+        Pass 1: Use function calling to determine sources.
+        Keywords provide hints to improve prompting, not replace LLM judgment.
         """
-        prompt = self.router_prompts.get_source_selection_prompt(user_query)
+        # Get keyword hints (but don't rely on them exclusively)
+        keyword_hints = self._get_keyword_hints(user_query)
+        
+        # Always use function calling for accurate source selection
+        prompt = self._create_enhanced_source_prompt(user_query, keyword_hints)
         
         try:
-            # Use structured response with function calling for better reliability
-            validated_response = await self.llm_client.generate_structured_response(
-                prompt, SourceSelectionResponse, use_function_calling=True
+            response = await self.llm_client.generate_structured_response(
+                prompt, 
+                SourceSelectionResponse,
+                max_retries=2  # Reasonable retries
             )
             
-            # Convert enum values back to our internal SourceType enum
-            sources = [SourceType(source.value) for source in validated_response.sources_needed]
+            sources = [SourceType(s.value) for s in response.sources_needed]
+            
+            # Calculate confidence based on alignment with hints
+            confidence = self._calculate_confidence(sources, keyword_hints)
             
             return SourceSelection(
-                sources_needed=sources, 
-                reasoning=validated_response.reasoning
+                sources_needed=sources,
+                reasoning=response.reasoning,
+                confidence=confidence
             )
             
         except Exception as e:
-            # Fallback: assume all sources needed if routing fails
-            return SourceSelection(
-                sources_needed=[SourceType.DND_RULEBOOK, SourceType.CHARACTER_DATA],
-                reasoning=f"Error in source selection, using fallback: {str(e)}"
-            )
+            # Fallback uses keyword hints + safe defaults
+            return self._create_fallback_selection(user_query, keyword_hints, str(e))
+    
+    def _get_keyword_hints(self, query: str) -> Set[str]:
+        """Get keyword hints without making decisions."""
+        hints = set()
+        
+        for hint_type, pattern in self.hint_patterns.items():
+            if pattern.search(query):
+                hints.add(hint_type)
+        
+        # Complex queries likely need multiple sources
+        if self.hint_patterns['complex'].search(query) or len(query) > 100:
+            hints.add('complex')
+        
+        return hints
+    
+    def _create_enhanced_source_prompt(self, query: str, hints: Set[str]) -> str:
+        """Create an enhanced prompt with keyword hints to guide the LLM."""
+        
+        # Add hints to help the LLM
+        hint_text = ""
+        if hints:
+            hint_text = f"\nQuery characteristics detected: {', '.join(hints)}"
+            if 'complex' in hints:
+                hint_text += "\nThis appears to be a complex query that may need multiple sources."
+        
+        return f"""Analyze this D&D query to determine which knowledge sources are needed.
+
+User Query: "{query}"{hint_text}
+
+Available Sources:
+1. dnd_rulebook: Complete D&D 5e rules, spells, mechanics, conditions, combat rules
+   - Use for: game mechanics, spell descriptions, rule clarifications, general D&D knowledge
+   
+2. character_data: Duskryn Nightwarden (Level 13 Hill Dwarf Paladin 8/Warlock 5)
+   - Files: stats, inventory (including Eldaryth), spells, actions, feats, background, objectives
+   - Use for: character-specific questions, build optimization, equipment, personal abilities
+   
+3. session_notes: Campaign history and narrative
+   - Contains: NPCs (Ghul'Vor, etc.), story events, quest progress, past decisions
+   - Use for: story context, NPC information, campaign-specific events
+
+Important considerations:
+- "My" or "I" in the query usually refers to Duskryn's character
+- Combat optimization often needs both rules AND character data
+- Story questions need session notes even if they mention character actions
+- Spell questions may need rules (general) AND character data (specific spells known)
+- Always include all sources that could contribute to a complete answer
+
+Return a JSON response with sources_needed and detailed reasoning."""
     
     async def target_content(self, user_query: str, sources: SourceSelection) -> List[ContentTarget]:
         """
-        Pass 2: For each selected source, determine specific content to retrieve.
-        
-        Args:
-            user_query: The user's question or request
-            sources: Result from Pass 1 indicating which sources to target
-            
-        Returns:
-            List of ContentTarget objects specifying what to retrieve
+        Pass 2: Use function calling for precise targeting.
+        High confidence = more focused, low confidence = broader retrieval.
         """
         targets = []
         
         for source_type in sources.sources_needed:
             try:
                 if source_type == SourceType.DND_RULEBOOK:
-                    target = await self._target_rulebook_content(user_query)
+                    target = await self._target_rulebook_content(user_query, sources.confidence)
                 elif source_type == SourceType.CHARACTER_DATA:
-                    target = await self._target_character_content(user_query)
+                    target = await self._target_character_content(user_query, sources.confidence)
                 elif source_type == SourceType.SESSION_NOTES:
-                    target = await self._target_session_content(user_query)
+                    target = await self._target_session_content(user_query, sources.confidence)
                 else:
                     continue
                     
                 targets.append(target)
                 
             except Exception as e:
-                # Continue with other sources if one fails
-                print(f"Warning: Failed to target content for {source_type}: {str(e)}")
-                continue
+                # Create broad fallback target
+                targets.append(self._create_broad_target(source_type, user_query))
         
         return targets
     
-    async def _target_rulebook_content(self, user_query: str) -> ContentTarget:
-        """Target specific sections within the D&D rulebook."""
-        prompt = self.router_prompts.get_rulebook_targeting_prompt(user_query)
+    async def _target_rulebook_content(self, query: str, confidence: float) -> ContentTarget:
+        """Target rulebook with function calling."""
+        prompt = f"""Target specific D&D 5e rulebook sections for this query.
+
+Query: "{query}"
+
+The rulebook has 2,098 sections covering:
+- Combat mechanics (actions, attacks, damage, conditions)
+- Spellcasting (spell descriptions, components, concentration)
+- Character creation and advancement
+- Equipment and magic items
+- Monsters and NPCs
+
+Based on the query, identify:
+1. Specific section IDs if you know them
+2. Keywords to search for (spell names, rule terms, mechanics)
+
+Be {'precise' if confidence > 0.7 else 'comprehensive'} in your targeting.
+
+Return section_ids (if known) and keywords for searching."""
         
-        try:
-            # Use structured response with function calling for better reliability
-            validated_response = await self.llm_client.generate_structured_response(
-                prompt, RulebookTargetResponse, use_function_calling=True
-            )
-            
-            return ContentTarget(
-                source_type=SourceType.DND_RULEBOOK,
-                specific_targets={
-                    "section_ids": validated_response.section_ids,
-                    "keywords": validated_response.keywords
-                },
-                reasoning=validated_response.reasoning
-            )
-            
-        except Exception as e:
-            # Fallback: search by keywords extracted from query
-            keywords = self._extract_keywords_from_query(user_query)
-            return ContentTarget(
-                source_type=SourceType.DND_RULEBOOK,
-                specific_targets={"keywords": keywords},
-                reasoning=f"Fallback keyword search due to validation error: {str(e)}"
-            )
+        response = await self.llm_client.generate_structured_response(
+            prompt, RulebookTargetResponse, max_retries=1
+        )
+        
+        return ContentTarget(
+            source_type=SourceType.DND_RULEBOOK,
+            specific_targets={
+                "section_ids": response.section_ids,
+                "keywords": response.keywords
+            },
+            reasoning=response.reasoning
+        )
     
-    async def _target_character_content(self, user_query: str) -> ContentTarget:
-        """Target specific data within character files."""
-        prompt = self.router_prompts.get_character_targeting_prompt(user_query)
+    async def _target_character_content(self, query: str, confidence: float) -> ContentTarget:
+        """Target character data with function calling."""
+        # Build comprehensive prompt with ALL available files
+        prompt = f"""Target specific character data files for Duskryn Nightwarden.
+
+Query: "{query}"
+
+Available character files and their contents:
+1. character.json - Core stats
+   - character_base (name, race, classes, level)
+   - ability_scores (STR, DEX, CON, INT, WIS, CHA)
+   - combat_stats (AC, HP, initiative, speed, proficiency)
+   - proficiencies (saves, skills, tools, languages)
+
+2. inventory_list.json - All equipment
+   - inventory.equipped_items (currently worn/wielded)
+   - inventory.weapons (including Eldaryth of Regret)
+   - inventory.armor (plate mail, etc.)
+   - inventory.consumables (potions, scrolls)
+   - inventory.other_items (general equipment)
+
+3. spell_list.json - All known spells
+   - character_spells.paladin_spells (by level)
+   - character_spells.warlock_spells (by level)
+   - character_spells.cantrips
+   - character_spells.spell_slots
+
+4. action_list.json - Combat actions
+   - character_actions.action_economy (what can be done when)
+   - character_actions.attacks_per_action
+   - character_actions.special_abilities (Divine Smite, Hex, etc.)
+
+5. feats_and_traits.json - Abilities
+   - features_and_traits.class_features (Paladin/Warlock abilities)
+   - features_and_traits.species_traits (Hill Dwarf traits)
+   - features_and_traits.feats (Lucky, Fey Touched)
+
+6. character_background.json - Roleplay info
+   - background (history, story)
+   - personality (traits, ideals, bonds, flaws)
+   - allies (friendly NPCs)
+   - enemies (hostile NPCs)
+
+7. objectives_and_contracts.json - Quests
+   - objectives_and_contracts.active_contracts
+   - objectives_and_contracts.current_objectives
+   - objectives_and_contracts.completed_objectives
+   - objectives_and_contracts.divine_covenants (Ghul'Vor pact)
+
+Select the files and specific fields needed. Use dot notation for nested fields.
+Be {'selective' if confidence > 0.7 else 'inclusive'} - when in doubt, include more data.
+
+Return file_fields as a dict mapping filenames to field lists."""
         
-        try:
-            # Use structured response with function calling for better reliability
-            validated_response = await self.llm_client.generate_structured_response(
-                prompt, CharacterTargetResponse, use_function_calling=True
-            )
-            
-            return ContentTarget(
-                source_type=SourceType.CHARACTER_DATA,
-                specific_targets=validated_response.file_fields,
-                reasoning=validated_response.reasoning
-            )
-            
-        except Exception as e:
-            # Improved fallback: include inventory and other relevant files based on query
-            fallback_targets = self._get_smart_fallback_targets(user_query)
-            return ContentTarget(
-                source_type=SourceType.CHARACTER_DATA,
-                specific_targets=fallback_targets,
-                reasoning=f"Fallback character data due to validation error: {str(e)}"
-            )
+        response = await self.llm_client.generate_structured_response(
+            prompt, CharacterTargetResponse, max_retries=2
+        )
+        
+        return ContentTarget(
+            source_type=SourceType.CHARACTER_DATA,
+            specific_targets={"file_fields": response.file_fields},
+            reasoning=response.reasoning
+        )
     
-    async def _target_session_content(self, user_query: str) -> ContentTarget:
-        """Target specific session notes."""
-        prompt = self.router_prompts.get_session_targeting_prompt(user_query)
+    async def _target_session_content(self, query: str, confidence: float) -> ContentTarget:
+        """Target session notes with function calling."""
+        prompt = f"""Target specific session notes for this query.
+
+Query: "{query}"
+
+Session notes contain:
+- Campaign events and story progression
+- NPC interactions (Ghul'Vor, Aldric, etc.)
+- Combat encounters and outcomes
+- Player decisions and consequences
+- Location descriptions
+- Quest updates
+
+Specify:
+1. Session dates (or "latest" for most recent)
+2. Keywords to search for (NPC names, locations, events)
+
+Be {'specific' if confidence > 0.7 else 'broad'} in your targeting."""
         
-        try:
-            # Use structured response with function calling for better reliability
-            validated_response = await self.llm_client.generate_structured_response(
-                prompt, SessionTargetResponse, use_function_calling=True
-            )
-            
-            return ContentTarget(
-                source_type=SourceType.SESSION_NOTES,
-                specific_targets={
-                    "session_dates": validated_response.session_dates,
-                    "keywords": validated_response.keywords
-                },
-                reasoning=validated_response.reasoning
-            )
-            
-        except Exception as e:
-            # Fallback: get most recent session
-            return ContentTarget(
-                source_type=SourceType.SESSION_NOTES,
-                specific_targets={"session_dates": ["latest"]},
-                reasoning=f"Fallback to latest session due to validation error: {str(e)}"
-            )
+        response = await self.llm_client.generate_structured_response(
+            prompt, SessionTargetResponse, max_retries=1
+        )
+        
+        return ContentTarget(
+            source_type=SourceType.SESSION_NOTES,
+            specific_targets={
+                "session_dates": response.session_dates,
+                "keywords": response.keywords
+            },
+            reasoning=response.reasoning
+        )
     
-    def _get_smart_fallback_targets(self, user_query: str) -> Dict[str, List[str]]:
-        """Generate smart fallback targets based on query content."""
-        query_lower = user_query.lower()
-        targets = {
-            "character.json": ["name", "class", "level", "ability_scores", "combat_stats"]
-        }
+    def _calculate_confidence(self, sources: List[SourceType], hints: Set[str]) -> float:
+        """Calculate confidence based on hint alignment."""
+        if not hints:
+            return 0.5  # Neutral confidence
         
-        # Inventory/equipment related queries
-        if any(word in query_lower for word in ["weapon", "inventory", "equipment", "armor", "item", "gear", "eldaryth"]):
-            targets["inventory_list.json"] = ["all"]
+        expected_sources = set()
+        if 'rules' in hints:
+            expected_sources.add(SourceType.DND_RULEBOOK)
+        if 'character' in hints:
+            expected_sources.add(SourceType.CHARACTER_DATA)
+        if 'session' in hints:
+            expected_sources.add(SourceType.SESSION_NOTES)
         
-        # Spell related queries
-        if any(word in query_lower for word in ["spell", "cantrip", "magic", "cast", "slot"]):
-            targets["spell_list.json"] = ["all"]
+        if not expected_sources:
+            return 0.5
         
-        # Combat/action related queries
-        if any(word in query_lower for word in ["attack", "action", "combat", "damage", "smite", "hex"]):
-            targets["action_list.json"] = ["all"]
-            if "inventory_list.json" not in targets:  # Include weapons for combat
-                targets["inventory_list.json"] = ["inventory.equipped_items.weapons"]
+        actual_sources = set(sources)
+        overlap = len(expected_sources & actual_sources)
+        total = len(expected_sources | actual_sources)
         
-        # Character abilities/traits
-        if any(word in query_lower for word in ["feat", "trait", "ability", "feature", "class", "paladin", "warlock"]):
-            targets["feats_and_traits.json"] = ["all"]
-        
-        # Background/roleplay queries
-        if any(word in query_lower for word in ["background", "story", "personality", "history", "ally", "enemy"]):
-            targets["character_background.json"] = ["all"]
-        
-        # Objectives/contracts/quest related queries
-        if any(word in query_lower for word in ["objective", "contract", "quest", "goal", "mission", "covenant", "ghul'vor", "patron", "obligation"]):
-            targets["objectives_and_contracts.json"] = ["all"]
-        
-        # Default fallback - if nothing specific matched, include inventory anyway
-        if len(targets) == 1:  # Only has basic character.json
-            targets["inventory_list.json"] = ["all"]
-            targets["spell_list.json"] = ["all"]
-        
-        return targets
+        return overlap / total if total > 0 else 0.5
     
-    def _extract_keywords_from_query(self, query: str) -> List[str]:
-        """Extract potential D&D keywords from the query."""
-        # Simple keyword extraction - can be enhanced later
-        dnd_keywords = [
-            "spell", "cantrip", "attack", "damage", "ac", "armor class",
-            "hit points", "hp", "saving throw", "ability check", "proficiency",
-            "advantage", "disadvantage", "action", "bonus action", "reaction",
-            "movement", "speed", "range", "duration", "concentration",
-            "paladin", "warlock", "counterspell", "smite", "hex", "eldritch blast"
-        ]
+    def _create_fallback_selection(self, query: str, hints: Set[str], error: str) -> SourceSelection:
+        """Create intelligent fallback when function calling fails."""
+        sources = []
         
-        query_lower = query.lower()
-        found_keywords = [kw for kw in dnd_keywords if kw in query_lower]
+        # Use hints as guidance, but be inclusive
+        if 'rules' in hints or 'complex' in hints:
+            sources.append(SourceType.DND_RULEBOOK)
         
-        # Also extract words that might be spell or ability names
-        words = query.split()
-        potential_names = [word for word in words if len(word) > 3 and word.isalpha()]
+        if 'character' in hints or 'combat' in hints or not hints:
+            # Default to including character data
+            sources.append(SourceType.CHARACTER_DATA)
         
-        return found_keywords + potential_names[:5]  # Limit to avoid too many keywords
+        if 'session' in hints:
+            sources.append(SourceType.SESSION_NOTES)
+        
+        # Ensure we have at least one source
+        if not sources:
+            sources = [SourceType.CHARACTER_DATA]
+        
+        return SourceSelection(
+            sources_needed=sources,
+            reasoning=f"Fallback selection based on query analysis. Error: {error}",
+            confidence=0.3  # Low confidence for fallback
+        )
+    
+    def _create_broad_target(self, source_type: SourceType, query: str) -> ContentTarget:
+        """Create broad target when specific targeting fails."""
+        if source_type == SourceType.CHARACTER_DATA:
+            # Get most commonly needed files
+            targets = {
+                "file_fields": {
+                    "character.json": ["character_base", "combat_stats", "ability_scores"],
+                    "inventory_list.json": ["inventory"],
+                    "spell_list.json": ["character_spells"],
+                    "action_list.json": ["character_actions"]
+                }
+            }
+        elif source_type == SourceType.DND_RULEBOOK:
+            # Extract any potential keywords
+            words = query.split()
+            keywords = [w.lower() for w in words if len(w) > 3][:10]
+            targets = {"keywords": keywords, "section_ids": []}
+        else:  # SESSION_NOTES
+            targets = {"session_dates": ["latest"], "keywords": []}
+        
+        return ContentTarget(
+            source_type=source_type,
+            specific_targets=targets,
+            reasoning="Broad targeting fallback"
+        )

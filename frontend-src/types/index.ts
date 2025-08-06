@@ -30,9 +30,12 @@ export interface Message {
 
 export interface Progress {
   pass: number;
-  status: string;
-  details: string;
-  metadata?: Record<string, any>;
+  status: 'starting' | 'complete' | 'unknown';
+  stage?: string;
+  message: string;
+  details?: string;
+  metadata?: any;
+  timestamp?: number;
 }
 
 export interface WebSocketData {
