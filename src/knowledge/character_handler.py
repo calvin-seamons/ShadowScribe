@@ -32,6 +32,126 @@ class CharacterHandler:
             "objectives_and_contracts.json": "objectives_and_contracts.json"
         }
         
+        # Field alias mapping - maps common field requests to actual field paths
+        self.field_aliases = {
+            # Character basic info aliases
+            "level": ["character_base.total_level", "total_level"],
+            "lvl": ["character_base.total_level", "total_level"],
+            "character_level": ["character_base.total_level", "total_level"],
+            "name": ["character_base.name"],
+            "character_name": ["character_base.name"],
+            "class": ["character_base.class"],
+            "character_class": ["character_base.class"],
+            "race": ["character_base.race"],
+            "subrace": ["character_base.subrace"],
+            "alignment": ["character_base.alignment", "characteristics.alignment"],
+            "experience": ["character_base.experience_points"],
+            "exp": ["character_base.experience_points"],
+            "xp": ["character_base.experience_points"],
+            "background": ["character_base.background"],
+            "lifestyle": ["character_base.lifestyle"],
+            
+            # Multi-class specific aliases
+            "warlock_level": ["character_base.warlock_level"],
+            "paladin_level": ["character_base.paladin_level"],
+            "hit_dice": ["character_base.hit_dice"],
+            
+            # Ability scores aliases
+            "str": ["ability_scores.strength"],
+            "dex": ["ability_scores.dexterity"],
+            "con": ["ability_scores.constitution"],
+            "int": ["ability_scores.intelligence"],
+            "wis": ["ability_scores.wisdom"],
+            "cha": ["ability_scores.charisma"],
+            "strength": ["ability_scores.strength"],
+            "dexterity": ["ability_scores.dexterity"],
+            "constitution": ["ability_scores.constitution"],
+            "intelligence": ["ability_scores.intelligence"],
+            "wisdom": ["ability_scores.wisdom"],
+            "charisma": ["ability_scores.charisma"],
+            
+            # Combat stats aliases
+            "hp": ["combat_stats.current_hp", "combat_stats.max_hp"],
+            "health": ["combat_stats.current_hp", "combat_stats.max_hp"],
+            "hit_points": ["combat_stats.current_hp", "combat_stats.max_hp"],
+            "max_hp": ["combat_stats.max_hp"],
+            "current_hp": ["combat_stats.current_hp"],
+            "ac": ["combat_stats.armor_class"],
+            "armor_class": ["combat_stats.armor_class"],
+            "speed": ["combat_stats.speed"],
+            "initiative": ["combat_stats.initiative_bonus"],
+            "temp_hp": ["combat_stats.temp_hp"],
+            "temporary_hp": ["combat_stats.temp_hp"],
+            "inspiration": ["combat_stats.inspiration"],
+            
+            # Spell-related aliases
+            "spells": ["spellcasting"],
+            "character_spells": ["spellcasting"],
+            "spell_list": ["spellcasting"],
+            "magic": ["spellcasting"],
+            "spellcasting": ["spellcasting"],
+            "cantrips": ["spellcasting.paladin.spells.cantrips", "spellcasting.warlock.spells.cantrips"],
+            "paladin_spells": ["spellcasting.paladin"],
+            "warlock_spells": ["spellcasting.warlock"],
+            
+            # Equipment aliases
+            "equipment": ["inventory"],
+            "gear": ["inventory"],
+            "items": ["inventory"],
+            "inventory": ["inventory"],
+            "weapons": ["inventory.equipped_items.weapons"],
+            "armor": ["inventory.equipped_items.armor"],
+            "equipped": ["inventory.equipped_items"],
+            "equipped_items": ["inventory.equipped_items"],
+            "weight": ["inventory.total_weight"],
+            "total_weight": ["inventory.total_weight"],
+            
+            # Actions and combat aliases
+            "actions": ["character_actions"],
+            "combat_actions": ["character_actions"],
+            "attacks": ["character_actions.action_economy.actions"],
+            "attack": ["character_actions.action_economy.actions"],
+            "attacks_per_action": ["character_actions.attacks_per_action"],
+            "action_economy": ["character_actions.action_economy"],
+            
+            # Features and traits aliases
+            "features": ["features_and_traits"],
+            "traits": ["features_and_traits"],
+            "abilities": ["features_and_traits"],
+            "class_features": ["features_and_traits.class_features"],
+            "racial_traits": ["features_and_traits.racial_traits"],
+            "feats": ["features_and_traits.feats"],
+            "paladin_features": ["features_and_traits.class_features.paladin"],
+            "warlock_features": ["features_and_traits.class_features.warlock"],
+            
+            # Background and personality aliases
+            "personality": ["characteristics"],
+            "ideals": ["characteristics.ideals"],
+            "bonds": ["characteristics.bonds"],
+            "flaws": ["characteristics.flaws"],
+            "personality_traits": ["characteristics.personality_traits"],
+            "faith": ["characteristics.faith"],
+            
+            # Physical characteristics aliases
+            "age": ["characteristics.age"],
+            "height": ["characteristics.height"],
+            "size": ["characteristics.size"],
+            "eyes": ["characteristics.eyes"],
+            "hair": ["characteristics.hair"],
+            "skin": ["characteristics.skin"],
+            "gender": ["characteristics.gender"],
+            
+            # Objectives and contracts aliases
+            "objectives": ["objectives_and_contracts"],
+            "contracts": ["objectives_and_contracts"],
+            "quests": ["objectives_and_contracts"],
+            "active_objectives": ["objectives_and_contracts.active_contracts", "objectives_and_contracts.current_objectives"],
+            "completed_objectives": ["objectives_and_contracts.completed_objectives"],
+            "covenant": ["objectives_and_contracts.completed_objectives"],
+            "active_contracts": ["objectives_and_contracts.active_contracts"],
+            "current_objectives": ["objectives_and_contracts.current_objectives"],
+        }
+        
         self.data: Dict[str, Any] = {}
         self._loaded = False
     
@@ -68,6 +188,52 @@ class CharacterHandler:
         character_data = self.data.get("character.json", {})
         return character_data.get("character_base", {}).get("name", "Unknown Character")
     
+    def _find_field_in_nested_dict(self, data: Dict[str, Any], field_name: str, current_path: str = "") -> List[tuple]:
+        """
+        Recursively search for a field name in nested dictionaries.
+        
+        Args:
+            data: Dictionary to search in
+            field_name: Name of the field to find
+            current_path: Current path in the nested structure
+            
+        Returns:
+            List of tuples containing (full_path, value) for each match
+        """
+        matches = []
+        
+        if not isinstance(data, dict):
+            return matches
+            
+        for key, value in data.items():
+            current_key_path = f"{current_path}.{key}" if current_path else key
+            
+            # Check if this key matches what we're looking for
+            if key.lower() == field_name.lower():
+                matches.append((current_key_path, value))
+            
+            # Recursively search in nested dictionaries
+            if isinstance(value, dict):
+                nested_matches = self._find_field_in_nested_dict(value, field_name, current_key_path)
+                matches.extend(nested_matches)
+        
+        return matches
+
+    def _resolve_field_alias(self, field_name: str) -> List[str]:
+        """
+        Resolve field aliases to actual field paths.
+        
+        Args:
+            field_name: The field name to resolve
+            
+        Returns:
+            List of potential field paths to try
+        """
+        field_lower = field_name.lower()
+        if field_lower in self.field_aliases:
+            return self.field_aliases[field_lower]
+        return [field_name]  # Return original if no alias found
+
     def get_file_data(self, filename: str, fields: List[str] = None) -> Dict[str, Any]:
         """
         Get data from a specific character file.
@@ -93,7 +259,7 @@ class CharacterHandler:
             if field in file_data:
                 # Direct field access
                 result[field] = file_data[field]
-            else:
+            elif '.' in field:
                 # Try nested field access (e.g., "character_base.name" or "objectives_and_contracts.active_contracts")
                 current = file_data
                 field_parts = field.split('.')
@@ -120,6 +286,59 @@ class CharacterHandler:
                             available_keys = list(file_data.keys())
                             print(f"Debug: Field '{field}' not found in {filename}. Available root keys: {available_keys}")
                     continue
+            else:
+                # Search for the field at any level in the nested structure
+                matches = self._find_field_in_nested_dict(file_data, field)
+                
+                if matches:
+                    # If we found multiple matches, include all of them
+                    if len(matches) == 1:
+                        # Single match - use the field name as key for backwards compatibility
+                        result[field] = matches[0][1]
+                        print(f"Debug: Found '{field}' at path '{matches[0][0]}' in {filename}")
+                    else:
+                        # Multiple matches - include all with their paths
+                        for path, value in matches:
+                            result[path] = value
+                        print(f"Debug: Found multiple matches for '{field}' in {filename}: {[path for path, _ in matches]}")
+                else:
+                    # Field not found anywhere - try alias fallback
+                    potential_paths = self._resolve_field_alias(field)
+                    alias_found = False
+                    
+                    for alias_path in potential_paths:
+                        if alias_path != field:  # Don't retry the same field name
+                            if '.' in alias_path:
+                                # Try nested field access for alias
+                                current = file_data
+                                field_parts = alias_path.split('.')
+                                try:
+                                    for part in field_parts:
+                                        current = current[part]
+                                    result[field] = current  # Use original field name as key
+                                    print(f"Debug: Found '{field}' via alias '{alias_path}' in {filename}")
+                                    alias_found = True
+                                    break
+                                except (KeyError, TypeError):
+                                    continue
+                            else:
+                                # Try direct access for alias
+                                if alias_path in file_data:
+                                    result[field] = file_data[alias_path]
+                                    print(f"Debug: Found '{field}' via alias '{alias_path}' in {filename}")
+                                    alias_found = True
+                                    break
+                    
+                    if not alias_found:
+                        # Still not found anywhere - provide helpful debug info
+                        if isinstance(file_data, dict):
+                            available_keys = list(file_data.keys())
+                            potential_aliases = self._resolve_field_alias(field)
+                            if len(potential_aliases) > 1:
+                                print(f"Debug: Field '{field}' not found anywhere in {filename}. Tried aliases: {potential_aliases}. Available root keys: {available_keys}")
+                            else:
+                                print(f"Debug: Field '{field}' not found anywhere in {filename}. Available root keys: {available_keys}")
+                        continue
         
         return result
     
