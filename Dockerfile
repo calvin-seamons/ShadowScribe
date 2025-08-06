@@ -3,8 +3,8 @@ FROM python:3.11-slim as backend
 WORKDIR /app
 
 # Install dependencies
-COPY requirements-web.txt .
-RUN pip install --no-cache-dir -r requirements-web.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code
 COPY src ./src

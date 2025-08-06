@@ -11,7 +11,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
-    "install:backend": "pip install -r requirements-web.txt"
+    "install:backend": "pip install -r requirements.txt"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.17",

@@ -6,7 +6,7 @@
 
 1. **Install Backend Dependencies**
    ```bash
-   pip install -r requirements-web.txt
+   pip install -r requirements.txt
    ```
 
 2. **Start Backend Server**

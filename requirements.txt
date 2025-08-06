@@ -1,5 +1,5 @@
 # D&D RAG Chunker Requirements
-# Core dependencies for LangChain-based RAG system
+# Core dependencies for LangChain-based RAG system and web application
 
 # LangChain and related packages
 langchain>=0.2.0
@@ -31,4 +31,10 @@ tqdm>=4.64.0
 
 # File handling and utilities
 pathlib
-python-dotenv
+
+# Web application dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+websockets>=11.0
+python-multipart>=0.0.6
+redis>=4.5.0
