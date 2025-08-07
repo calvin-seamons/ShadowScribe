@@ -188,31 +188,45 @@ class WebSocketManager:
         if not self.active_session_id or self.active_session_id not in self.active_connections:
             return
         
-        # Map stage to pass number and determine if it's a start or complete
+        # Map stage to pass number and determine if it's a start, complete, or error
         pass_info = {
             "PASS_1_START": (1, "starting", "Analyzing your question..."),
             "PASS_1_COMPLETE": (1, "complete", "Identified relevant sources"),
+            "PASS_1_ERROR": (1, "error", "Source selection failed"),
+            "PASS_1_SUCCESS": (1, "complete", "Identified relevant sources"),
             "PASS_2_START": (2, "starting", "Targeting specific content..."),
             "PASS_2_COMPLETE": (2, "complete", "Content targets identified"),
+            "PASS_2_ERROR": (2, "error", "Content targeting failed"),
             "PASS_3_START": (3, "starting", "Retrieving information..."),
             "PASS_3_COMPLETE": (3, "complete", "Information retrieved"),
+            "PASS_3_ERROR": (3, "error", "Content retrieval failed"),
             "PASS_4_START": (4, "starting", "Generating response..."),
             "PASS_4_COMPLETE": (4, "complete", "Response ready"),
+            "PASS_4_ERROR": (4, "error", "Response generation failed"),
         }
         
         pass_number, status, friendly_message = pass_info.get(stage, (0, "unknown", message))
         
-        # Include data details if it's a complete stage
+        # Include data details based on status
         details = {}
-        if status == "complete" and data:
-            if "selected_sources" in data:
-                details["sources"] = data["selected_sources"]
-            if "targets" in data:
-                details["targets"] = data["targets"]
-            if "content_summary" in data:
-                details["content"] = data["content_summary"]
-            if "response_preview" in data:
-                details["preview"] = data["response_preview"][:100]
+        if data:
+            if status == "error":
+                # For errors, include the error message and any additional context
+                details["error"] = data.get("error", message)
+                if "reasoning" in data:
+                    details["reasoning"] = data["reasoning"]
+                if "fallback_used" in data:
+                    details["fallback_used"] = data["fallback_used"]
+            elif status == "complete":
+                # For successful completion, include success data
+                if "selected_sources" in data:
+                    details["sources"] = data["selected_sources"]
+                if "targets" in data:
+                    details["targets"] = data["targets"]
+                if "content_summary" in data:
+                    details["content"] = data["content_summary"]
+                if "response_preview" in data:
+                    details["preview"] = data["response_preview"][:100]
         
         progress_message = {
             "type": "progress",

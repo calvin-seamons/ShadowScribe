@@ -108,6 +108,7 @@ class QueryRouter:
         High confidence = more focused, low confidence = broader retrieval.
         """
         targets = []
+        has_errors = False
         
         for source_type in sources.sources_needed:
             try:
@@ -123,8 +124,18 @@ class QueryRouter:
                 targets.append(target)
                 
             except Exception as e:
+                has_errors = True
+                await self._call_debug_callback("PASS_2_ERROR", 
+                    f"Targeting failed for {source_type.value}: {str(e)}", 
+                    {"error": str(e), "source_type": source_type.value})
                 # Create broad fallback target
                 targets.append(self._create_broad_target(source_type, user_query))
+        
+        # If we had errors but still have targets (due to fallbacks), consider it a partial success
+        if has_errors and targets:
+            await self._call_debug_callback("PASS_2_ERROR", 
+                "Content targeting completed with fallbacks", 
+                {"error": "Some targeting failed, using fallbacks", "targets_count": len(targets)})
         
         return targets
     

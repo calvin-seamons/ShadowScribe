@@ -9,6 +9,12 @@ const sourceIcons = {
   session_notes: ScrollText,
 } as const;
 
+const sourceDisplayNames = {
+  dnd_rulebook: 'D&D 5e Rulebook',
+  character_data: 'Character Data',
+  session_notes: 'Session Notes',
+} as const;
+
 interface SourcesData {
   sources: Record<string, SourceDetails>;
 }
@@ -55,6 +61,8 @@ export const SourcesPanel: React.FC = () => {
       <div className="space-y-2">
         {Object.entries(sources).map(([key, details]) => {
           const Icon = sourceIcons[key as keyof typeof sourceIcons] || Book;
+          const displayName = sourceDisplayNames[key as keyof typeof sourceDisplayNames] || 
+                             key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
           const count = details?.count || 'Available';
           
           return (
@@ -65,7 +73,7 @@ export const SourcesPanel: React.FC = () => {
               <Icon className="w-4 h-4 text-purple-500" />
               <div className="flex-1">
                 <div className="text-sm text-white">
-                  {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  {displayName}
                 </div>
                 <div className="text-xs text-gray-500">{count} items</div>
               </div>

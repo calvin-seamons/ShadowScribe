@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle, Circle, Loader } from 'lucide-react';
+import { CheckCircle, Circle, Loader, XCircle } from 'lucide-react';
 import type { Progress } from '../../types/index';
 
 interface ProgressIndicatorProps {
@@ -15,6 +15,7 @@ const passes = [
 
 export default function ProgressIndicator({ progress }: ProgressIndicatorProps) {
   const [completedPasses, setCompletedPasses] = useState<Set<number>>(new Set());
+  const [erroredPasses, setErroredPasses] = useState<Set<number>>(new Set());
   const [currentPass, setCurrentPass] = useState<number>(0);
   const [animatingPass, setAnimatingPass] = useState<number | null>(null);
 
@@ -31,6 +32,16 @@ export default function ProgressIndicator({ progress }: ProgressIndicatorProps) 
         // When a pass completes, clear the current pass
         // The next pass will be set when it starts
         setCurrentPass(0);
+      } else if (progress.status === 'error') {
+        setErroredPasses(prev => {
+          const newErrored = new Set([...prev, progress.pass]);
+          return newErrored;
+        });
+        setAnimatingPass(progress.pass);
+        setTimeout(() => setAnimatingPass(null), 500);
+        
+        // Clear current pass so next one can start
+        setCurrentPass(0);
       } else if (progress.status === 'starting') {
         setCurrentPass(progress.pass);
       }
@@ -41,12 +52,14 @@ export default function ProgressIndicator({ progress }: ProgressIndicatorProps) 
   useEffect(() => {
     if (progress?.status === 'starting' && progress.pass === 1) {
       setCompletedPasses(new Set());
+      setErroredPasses(new Set());
       setCurrentPass(1);
       setAnimatingPass(null);
     }
   }, [progress]);
 
   const getPassStatus = (passNumber: number) => {
+    if (erroredPasses.has(passNumber)) return 'error';
     if (completedPasses.has(passNumber)) return 'complete';
     if (currentPass === passNumber) return 'active';
     // If we haven't started yet but we're processing, show pass 1 as preparing
@@ -80,6 +93,12 @@ export default function ProgressIndicator({ progress }: ProgressIndicatorProps) 
                       isAnimating ? 'animate-bounce-right' : ''
                     }`}
                   />
+                ) : status === 'error' ? (
+                  <XCircle
+                    className={`w-5 h-5 text-red-500 ${
+                      isAnimating ? 'animate-bounce-right' : ''
+                    }`}
+                  />
                 ) : status === 'active' || status === 'preparing' ? (
                   <Loader className="w-5 h-5 text-purple-500 animate-spin" />
                 ) : (
@@ -94,6 +113,8 @@ export default function ProgressIndicator({ progress }: ProgressIndicatorProps) 
                     className={`text-sm font-medium transition-colors ${
                       status === 'complete'
                         ? 'text-green-400'
+                        : status === 'error'
+                        ? 'text-red-400'
                         : status === 'active' || status === 'preparing'
                         ? 'text-purple-400'
                         : 'text-gray-500'
@@ -109,6 +130,19 @@ export default function ProgressIndicator({ progress }: ProgressIndicatorProps) 
                 {(status === 'active' || status === 'preparing') && (
                   <div className="mt-1 text-xs text-gray-400 animate-fade-in">
                     {status === 'preparing' ? 'Preparing...' : progress?.details || progress?.message}
+                  </div>
+                )}
+
+                {/* Show error details for errored passes */}
+                {status === 'error' && (
+                  <div className="mt-1 text-xs text-red-400 animate-fade-in">
+                    <div className="font-medium">Error: {progress?.message}</div>
+                    {progress?.details && progress.details !== progress.message && (
+                      <div className="mt-0.5 text-red-300">{progress.details}</div>
+                    )}
+                    {progress?.metadata?.error && (
+                      <div className="mt-0.5 text-red-300 font-mono text-xs">{progress.metadata.error}</div>
+                    )}
                   </div>
                 )}
 

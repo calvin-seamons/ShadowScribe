@@ -103,32 +103,38 @@ class ShadowScribeEngine:
             await self._call_debug_callback("PASS_3_START", "Starting content retrieval", {
                 "num_targets": len(targets)
             })
-                
-            content_task = asyncio.create_task(self.content_retriever.fetch_content(targets))
-            content = await content_task
             
-            content_summary = {}
-            if isinstance(content, list):
-                content_summary["retrieved_items"] = len(content)
-                content_summary["source_types"] = [item.source_type.value if hasattr(item, 'source_type') else str(type(item)) for item in content]
+            try:
+                content_task = asyncio.create_task(self.content_retriever.fetch_content(targets))
+                content = await content_task
                 
-                # Add more detailed summary
-                for item in content:
-                    if hasattr(item, 'source_type') and hasattr(item, 'content'):
-                        source_name = item.source_type.value
-                        if isinstance(item.content, dict):
-                            content_summary[f"{source_name}_files"] = list(item.content.keys())
-            else:
-                # Fallback for dictionary-style content
-                for key, value in content.items():
-                    if isinstance(value, str):
-                        content_summary[key] = f"{len(value)} characters" if value else "empty"
-                    else:
-                        content_summary[key] = f"{type(value).__name__} object"
-            
-            await self._call_debug_callback("PASS_3_COMPLETE", "Content retrieval completed", {
-                "content_summary": content_summary
-            })
+                content_summary = {}
+                if isinstance(content, list):
+                    content_summary["retrieved_items"] = len(content)
+                    content_summary["source_types"] = [item.source_type.value if hasattr(item, 'source_type') else str(type(item)) for item in content]
+                    
+                    # Add more detailed summary
+                    for item in content:
+                        if hasattr(item, 'source_type') and hasattr(item, 'content'):
+                            source_name = item.source_type.value
+                            if isinstance(item.content, dict):
+                                content_summary[f"{source_name}_files"] = list(item.content.keys())
+                else:
+                    # Fallback for dictionary-style content
+                    for key, value in content.items():
+                        if isinstance(value, str):
+                            content_summary[key] = f"{len(value)} characters" if value else "empty"
+                        else:
+                            content_summary[key] = f"{type(value).__name__} object"
+                
+                await self._call_debug_callback("PASS_3_COMPLETE", "Content retrieval completed", {
+                    "content_summary": content_summary
+                })
+                
+            except Exception as e:
+                await self._call_debug_callback("PASS_3_ERROR", f"Content retrieval failed: {str(e)}", {"error": str(e)})
+                # Use empty content as fallback
+                content = []
             
             # Pass 4: Response Generation
             content_types = [item.source_type.value for item in content] if isinstance(content, list) else []
@@ -136,18 +142,24 @@ class ShadowScribeEngine:
                 "content_available": content_types,
                 "content_count": len(content) if isinstance(content, list) else 0
             })
+            
+            try:
+                response_task = asyncio.create_task(self.response_generator.generate_response(
+                    user_query, content
+                ))
+                response = await response_task
                 
-            response_task = asyncio.create_task(self.response_generator.generate_response(
-                user_query, content
-            ))
-            response = await response_task
-            
-            await self._call_debug_callback("PASS_4_COMPLETE", "Response generation completed", {
-                "response_length": len(response),
-                "response_preview": response[:200] + "..." if len(response) > 200 else response
-            })
-            
-            return response
+                await self._call_debug_callback("PASS_4_COMPLETE", "Response generation completed", {
+                    "response_length": len(response),
+                    "response_preview": response[:200] + "..." if len(response) > 200 else response
+                })
+                
+                return response
+                
+            except Exception as e:
+                await self._call_debug_callback("PASS_4_ERROR", f"Response generation failed: {str(e)}", {"error": str(e)})
+                # Return a fallback error message
+                return f"I encountered an error while generating the response. The query was processed but I couldn't formulate an answer: {str(e)}"
             
         except Exception as e:
             error_details = {

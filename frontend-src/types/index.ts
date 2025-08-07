@@ -30,7 +30,7 @@ export interface Message {
 
 export interface Progress {
   pass: number;
-  status: 'starting' | 'complete' | 'unknown';
+  status: 'starting' | 'complete' | 'error' | 'unknown';
   stage?: string;
   message: string;
   details?: string;
