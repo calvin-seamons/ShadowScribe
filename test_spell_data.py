@@ -7,8 +7,13 @@ import asyncio
 import sys
 import os
 import json
+from dotenv import load_dotenv
 
-sys.path.insert(0, '/Users/calvinseamons/ShadowScribe')
+# Load environment variables
+load_dotenv()
+
+# Add current directory to path
+sys.path.insert(0, os.getcwd())
 
 from src.engine.shadowscribe_engine import ShadowScribeEngine
 
@@ -18,14 +23,21 @@ async def test_spell_data_retrieval():
     print("🧙 Detailed Spell Data Retrieval Test")
     print("=" * 60)
     
+    # Get base directory from environment or use current directory
+    base_dir = os.getenv("SHADOWSCRIBE_BASE_DIR", os.getcwd())
+    knowledge_base_path = os.path.join(base_dir, "knowledge_base")
+    
+    print(f"📁 Using knowledge base path: {knowledge_base_path}")
+    print("")
+    
     # Initialize engine
     engine = ShadowScribeEngine(
-        knowledge_base_path="/Users/calvinseamons/ShadowScribe/knowledge_base",
+        knowledge_base_path=knowledge_base_path,
         model="gpt-4o-mini"
     )
     
     # Test the complete pipeline step by step
-    query = "Show my spells"
+    query = "What do you know about the Mantle of Shadow in Dusk's inventory, and also the Eldaryth"
     print(f"📝 Query: {query}")
     print("")
     

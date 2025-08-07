@@ -49,7 +49,7 @@ class WebSocketManager:
             self._message_sender(session_id)
         )
         
-        print(f"✅ WebSocket connected: {session_id}")
+        print(f"[+] WebSocket connected: {session_id}")
     
     def disconnect(self, websocket: WebSocket, session_id: str):
         """Remove a WebSocket connection."""
@@ -68,7 +68,7 @@ class WebSocketManager:
         # Clean up completed progress tasks
         self._cleanup_progress_tasks()
             
-        print(f"❌ WebSocket disconnected: {session_id}")
+        print(f"[-] WebSocket disconnected: {session_id}")
     
     def _cleanup_progress_tasks(self):
         """Clean up completed or cancelled progress tasks."""
@@ -171,10 +171,10 @@ class WebSocketManager:
                     loop.run_until_complete(coro)
                     loop.close()
                 except Exception as sync_error:
-                    print(f"❌ Failed to run sync callback for {stage}: {sync_error}")
+                    print(f"[!] Failed to run sync callback for {stage}: {sync_error}")
                 
         except Exception as e:
-            print(f"❌ Error in sync callback wrapper for {stage}: {e}")
+            print(f"[!] Error in sync callback wrapper for {stage}: {e}")
     
     def get_sync_callback(self):
         """Get a synchronous callback function that wraps the async broadcast_progress."""

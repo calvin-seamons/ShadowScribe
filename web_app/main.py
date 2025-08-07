@@ -2,6 +2,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 import asyncio
 import json
 from typing import List
@@ -22,8 +23,38 @@ from websocket_handler import WebSocketManager
 from api_routes import router as api_router
 from session_manager import SessionManager
 
-# Initialize FastAPI app
-app = FastAPI(title="ShadowScribe API", version="1.0.0")
+# Initialize managers
+websocket_manager = WebSocketManager()
+session_manager = SessionManager()
+
+# Get the knowledge base path - use absolute path
+base_dir = os.getenv("SHADOWSCRIBE_BASE_DIR", os.path.join(os.path.dirname(__file__), '..'))
+knowledge_base_path = os.path.join(base_dir, "knowledge_base")
+
+# Initialize ShadowScribe engine
+engine = ShadowScribeEngine(
+    knowledge_base_path=knowledge_base_path,
+    model=os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Handle application startup and shutdown events."""
+    # Startup
+    print("[*] ShadowScribe Web Server Starting...")
+    # Set up debug callback for engine
+    engine.set_debug_callback(websocket_manager.get_sync_callback())
+    print("[+] Debug callback configured")
+    
+    yield
+    
+    # Shutdown
+    print("[*] ShadowScribe Web Server Shutting Down...")
+    await websocket_manager.shutdown()
+    print("[+] WebSocket manager shut down")
+
+# Initialize FastAPI app with lifespan
+app = FastAPI(title="ShadowScribe API", version="1.0.0", lifespan=lifespan)
 
 # Configure CORS
 frontend_port = os.getenv("FRONTEND_PORT", "3000")
@@ -39,16 +70,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize managers
-websocket_manager = WebSocketManager()
-session_manager = SessionManager()
-
-# Initialize ShadowScribe engine
-engine = ShadowScribeEngine(
-    knowledge_base_path="../knowledge_base",
-    model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
-)
-
 # Set dependencies for API routes
 from api_routes import set_dependencies
 set_dependencies(engine, session_manager)
@@ -59,21 +80,6 @@ app.include_router(api_router, prefix="/api")
 # Serve static files in production
 if os.path.exists("../frontend/build"):
     app.mount("/", StaticFiles(directory="../frontend/build", html=True), name="static")
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize the application on startup."""
-    print("🌙 ShadowScribe Web Server Starting...")
-    # Set up debug callback for engine
-    engine.set_debug_callback(websocket_manager.get_sync_callback())
-    print("✅ Debug callback configured")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Clean up resources on shutdown."""
-    print("🌙 ShadowScribe Web Server Shutting Down...")
-    await websocket_manager.shutdown()
-    print("✅ WebSocket manager shut down")
 
 @app.websocket("/ws/{session_id}")
 async def websocket_endpoint(websocket: WebSocket, session_id: str):
@@ -180,16 +186,16 @@ if __name__ == "__main__":
     host = os.getenv("BACKEND_HOST", "localhost")
     port = int(os.getenv("BACKEND_PORT", "8000"))
     
-    print(f"🚀 Starting ShadowScribe backend on {host}:{port}")
-    print(f"📁 Knowledge base path: {engine.knowledge_base.base_path}")
+    print(f"[*] Starting ShadowScribe backend on {host}:{port}")
+    print(f"[*] Knowledge base path: {engine.knowledge_base.base_path}")
     
     # Check if OpenAI API key is loaded
     from src.config.settings import Config
     config = Config()
     if config.openai_api_key:
-        print("✅ OpenAI API key loaded from environment")
+        print("[+] OpenAI API key loaded from environment")
     else:
-        print("⚠️  No OpenAI API key found in .env file")
+        print("[!] No OpenAI API key found in .env file")
     
     uvicorn.run(
         "main:app", 

@@ -207,7 +207,7 @@ Remember: Your response will be rendered as Markdown, so use formatting to make 
         return prompt
     
     def _format_dict(self, data: dict, indent: int = 0) -> str:
-        """Format dictionary data for readable output."""
+        """Format dictionary data for readable output - include ALL information."""
         lines = []
         indent_str = "  " * indent
         
@@ -219,28 +219,38 @@ Remember: Your response will be rendered as Markdown, so use formatting to make 
                 lines.append(f"{indent_str}{key}:")
                 lines.append(self._format_list(value, indent + 1))
             else:
+                # Include the full value, no truncation
                 lines.append(f"{indent_str}{key}: {value}")
         
         return "\n".join(lines)
     
     def _format_list(self, data: list, indent: int = 0) -> str:
-        """Format list data for readable output."""
+        """Format list data for readable output - include ALL information."""
         lines = []
         indent_str = "  " * indent
         
-        for item in data[:5]:  # Limit lists to 5 items
+        # Include ALL items, not just first 5
+        for i, item in enumerate(data):
             if isinstance(item, dict):
-                # Extract key info from dict
+                # Include ALL dictionary content for each item
                 if "name" in item:
-                    lines.append(f"{indent_str}- {item['name']}")
-                elif "title" in item:
-                    lines.append(f"{indent_str}- {item['title']}")
+                    lines.append(f"{indent_str}- {item['name']}:")
+                    # Include ALL fields from the dictionary
+                    for key, value in item.items():
+                        if key != "name":  # Skip name since we already used it
+                            if isinstance(value, dict):
+                                lines.append(f"{indent_str}  {key}:")
+                                lines.append(self._format_dict(value, indent + 2))
+                            elif isinstance(value, list):
+                                lines.append(f"{indent_str}  {key}:")
+                                lines.append(self._format_list(value, indent + 2))
+                            else:
+                                lines.append(f"{indent_str}  {key}: {value}")
                 else:
-                    lines.append(f"{indent_str}- {str(item)[:100]}")
+                    # For dictionaries without a name field, format the entire dict
+                    lines.append(f"{indent_str}- Item {i + 1}:")
+                    lines.append(self._format_dict(item, indent + 1))
             else:
                 lines.append(f"{indent_str}- {item}")
-        
-        if len(data) > 5:
-            lines.append(f"{indent_str}... and {len(data) - 5} more")
         
         return "\n".join(lines)

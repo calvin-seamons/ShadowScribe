@@ -307,22 +307,30 @@ RESPOND WITH ONLY VALID JSON ARRAY, NO OTHER TEXT."""
 Here is the actual structure of {filename}:
 {json.dumps(file_structure, indent=2)}
 
-Which specific fields from this file are needed to answer the query?
+Which fields from this file are needed to answer the query?
 
-IMPORTANT RULES:
-- Choose specific field paths, NOT wildcards like "*"
-- Use dot notation for nested fields: "spellcasting.paladin.spells"
-- Only select fields that directly answer the query
-- For spell queries, focus on spell-related fields
-- For character info, focus on relevant character fields
+FIELD SELECTION STRATEGY:
+- Use "*" if the query could benefit from multiple sections or if you're unsure what specific data is needed
+- Use "*" for broad queries like "tell me about the character" or "what spells do I have"
+- Use specific field paths ONLY when the query is very targeted to one specific piece of data
+- When requesting a field path like "spellcasting.paladin.spells", you get that field AND everything underneath it (all spell levels, cantrips, etc.)
+- Better to include too much relevant data than miss something important
+
+IMPORTANT: Field paths return the entire subtree, so:
+- "spellcasting" returns ALL spellcasting data for all classes
+- "spellcasting.paladin" returns ALL paladin spell data
+- "spellcasting.paladin.spells" returns ALL paladin spells (all levels)
 
 Examples:
-- For spell queries from spell_list.json: ["spellcasting.paladin.spells", "spellcasting.warlock.spells"]
-- For character stats: ["character_base", "ability_scores", "combat_stats"]
-- For backstory: ["backstory.family_backstory.parents"]
+- Broad queries → ["*"]
+- Spell-related queries → ["*"] (since spells might be scattered across sections)
+- Very specific stat queries → ["character_base.level"] or ["combat_stats.armor_class"]
+- Character overview → ["*"]
 
-Return ONLY a JSON array of specific field paths:
-["spellcasting.paladin.spells", "spellcasting.warlock.spells"]
+BIAS TOWARD COMPLETENESS: When in doubt, use "*" to ensure no relevant information is missed.
+
+Return ONLY a JSON array:
+["*"] or ["character_base", "combat_stats"] or ["*"]
 
 RESPOND WITH ONLY VALID JSON ARRAY, NO OTHER TEXT."""
 
@@ -368,9 +376,18 @@ RESPOND WITH ONLY VALID JSON ARRAY, NO OTHER TEXT."""
         try:
             # Import the character handler to get file structure
             from ..knowledge.character_handler import CharacterHandler
+            import os
+            from dotenv import load_dotenv
+            
+            # Load environment variables
+            load_dotenv()
+            
+            # Get base directory from environment or use current directory
+            base_dir = os.getenv("SHADOWSCRIBE_BASE_DIR", os.getcwd())
+            knowledge_base_path = os.path.join(base_dir, "knowledge_base")
             
             # Create a temporary handler instance
-            handler = CharacterHandler("/Users/calvinseamons/ShadowScribe/knowledge_base")
+            handler = CharacterHandler(knowledge_base_path)
             
             # Load and initialize the handler
             handler.load_data()
@@ -418,23 +435,38 @@ RESPOND WITH ONLY VALID JSON ARRAY, NO OTHER TEXT."""
         """Get smart fallback fields based on filename and query keywords."""
         query_lower = query.lower()
         
+        # Be more liberal with * - if the query is broad or complex, use *
+        broad_keywords = [
+            "tell me about", "what", "how", "describe", "explain", "overview", 
+            "info", "information", "details", "everything", "all"
+        ]
+        
+        if any(keyword in query_lower for keyword in broad_keywords):
+            return ["*"]
+        
+        # For specific files, still default to * unless very targeted
         if filename == "spell_list.json":
-            return ["spellcasting.paladin.spells", "spellcasting.warlock.spells"]
-        elif filename == "character_background.json":
-            if any(word in query_lower for word in ["family", "parent", "thaldrin", "brenna"]):
-                return ["backstory.family_backstory", "backstory.family_backstory.parents"]
+            # Even for spells, use * unless very specific
+            if any(word in query_lower for word in ["specific spell", "one spell", "just"]):
+                return ["spellcasting.paladin.spells", "spellcasting.warlock.spells"]
             else:
-                return ["backstory", "personality", "characteristics"]
-        elif filename == "inventory_list.json":
-            return ["inventory"]
-        elif filename == "action_list.json":
-            return ["character_actions"]
-        elif filename == "feats_and_traits.json":
-            return ["features_and_traits"]
-        elif filename == "objectives_and_contracts.json":
-            return ["objectives_and_contracts"]
+                return ["*"]
+        elif filename == "character_background.json":
+            # Only use specific fields for very targeted queries
+            if "parent" in query_lower or "thaldrin" in query_lower or "brenna" in query_lower:
+                return ["backstory.family_backstory.parents"]
+            else:
+                return ["*"]
+        elif filename in ["inventory_list.json", "action_list.json", "feats_and_traits.json", "objectives_and_contracts.json"]:
+            # These files are typically needed in full
+            return ["*"]
         else:  # character.json
-            return ["character_base", "combat_stats"]
+            # For character basics, use * unless asking for one specific stat
+            specific_stats = ["level", "armor class", "ac", "hit points", "hp"]
+            if any(stat in query_lower for stat in specific_stats) and len(query.split()) < 6:
+                return ["character_base", "combat_stats"]
+            else:
+                return ["*"]
     
     async def target_rulebook_content(self, query: str) -> Dict[str, List[str]]:
         """

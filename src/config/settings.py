@@ -35,12 +35,12 @@ class Config:
         for config_path in config_paths:
             if os.path.exists(config_path):
                 self.config.read(config_path)
-                print(f"✅ Loaded configuration from {config_path}")
+                print(f"[+] Loaded configuration from {config_path}")
                 config_found = True
                 break
         
         if not config_found:
-            print(f"⚠️  Configuration file {config_file} not found in any expected location, using defaults")
+            print(f"[!] Configuration file {config_file} not found in any expected location, using defaults")
     
     def _set_defaults(self):
         """Set default configuration values with cross-platform paths"""
