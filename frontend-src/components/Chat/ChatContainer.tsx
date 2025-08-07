@@ -67,17 +67,32 @@ export const ChatContainer: React.FC = () => {
             setCurrentProgress(null);
             setActiveSources([]);
             if (data.data.response) {
-              // Create complete source usage object if we have the necessary data
-              const currentUsage = sourceUsageRef.current;
-              const sourceUsage: QuerySourceUsage | undefined = 
-                currentUsage.sources && currentUsage.sources.length > 0
-                  ? {
-                      sources: currentUsage.sources,
-                      targets: currentUsage.targets || {},
-                      content: currentUsage.content || 'No content summary available',
-                      retrievedAt: new Date()
-                    }
-                  : undefined;
+              // Check if sourceUsage is provided in the response data
+              let sourceUsage: QuerySourceUsage | undefined;
+              
+              if (data.data.sourceUsage) {
+                // Use sourceUsage from response if available
+                sourceUsage = {
+                  sources: data.data.sourceUsage.sources || [],
+                  targets: data.data.sourceUsage.targets || {},
+                  content: data.data.sourceUsage.content || 'No content summary available',
+                  retrievedAt: typeof data.data.sourceUsage.retrievedAt === 'number' 
+                    ? new Date(data.data.sourceUsage.retrievedAt * 1000) 
+                    : new Date()
+                };
+              } else {
+                // Fallback to accumulated data from progress updates
+                const currentUsage = sourceUsageRef.current;
+                sourceUsage = 
+                  currentUsage.sources && currentUsage.sources.length > 0
+                    ? {
+                        sources: currentUsage.sources,
+                        targets: currentUsage.targets || {},
+                        content: currentUsage.content || 'No content summary available',
+                        retrievedAt: new Date()
+                      }
+                    : undefined;
+              }
               
               setMessages(prev => [...prev, {
                 id: Date.now().toString(),

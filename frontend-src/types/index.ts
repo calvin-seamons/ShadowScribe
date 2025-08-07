@@ -62,6 +62,7 @@ export interface WebSocketData {
     error?: string;
     status?: string;
     progress?: Progress;
+    sourceUsage?: QuerySourceUsage;
   };
 }
 

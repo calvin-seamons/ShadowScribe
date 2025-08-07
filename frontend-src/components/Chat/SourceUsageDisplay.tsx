@@ -57,21 +57,90 @@ export const SourceUsageDisplay: React.FC<SourceUsageDisplayProps> = ({
       
       // Handle different target formats
       if (Array.isArray(sourceTargets)) {
-        return sourceTargets;
+        // Simple array of targets
+        return sourceTargets.map(target => ({
+          type: 'simple',
+          display: target,
+          details: null
+        }));
       } else if (typeof sourceTargets === 'object') {
-        // For character data with file-specific targets
-        return Object.entries(sourceTargets).map(([file, fieldArray]) => {
-          if (Array.isArray(fieldArray)) {
-            return `${file}: ${fieldArray.join(', ')}`;
+        // Handle nested object structure
+        const formattedTargets: Array<{type: string, display: string, details: any}> = [];
+        
+        // Look for specific patterns based on source type
+        if (source === 'character_data') {
+          // Handle character data file structure
+          if (sourceTargets.file_fields) {
+            // New format with file_fields wrapper
+            Object.entries(sourceTargets.file_fields).forEach(([file, fieldArray]) => {
+              const fileName = file.replace('.json', '');
+              const displayName = fileName.replace(/_/g, ' ')
+                .replace(/\b\w/g, l => l.toUpperCase());
+              
+              formattedTargets.push({
+                type: 'file',
+                display: displayName,
+                details: Array.isArray(fieldArray) ? fieldArray : [fieldArray]
+              });
+            });
+          } else {
+            // Direct file mapping
+            Object.entries(sourceTargets).forEach(([file, fieldArray]) => {
+              if (file.includes('.json') || typeof fieldArray === 'object') {
+                const fileName = file.replace('.json', '');
+                const displayName = fileName.replace(/_/g, ' ')
+                  .replace(/\b\w/g, l => l.toUpperCase());
+                
+                formattedTargets.push({
+                  type: 'file',
+                  display: displayName,
+                  details: Array.isArray(fieldArray) ? fieldArray : [fieldArray]
+                });
+              }
+            });
           }
-          return `${file}: ${fieldArray}`;
-        });
+        } else if (source === 'dnd_rulebook') {
+          // Handle rulebook structure
+          if (sourceTargets.section_ids && sourceTargets.section_ids.length > 0) {
+            formattedTargets.push({
+              type: 'sections',
+              display: 'Rule Sections',
+              details: sourceTargets.section_ids
+            });
+          }
+          if (sourceTargets.keywords && sourceTargets.keywords.length > 0) {
+            formattedTargets.push({
+              type: 'keywords',
+              display: 'Search Keywords',
+              details: sourceTargets.keywords
+            });
+          }
+        } else {
+          // Generic object handling
+          Object.entries(sourceTargets).forEach(([key, value]) => {
+            formattedTargets.push({
+              type: 'generic',
+              display: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+              details: Array.isArray(value) ? value : [value]
+            });
+          });
+        }
+        
+        return formattedTargets;
       }
       
-      return [String(sourceTargets)];
+      return [{
+        type: 'simple',
+        display: String(sourceTargets),
+        details: null
+      }];
     } catch (error) {
       console.error('Error formatting targets:', error, { targets, source });
-      return [`Error formatting targets for ${source}`];
+      return [{
+        type: 'error',
+        display: `Error formatting targets for ${source}`,
+        details: null
+      }];
     }
   };
 
@@ -168,7 +237,22 @@ export const SourceUsageDisplay: React.FC<SourceUsageDisplayProps> = ({
                             {getSourceDisplayName(source)}
                           </div>
                           <div className="text-xs opacity-75">
-                            {targets.length} {targets.length === 1 ? 'target' : 'targets'}
+                            {(() => {
+                              const totalTargets = targets.reduce((sum, target) => {
+                                if (target.details && Array.isArray(target.details)) {
+                                  return sum + target.details.length;
+                                }
+                                return sum + 1;
+                              }, 0);
+                              
+                              if (targets.length === 1 && !targets[0].details) {
+                                return `${targets.length} target`;
+                              } else if (targets.length === 1 && targets[0].details) {
+                                return `${targets[0].details.length} items`;
+                              } else {
+                                return `${targets.length} categories, ${totalTargets} items`;
+                              }
+                            })()}
                           </div>
                         </div>
                       </div>
@@ -184,19 +268,107 @@ export const SourceUsageDisplay: React.FC<SourceUsageDisplayProps> = ({
 
                   {/* Source Details */}
                   {isSourceExpanded && targets.length > 0 && (
-                    <div className="ml-4 pl-4 border-l-2 border-gray-600/30 space-y-2">
+                    <div className="ml-4 pl-4 border-l-2 border-gray-600/30 space-y-3">
                       <div className="text-xs font-medium text-gray-400 uppercase tracking-wide">
                         Specific Content Retrieved:
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-2">
                         {targets.map((target, targetIndex) => (
-                          <div
-                            key={targetIndex}
-                            className="text-sm text-gray-300 bg-gray-700/50 px-3 py-2 rounded border border-gray-600/30 transition-all duration-200 hover:bg-gray-700/70 hover:border-gray-500/50"
-                          >
-                            <code className="text-xs font-mono text-gray-200">
-                              {target}
-                            </code>
+                          <div key={targetIndex} className="space-y-1">
+                            {target.type === 'file' ? (
+                              // File-based content (character data)
+                              <div className="bg-gray-700/50 rounded border border-gray-600/30 transition-all duration-200 hover:bg-gray-700/70 hover:border-gray-500/50">
+                                <div className="px-3 py-2 border-b border-gray-600/30">
+                                  <div className="flex items-center space-x-2">
+                                    <Database className="w-3 h-3 text-blue-400" />
+                                    <span className="text-sm font-medium text-gray-200">
+                                      {target.display}
+                                    </span>
+                                  </div>
+                                </div>
+                                {target.details && target.details.length > 0 && (
+                                  <div className="px-3 py-2">
+                                    <div className="text-xs text-gray-400 mb-1">Fields accessed:</div>
+                                    <div className="flex flex-wrap gap-1">
+                                      {target.details.map((field: string, fieldIndex: number) => (
+                                        <span
+                                          key={fieldIndex}
+                                          className="inline-block bg-gray-800/50 text-gray-300 text-xs px-2 py-1 rounded border border-gray-600/50"
+                                        >
+                                          {field}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ) : target.type === 'sections' ? (
+                              // Section-based content (rulebook sections)
+                              <div className="bg-gray-700/50 rounded border border-gray-600/30 transition-all duration-200 hover:bg-gray-700/70 hover:border-gray-500/50">
+                                <div className="px-3 py-2 border-b border-gray-600/30">
+                                  <div className="flex items-center space-x-2">
+                                    <Book className="w-3 h-3 text-amber-400" />
+                                    <span className="text-sm font-medium text-gray-200">
+                                      {target.display}
+                                    </span>
+                                  </div>
+                                </div>
+                                {target.details && target.details.length > 0 && (
+                                  <div className="px-3 py-2">
+                                    <div className="text-xs text-gray-400 mb-1">Section IDs:</div>
+                                    <div className="space-y-1">
+                                      {target.details.map((sectionId: string, sectionIndex: number) => (
+                                        <div
+                                          key={sectionIndex}
+                                          className="text-xs font-mono bg-gray-800/50 text-gray-300 px-2 py-1 rounded border border-gray-600/50"
+                                        >
+                                          {sectionId}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ) : target.type === 'keywords' ? (
+                              // Keyword-based content (rulebook search)
+                              <div className="bg-gray-700/50 rounded border border-gray-600/30 transition-all duration-200 hover:bg-gray-700/70 hover:border-gray-500/50">
+                                <div className="px-3 py-2 border-b border-gray-600/30">
+                                  <div className="flex items-center space-x-2">
+                                    <ScrollText className="w-3 h-3 text-amber-400" />
+                                    <span className="text-sm font-medium text-gray-200">
+                                      {target.display}
+                                    </span>
+                                  </div>
+                                </div>
+                                {target.details && target.details.length > 0 && (
+                                  <div className="px-3 py-2">
+                                    <div className="text-xs text-gray-400 mb-1">Keywords searched:</div>
+                                    <div className="flex flex-wrap gap-1">
+                                      {target.details.map((keyword: string, keywordIndex: number) => (
+                                        <span
+                                          key={keywordIndex}
+                                          className="inline-block bg-amber-900/20 text-amber-300 text-xs px-2 py-1 rounded border border-amber-600/30"
+                                        >
+                                          {keyword}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              // Fallback for simple or generic content
+                              <div className="text-sm text-gray-300 bg-gray-700/50 px-3 py-2 rounded border border-gray-600/30 transition-all duration-200 hover:bg-gray-700/70 hover:border-gray-500/50">
+                                <code className="text-xs font-mono text-gray-200">
+                                  {target.display}
+                                </code>
+                                {target.details && (
+                                  <div className="mt-1 text-xs text-gray-400">
+                                    {Array.isArray(target.details) ? target.details.join(', ') : target.details}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>

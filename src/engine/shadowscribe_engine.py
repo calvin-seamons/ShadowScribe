@@ -7,6 +7,7 @@ from typing import Dict, Any, List, Callable, Optional
 import asyncio
 import traceback
 import inspect
+import time
 from ..knowledge.knowledge_base import KnowledgeBase
 from .query_router import QueryRouter
 from .content_retriever import ContentRetriever
@@ -56,7 +57,7 @@ class ShadowScribeEngine:
         except Exception as e:
             print(f"Error in debug callback: {e}")
     
-    async def process_query(self, user_query: str) -> str:
+    async def process_query(self, user_query: str) -> Dict[str, Any]:
         """
         Process a user query through the complete 4-pass system.
         
@@ -64,8 +65,13 @@ class ShadowScribeEngine:
             user_query: The user's question or request
             
         Returns:
-            Generated response based on retrieved context
+            Dictionary containing response and source usage information
         """
+        # Initialize tracking variables
+        used_sources = []
+        targets_info = []
+        content_summary = {}
+        
         try:
             # Pass 1: Source Selection
             await self._call_debug_callback("PASS_1_START", "Starting source selection", {"query": user_query})
@@ -74,26 +80,30 @@ class ShadowScribeEngine:
             sources_task = asyncio.create_task(self.query_router.select_sources(user_query))
             sources = await sources_task
             
+            # Track used sources
+            used_sources = [s.value for s in sources.sources_needed] if hasattr(sources, 'sources_needed') else []
+            
             await self._call_debug_callback("PASS_1_COMPLETE", "Source selection completed", {
-                "selected_sources": [s.value for s in sources.sources_needed] if hasattr(sources, 'sources_needed') else str(sources),
+                "selected_sources": used_sources,
                 "reasoning": sources.reasoning if hasattr(sources, 'reasoning') else "No reasoning available"
             })
             
             # Pass 2: Content Targeting
             await self._call_debug_callback("PASS_2_START", "Starting content targeting", {
-                "sources": [s.value for s in sources.sources_needed] if hasattr(sources, 'sources_needed') else str(sources)
+                "sources": used_sources
             })
                 
             targets_task = asyncio.create_task(self.query_router.target_content(user_query, sources))
             targets = await targets_task
             
-            # Format targets for debug output
+            # Format targets for debug output and tracking
             targets_info = []
             for target in targets:
-                targets_info.append({
+                target_data = {
                     "source": target.source_type.value,
-                    "targets": list(target.specific_targets.keys()) if isinstance(target.specific_targets, dict) else str(target.specific_targets)
-                })
+                    "targets": target.specific_targets
+                }
+                targets_info.append(target_data)
             
             await self._call_debug_callback("PASS_2_COMPLETE", "Content targeting completed", {
                 "targets": targets_info
@@ -154,12 +164,29 @@ class ShadowScribeEngine:
                     "response_preview": response[:200] + "..." if len(response) > 200 else response
                 })
                 
-                return response
+                # Return structured response with source usage
+                return {
+                    "response": response,
+                    "sourceUsage": {
+                        "sources": used_sources,
+                        "targets": self._format_targets_for_frontend(targets_info),
+                        "content": content_summary,
+                        "retrievedAt": time.time()
+                    }
+                }
                 
             except Exception as e:
                 await self._call_debug_callback("PASS_4_ERROR", f"Response generation failed: {str(e)}", {"error": str(e)})
                 # Return a fallback error message
-                return f"I encountered an error while generating the response. The query was processed but I couldn't formulate an answer: {str(e)}"
+                return {
+                    "response": f"I encountered an error while generating the response. The query was processed but I couldn't formulate an answer: {str(e)}",
+                    "sourceUsage": {
+                        "sources": used_sources,
+                        "targets": self._format_targets_for_frontend(targets_info),
+                        "content": content_summary,
+                        "retrievedAt": time.time()
+                    }
+                }
             
         except Exception as e:
             error_details = {
@@ -171,7 +198,35 @@ class ShadowScribeEngine:
             await self._call_debug_callback("ERROR", f"Error in query processing: {str(e)}", error_details)
             
             # Return a user-friendly error message
-            return f"I encountered an error while processing your query. Please try rephrasing your question or try again later."
+            return {
+                "response": f"I encountered an error while processing your query. Please try rephrasing your question or try again later.",
+                "sourceUsage": {
+                    "sources": used_sources,
+                    "targets": self._format_targets_for_frontend(targets_info),
+                    "content": content_summary,
+                    "retrievedAt": time.time()
+                }
+            }
+    
+    def _format_targets_for_frontend(self, targets_info: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Format targets data for frontend consumption."""
+        formatted_targets = {}
+        
+        for target_data in targets_info:
+            source = target_data["source"]
+            targets = target_data["targets"]
+            
+            if source == "character_data":
+                # Handle character data - remove file_fields wrapper if present
+                if isinstance(targets, dict) and "file_fields" in targets:
+                    formatted_targets[source] = targets["file_fields"]
+                else:
+                    formatted_targets[source] = targets
+            else:
+                # For other sources, use as-is
+                formatted_targets[source] = targets
+        
+        return formatted_targets
     
     def get_available_sources(self) -> Dict[str, Any]:
         """Get information about available knowledge sources."""

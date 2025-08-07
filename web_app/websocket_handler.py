@@ -230,8 +230,21 @@ class WebSocketManager:
                         for target_info in targets_data:
                             if isinstance(target_info, dict) and "source" in target_info:
                                 source = target_info["source"]
-                                targets = target_info.get("targets", [])
-                                structured_targets[source] = targets
+                                raw_targets = target_info.get("targets", {})
+                                
+                                # Transform the targets based on source type
+                                if source == "character_data":
+                                    # Handle character data - flatten file_fields structure
+                                    if isinstance(raw_targets, dict) and "file_fields" in raw_targets:
+                                        structured_targets[source] = raw_targets["file_fields"]
+                                    else:
+                                        structured_targets[source] = raw_targets
+                                elif source == "dnd_rulebook":
+                                    # Handle rulebook data - keep section_ids and keywords separate
+                                    structured_targets[source] = raw_targets
+                                else:
+                                    # Default handling for other sources
+                                    structured_targets[source] = raw_targets
                         details["targets"] = structured_targets
                     else:
                         details["targets"] = targets_data

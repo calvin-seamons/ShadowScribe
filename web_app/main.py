@@ -114,16 +114,30 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                     process_task = asyncio.create_task(engine.process_query(query))
                     
                     # Wait for the result
-                    response = await process_task
+                    result = await process_task
                     
-                    # Send the final response
+                    # Extract response and source usage from structured result
+                    if isinstance(result, dict) and "response" in result:
+                        response = result["response"]
+                        source_usage = result.get("sourceUsage")
+                    else:
+                        # Fallback for string responses (backwards compatibility)
+                        response = str(result)
+                        source_usage = None
+                    
+                    # Send the final response with source usage
+                    response_data = {
+                        "response": response,
+                        "timestamp": time.time()
+                    }
+                    
+                    if source_usage:
+                        response_data["sourceUsage"] = source_usage
+                    
                     await websocket_manager.send_personal_message({
                         "type": "response",
                         "sessionId": session_id,
-                        "data": {
-                            "response": response,
-                            "timestamp": time.time()
-                        }
+                        "data": response_data
                     }, websocket)
                     
                     # Save to session history (non-blocking)
