@@ -6,6 +6,8 @@ interface ProgressContextType {
   setCurrentProgress: (progress: Progress | null) => void;
   activeSources: string[];
   setActiveSources: (sources: string[]) => void;
+  lastUsedSources: string[];
+  setLastUsedSources: (sources: string[]) => void;
 }
 
 const ProgressContext = createContext<ProgressContextType | undefined>(undefined);
@@ -25,6 +27,7 @@ interface ProgressProviderProps {
 export const ProgressProvider: React.FC<ProgressProviderProps> = ({ children }) => {
   const [currentProgress, setCurrentProgress] = useState<Progress | null>(null);
   const [activeSources, setActiveSources] = useState<string[]>([]);
+  const [lastUsedSources, setLastUsedSources] = useState<string[]>([]);
 
   return (
     <ProgressContext.Provider 
@@ -32,7 +35,9 @@ export const ProgressProvider: React.FC<ProgressProviderProps> = ({ children }) 
         currentProgress, 
         setCurrentProgress, 
         activeSources, 
-        setActiveSources 
+        setActiveSources,
+        lastUsedSources,
+        setLastUsedSources
       }}
     >
       {children}

@@ -23,11 +23,13 @@ interface SourcesData {
 interface SourcesPanelProps {
   currentProgress?: Progress | null;
   activeSources?: string[];
+  lastUsedSources?: string[];
 }
 
 export const SourcesPanel: React.FC<SourcesPanelProps> = ({ 
   currentProgress, 
-  activeSources = [] 
+  activeSources = [],
+  lastUsedSources = []
 }) => {
   const [sources, setSources] = useState<Record<string, SourceDetails>>({});
   const [loading, setLoading] = useState(true);
@@ -48,19 +50,19 @@ export const SourcesPanel: React.FC<SourcesPanelProps> = ({
     loadSources();
   }, []);
 
-  // Track used sources based on progress
+  // Track used sources - prioritize current progress, then fall back to last used sources
   useEffect(() => {
     if (currentProgress?.metadata?.sources) {
+      // Update used sources from current progress
       setUsedSources(new Set(currentProgress.metadata.sources));
-    }
-  }, [currentProgress]);
-
-  // Reset used sources when no progress
-  useEffect(() => {
-    if (!currentProgress) {
+    } else if (lastUsedSources.length > 0) {
+      // Keep showing last used sources when no current progress
+      setUsedSources(new Set(lastUsedSources));
+    } else {
+      // Only reset when explicitly no sources available
       setUsedSources(new Set());
     }
-  }, [currentProgress]);
+  }, [currentProgress, lastUsedSources]);
 
   const getSourceStatus = (sourceKey: string) => {
     if (usedSources.has(sourceKey)) {

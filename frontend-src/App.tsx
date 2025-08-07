@@ -13,7 +13,7 @@ function AppContent() {
   const [isValidated, setIsValidated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { sessionId, initializeSession } = useSessionStore();
-  const { currentProgress, activeSources } = useProgress();
+  const { currentProgress, activeSources, lastUsedSources } = useProgress();
 
   useEffect(() => {
     // Initialize session and validate system
@@ -63,7 +63,11 @@ function AppContent() {
         <div className="w-80 bg-gray-800 border-r border-gray-700 flex flex-col">
           <ModelSelector />
           <CharacterSheet />
-          <SourcesPanel currentProgress={currentProgress} activeSources={activeSources} />
+          <SourcesPanel 
+            currentProgress={currentProgress} 
+            activeSources={activeSources} 
+            lastUsedSources={lastUsedSources}
+          />
           <SessionHistory sessionId={sessionId} />
         </div>
 

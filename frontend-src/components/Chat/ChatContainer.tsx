@@ -14,7 +14,7 @@ export const ChatContainer: React.FC = () => {
 
   const { sessionId } = useSessionStore();
   const { sendMessage, lastMessage, connectionStatus } = useWebSocket(sessionId);
-  const { currentProgress, setCurrentProgress, setActiveSources } = useProgress();
+  const { currentProgress, setCurrentProgress, setActiveSources, setLastUsedSources } = useProgress();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,6 +29,7 @@ export const ChatContainer: React.FC = () => {
             // Reset source usage for new query
             sourceUsageRef.current = {};
             setActiveSources([]);
+            setLastUsedSources([]); // Clear previous used sources when starting new query
             break;
             
           case 'progress':
@@ -64,6 +65,13 @@ export const ChatContainer: React.FC = () => {
             
           case 'response':
             setIsProcessing(false);
+            
+            // Preserve the last used sources before clearing progress
+            const currentUsage = sourceUsageRef.current;
+            if (currentUsage.sources && currentUsage.sources.length > 0) {
+              setLastUsedSources(currentUsage.sources);
+            }
+            
             setCurrentProgress(null);
             setActiveSources([]);
             if (data.data.response) {
