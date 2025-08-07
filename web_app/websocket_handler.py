@@ -222,7 +222,19 @@ class WebSocketManager:
                 if "selected_sources" in data:
                     details["sources"] = data["selected_sources"]
                 if "targets" in data:
-                    details["targets"] = data["targets"]
+                    # Restructure targets to be more frontend-friendly
+                    targets_data = data["targets"]
+                    if isinstance(targets_data, list):
+                        # Convert list of target objects to source-keyed dictionary
+                        structured_targets = {}
+                        for target_info in targets_data:
+                            if isinstance(target_info, dict) and "source" in target_info:
+                                source = target_info["source"]
+                                targets = target_info.get("targets", [])
+                                structured_targets[source] = targets
+                        details["targets"] = structured_targets
+                    else:
+                        details["targets"] = targets_data
                 if "content_summary" in data:
                     details["content"] = data["content_summary"]
                 if "response_preview" in data:

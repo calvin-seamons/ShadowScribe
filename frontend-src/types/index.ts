@@ -26,6 +26,14 @@ export interface Message {
   type: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  sourceUsage?: QuerySourceUsage;
+}
+
+export interface SourceUsage {
+  source: string;
+  targets?: string[] | Record<string, string[]>;
+  content?: string;
+  summary?: string;
 }
 
 export interface Progress {
@@ -36,6 +44,13 @@ export interface Progress {
   details?: string;
   metadata?: any;
   timestamp?: number;
+}
+
+export interface QuerySourceUsage {
+  sources: string[];
+  targets: Record<string, any>;
+  content: string | Record<string, any>;
+  retrievedAt: Date;
 }
 
 export interface WebSocketData {

@@ -7,11 +7,13 @@ import { SessionHistory } from './components/Sidebar/SessionHistory';
 import { ModelSelector } from './components/Sidebar/ModelSelector';
 import { useSessionStore } from './stores/sessionStore';
 import { validateSystem } from './services/api';
+import { ProgressProvider, useProgress } from './contexts/ProgressContext';
 
-function App() {
+function AppContent() {
   const [isValidated, setIsValidated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { sessionId, initializeSession } = useSessionStore();
+  const { currentProgress, activeSources } = useProgress();
 
   useEffect(() => {
     // Initialize session and validate system
@@ -61,7 +63,7 @@ function App() {
         <div className="w-80 bg-gray-800 border-r border-gray-700 flex flex-col">
           <ModelSelector />
           <CharacterSheet />
-          <SourcesPanel />
+          <SourcesPanel currentProgress={currentProgress} activeSources={activeSources} />
           <SessionHistory sessionId={sessionId} />
         </div>
 
@@ -71,6 +73,14 @@ function App() {
         </div>
       </div>
     </Layout>
+  );
+}
+
+function App() {
+  return (
+    <ProgressProvider>
+      <AppContent />
+    </ProgressProvider>
   );
 }
 

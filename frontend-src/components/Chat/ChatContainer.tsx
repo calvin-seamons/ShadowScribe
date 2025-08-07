@@ -4,15 +4,17 @@ import { MessageInput } from './MessageInput';
 import ProgressIndicator from './ProgressIndicator';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useSessionStore } from '../../stores/sessionStore';
-import type { Message, WebSocketData, Progress } from '../../types/index';
+import { useProgress } from '../../contexts/ProgressContext';
+import type { Message, WebSocketData, QuerySourceUsage } from '../../types/index';
 
 export const ChatContainer: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [currentProgress, setCurrentProgress] = useState<Progress | null>(null);
+  const sourceUsageRef = useRef<Partial<QuerySourceUsage>>({});
 
   const { sessionId } = useSessionStore();
   const { sendMessage, lastMessage, connectionStatus } = useWebSocket(sessionId);
+  const { currentProgress, setCurrentProgress, setActiveSources } = useProgress();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,47 +26,106 @@ export const ChatContainer: React.FC = () => {
         switch (data.type) {
           case 'acknowledgment':
             setIsProcessing(true);
+            // Reset source usage for new query
+            sourceUsageRef.current = {};
+            setActiveSources([]);
             break;
             
           case 'progress':
             if (data.data.progress) {
               setCurrentProgress(data.data.progress);
+              
+              // Capture source usage information from progress metadata
+              const progress = data.data.progress;
+              if (progress.metadata) {
+                const metadata = progress.metadata;
+                
+                // Update source usage based on progress pass
+                const currentUsage = sourceUsageRef.current;
+                
+                // Pass 1: Capture selected sources
+                if (metadata.sources && Array.isArray(metadata.sources)) {
+                  currentUsage.sources = metadata.sources;
+                  setActiveSources(metadata.sources);
+                }
+                
+                // Pass 2: Capture targets
+                if (metadata.targets) {
+                  currentUsage.targets = metadata.targets;
+                }
+                
+                // Pass 3: Capture content summary
+                if (metadata.content) {
+                  currentUsage.content = metadata.content;
+                }
+              }
             }
             break;
             
           case 'response':
             setIsProcessing(false);
             setCurrentProgress(null);
+            setActiveSources([]);
             if (data.data.response) {
+              // Create complete source usage object if we have the necessary data
+              const currentUsage = sourceUsageRef.current;
+              const sourceUsage: QuerySourceUsage | undefined = 
+                currentUsage.sources && currentUsage.sources.length > 0
+                  ? {
+                      sources: currentUsage.sources,
+                      targets: currentUsage.targets || {},
+                      content: currentUsage.content || 'No content summary available',
+                      retrievedAt: new Date()
+                    }
+                  : undefined;
+              
               setMessages(prev => [...prev, {
                 id: Date.now().toString(),
                 type: 'assistant',
                 content: data.data.response!,
-                timestamp: new Date()
+                timestamp: new Date(),
+                sourceUsage
               }]);
+              
+              // Reset source usage after message is created
+              sourceUsageRef.current = {};
             }
             break;
             
           case 'error':
             setIsProcessing(false);
             setCurrentProgress(null);
+            setActiveSources([]);
             setMessages(prev => [...prev, {
               id: Date.now().toString(),
               type: 'assistant',
               content: `Error: ${data.data.error || 'Unknown error'}`,
               timestamp: new Date()
             }]);
+            // Reset source usage on error
+            sourceUsageRef.current = {};
             break;
         }
       } catch (error) {
         console.error('Failed to parse WebSocket message:', error);
       }
     }
-  }, [lastMessage]);
+  }, [lastMessage, setCurrentProgress, setActiveSources]);
 
   useEffect(() => {
-    // Scroll to bottom when new messages arrive
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Scroll to bottom when new messages arrive, with a small delay to ensure DOM is updated
+    // Don't scroll if user is interacting with expanded elements
+    const timeoutId = setTimeout(() => {
+      const container = messagesEndRef.current?.parentElement;
+      if (container) {
+        const isAtBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 100;
+        if (isAtBottom) {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, [messages]);
 
   const handleSendMessage = (query: string) => {
