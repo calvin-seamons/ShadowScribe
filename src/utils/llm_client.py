@@ -37,7 +37,7 @@ class LLMClient:
     
     def _get_token_params(self, max_tokens: int) -> Dict[str, int]:
         """Get the appropriate token parameter name and value based on model."""
-        # GPT-5 models and some newer models use max_completion_tokens
+        # GPT-5 models use max_completion_tokens
         if (self.model.startswith("gpt-5") or 
             self.model.startswith("o1") or 
             self.model.startswith("o3")):
@@ -48,7 +48,7 @@ class LLMClient:
     
     def _get_temperature_params(self, desired_temperature: float = 0.1) -> Dict[str, float]:
         """Get the appropriate temperature parameter based on model support."""
-        # GPT-5 and o1/o3 models only support temperature = 1.0 (default)
+        # GPT-5 models only support temperature = 1.0 (default), so don't include the parameter
         if (self.model.startswith("gpt-5") or 
             self.model.startswith("o1") or 
             self.model.startswith("o3")):
