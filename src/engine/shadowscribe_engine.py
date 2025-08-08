@@ -159,13 +159,16 @@ class ShadowScribeEngine:
                 ))
                 response = await response_task
                 
+                print(f"[ENGINE DEBUG] Raw response from generator: type={type(response)}, length={len(response) if response else 0}")
+                print(f"[ENGINE DEBUG] Response preview: {response[:100] if response else 'None or empty'}...")
+                
                 await self._call_debug_callback("PASS_4_COMPLETE", "Response generation completed", {
-                    "response_length": len(response),
-                    "response_preview": response[:200] + "..." if len(response) > 200 else response
+                    "response_length": len(response) if response else 0,
+                    "response_preview": response[:200] + "..." if response and len(response) > 200 else response
                 })
                 
                 # Return structured response with source usage
-                return {
+                result = {
                     "response": response,
                     "sourceUsage": {
                         "sources": used_sources,
@@ -175,11 +178,20 @@ class ShadowScribeEngine:
                     }
                 }
                 
+                print(f"[ENGINE DEBUG] Final result structure: response_length={len(result.get('response', '')) if result.get('response') else 0}")
+                return result
+                
             except Exception as e:
-                await self._call_debug_callback("PASS_4_ERROR", f"Response generation failed: {str(e)}", {"error": str(e)})
+                error_msg = str(e)
+                print(f"[ENGINE DEBUG] Exception in response generation: {error_msg}")
+                print(f"[ENGINE DEBUG] Exception type: {type(e).__name__}")
+                import traceback
+                traceback.print_exc()
+                
+                await self._call_debug_callback("PASS_4_ERROR", f"Response generation failed: {error_msg}", {"error": error_msg})
                 # Return a fallback error message
-                return {
-                    "response": f"I encountered an error while generating the response. The query was processed but I couldn't formulate an answer: {str(e)}",
+                fallback_result = {
+                    "response": f"I encountered an error while generating the response. The query was processed but I couldn't formulate an answer: {error_msg}",
                     "sourceUsage": {
                         "sources": used_sources,
                         "targets": self._format_targets_for_frontend(targets_info),
@@ -187,6 +199,8 @@ class ShadowScribeEngine:
                         "retrievedAt": time.time()
                     }
                 }
+                print(f"[ENGINE DEBUG] Returning fallback result with response length: {len(fallback_result.get('response', ''))}")
+                return fallback_result
             
         except Exception as e:
             error_details = {
@@ -195,10 +209,13 @@ class ShadowScribeEngine:
                 "traceback": traceback.format_exc()
             }
             
+            print(f"[ENGINE DEBUG] Main exception caught: {type(e).__name__}: {str(e)}")
+            traceback.print_exc()
+            
             await self._call_debug_callback("ERROR", f"Error in query processing: {str(e)}", error_details)
             
             # Return a user-friendly error message
-            return {
+            error_result = {
                 "response": f"I encountered an error while processing your query. Please try rephrasing your question or try again later.",
                 "sourceUsage": {
                     "sources": used_sources,
@@ -207,6 +224,8 @@ class ShadowScribeEngine:
                     "retrievedAt": time.time()
                 }
             }
+            print(f"[ENGINE DEBUG] Returning error result with response length: {len(error_result.get('response', ''))}")
+            return error_result
     
     def _format_targets_for_frontend(self, targets_info: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Format targets data for frontend consumption."""
@@ -250,6 +269,9 @@ class ShadowScribeEngine:
     def get_available_models() -> List[str]:
         """Get list of available OpenAI models."""
         return [
+            "gpt-5",
+            "gpt-5-mini",
+            "gpt-5-nano",
             "gpt-4.1",
             "gpt-4.1-mini",
             "gpt-4.1-nano",

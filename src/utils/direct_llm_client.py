@@ -17,6 +17,28 @@ class DirectLLMClient:
         self.client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.debug_callback: Optional[Callable] = None
     
+    def _get_token_params(self, max_tokens: int) -> Dict[str, int]:
+        """Get the appropriate token parameter name and value based on model."""
+        # GPT-5 models and some newer models use max_completion_tokens
+        if (self.model.startswith("gpt-5") or 
+            self.model.startswith("o1") or 
+            self.model.startswith("o3")):
+            return {"max_completion_tokens": max_tokens}
+        else:
+            # Older models (GPT-4, GPT-4o, etc.) use max_tokens
+            return {"max_tokens": max_tokens}
+    
+    def _get_temperature_params(self, desired_temperature: float = 0.1) -> Dict[str, float]:
+        """Get the appropriate temperature parameter based on model support."""
+        # GPT-5 and o1/o3 models only support temperature = 1.0 (default)
+        if (self.model.startswith("gpt-5") or 
+            self.model.startswith("o1") or 
+            self.model.startswith("o3")):
+            return {}  # Don't include temperature parameter, let it use default (1.0)
+        else:
+            # Older models support custom temperature
+            return {"temperature": desired_temperature}
+    
     def set_debug_callback(self, callback: Callable):
         """Set debug callback for progress tracking."""
         self.debug_callback = callback
@@ -78,8 +100,8 @@ RESPOND WITH ONLY VALID JSON, NO OTHER TEXT."""
                     {"role": "system", "content": "Output only valid JSON."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.1,
-                max_tokens=300
+                **self._get_temperature_params(0.1),
+                **self._get_token_params(600)  # Increased from 300
             )
             
             content = response.choices[0].message.content.strip()
@@ -241,8 +263,8 @@ RESPOND WITH ONLY VALID JSON ARRAY, NO OTHER TEXT."""
                     {"role": "system", "content": "Output only a JSON array of filenames."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.1,
-                max_tokens=200
+                **self._get_temperature_params(0.1),
+                **self._get_token_params(400)  # Increased from 200
             )
             
             content = response.choices[0].message.content.strip()
@@ -341,8 +363,8 @@ RESPOND WITH ONLY VALID JSON ARRAY, NO OTHER TEXT."""
                     {"role": "system", "content": "Output only a JSON array of field paths."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.1,
-                max_tokens=300
+                **self._get_temperature_params(0.1),
+                **self._get_token_params(600)  # Increased from 300
             )
             
             content = response.choices[0].message.content.strip()
@@ -502,8 +524,8 @@ RESPOND WITH ONLY VALID JSON, NO OTHER TEXT."""
                     {"role": "system", "content": "Output only valid JSON."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.1,
-                max_tokens=300
+                **self._get_temperature_params(0.1),
+                **self._get_token_params(300)
             )
             
             content = response.choices[0].message.content.strip()
@@ -581,8 +603,8 @@ RESPOND WITH ONLY VALID JSON, NO OTHER TEXT."""
                     {"role": "system", "content": "Output only valid JSON."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.1,
-                max_tokens=200
+                **self._get_temperature_params(0.1),
+                **self._get_token_params(200)
             )
             
             content = response.choices[0].message.content.strip()
@@ -622,7 +644,7 @@ RESPOND WITH ONLY VALID JSON, NO OTHER TEXT."""
                 "keywords": ["session", "event"]
             }
     
-    async def generate_natural_response(self, prompt: str, temperature: float = 0.7, max_tokens: int = 1500) -> str:
+    async def generate_natural_response(self, prompt: str, temperature: float = 0.7, max_tokens: int = 3000) -> str:
         """
         Generate a natural language response using the direct client.
         This method is for final response generation, not structured parsing.
@@ -633,15 +655,31 @@ RESPOND WITH ONLY VALID JSON, NO OTHER TEXT."""
             {"prompt_length": len(prompt), "temperature": temperature, "max_tokens": max_tokens}
         )
         
+        print(f"[DIRECT_LLM DEBUG] Starting natural response generation")
+        print(f"[DIRECT_LLM DEBUG] Model: {self.model}")
+        print(f"[DIRECT_LLM DEBUG] Prompt length: {len(prompt)}")
+        print(f"[DIRECT_LLM DEBUG] Temperature: {temperature}")
+        print(f"[DIRECT_LLM DEBUG] Max tokens: {max_tokens}")
+        
         try:
+            token_params = self._get_token_params(max_tokens)
+            temp_params = self._get_temperature_params(temperature)
+            
+            print(f"[DIRECT_LLM DEBUG] Token params: {token_params}")
+            print(f"[DIRECT_LLM DEBUG] Temperature params: {temp_params}")
+            
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=temperature,
-                max_tokens=max_tokens
+                **temp_params,
+                **token_params
             )
             
             content = response.choices[0].message.content.strip()
+            
+            print(f"[DIRECT_LLM DEBUG] API response received")
+            print(f"[DIRECT_LLM DEBUG] Content length: {len(content) if content else 0}")
+            print(f"[DIRECT_LLM DEBUG] Content preview: {content[:100] if content else 'None or empty'}...")
             
             await self._call_debug_callback(
                 "NATURAL_RESPONSE_SUCCESS", 
@@ -652,11 +690,17 @@ RESPOND WITH ONLY VALID JSON, NO OTHER TEXT."""
             return content
             
         except Exception as e:
+            error_msg = str(e)
+            print(f"[DIRECT_LLM DEBUG] Exception in API call: {error_msg}")
+            print(f"[DIRECT_LLM DEBUG] Exception type: {type(e).__name__}")
+            import traceback
+            traceback.print_exc()
+            
             await self._call_debug_callback(
                 "NATURAL_RESPONSE_ERROR", 
-                f"Natural response generation failed: {str(e)}",
+                f"Natural response generation failed: {error_msg}",
                 {"error_type": type(e).__name__}
             )
             
             # Return a basic error response
-            return f"I apologize, but I encountered an error while generating a response: {str(e)}"
+            return f"I apologize, but I encountered an error while generating a response: {error_msg}"

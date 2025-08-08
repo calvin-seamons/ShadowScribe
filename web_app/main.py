@@ -120,10 +120,14 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                     if isinstance(result, dict) and "response" in result:
                         response = result["response"]
                         source_usage = result.get("sourceUsage")
+                        print(f"[DEBUG] Got structured result - response length: {len(response) if response else 0}")
+                        print(f"[DEBUG] Response preview: {response[:100] if response else 'None'}...")
+                        print(f"[DEBUG] Source usage available: {source_usage is not None}")
                     else:
                         # Fallback for string responses (backwards compatibility)
                         response = str(result)
                         source_usage = None
+                        print(f"[DEBUG] Got string result - length: {len(response)}")
                     
                     # Send the final response with source usage
                     response_data = {
@@ -134,11 +138,13 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                     if source_usage:
                         response_data["sourceUsage"] = source_usage
                     
+                    print(f"[DEBUG] Sending response message with {len(response_data)} fields")
                     await websocket_manager.send_personal_message({
                         "type": "response",
                         "sessionId": session_id,
                         "data": response_data
                     }, websocket)
+                    print(f"[DEBUG] Response message sent successfully")
                     
                     # Save to session history (non-blocking)
                     asyncio.create_task(
