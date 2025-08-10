@@ -36,18 +36,35 @@ class ResponseGenerator:
         Generate response with retrieved content.
         Simplified approach with clear data presentation.
         """
+        print(f"[RESPONSE_GEN DEBUG] Starting response generation")
+        print(f"[RESPONSE_GEN DEBUG] User query: {user_query}")
+        print(f"[RESPONSE_GEN DEBUG] Content type: {type(content)}")
+        print(f"[RESPONSE_GEN DEBUG] Content length: {len(content) if content else 0}")
+        
+        if content:
+            for i, item in enumerate(content):
+                print(f"[RESPONSE_GEN DEBUG] Content[{i}]: source_type={item.source_type}, content_keys={list(item.content.keys()) if hasattr(item, 'content') and isinstance(item.content, dict) else 'not dict'}")
+        else:
+            print(f"[RESPONSE_GEN DEBUG] No content provided!")
+        
         # Organize content by type
         organized_content = self._organize_content(content)
+        print(f"[RESPONSE_GEN DEBUG] Organized content keys: {list(organized_content.keys())}")
         
         # Create a clear, structured prompt
         prompt = self._create_response_prompt(user_query, organized_content)
+        print(f"[RESPONSE_GEN DEBUG] Prompt length: {len(prompt)} characters")
+        print(f"[RESPONSE_GEN DEBUG] Prompt preview: {prompt[:200]}...")
         
         # Generate response using direct client
         response = await self.direct_client.generate_natural_response(
             prompt,
             temperature=0.7,  # Slightly higher for more natural responses
-            max_tokens=1500
+            max_tokens=3000  # Increased token limit for longer, more detailed responses
         )
+        
+        print(f"[RESPONSE_GEN DEBUG] Generated response length: {len(response) if response else 0}")
+        print(f"[RESPONSE_GEN DEBUG] Response preview: {response[:100] if response else 'None or empty'}...")
         
         return response
     

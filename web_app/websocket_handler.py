@@ -128,9 +128,13 @@ class WebSocketManager:
         """Send a message directly to a specific WebSocket connection."""
         try:
             serializable_message = make_json_serializable(message)
+            print(f"[DEBUG] Sending personal message: {message.get('type', 'unknown')} - {len(str(serializable_message))} chars")
             await websocket.send_json(serializable_message)
+            print(f"[DEBUG] Successfully sent message")
         except Exception as e:
             print(f"Error sending personal message: {e}")
+            import traceback
+            traceback.print_exc()
     
     async def broadcast_to_session(self, session_id: str, message: dict):
         """Queue a message to be sent to a specific session."""

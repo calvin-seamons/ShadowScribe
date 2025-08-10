@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
     "frontend": "vite",
-    "backend": "cd web_app && python main.py",
+    "backend": "cd web_app && ../venv/bin/python main.py",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",

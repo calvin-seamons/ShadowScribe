@@ -30,12 +30,32 @@ class LLMClient:
         self.client = AsyncOpenAI(api_key=self.api_key)
         self.debug_callback = None
         
-        # Optimized parameters for structured responses
+        # Optimized parameters for structured responses (will be model-aware)
         self.default_params = {
-            "temperature": 0.1,  # Very low for consistent structured output
-            "max_tokens": 2000,
             "top_p": 1.0,
         }
+    
+    def _get_token_params(self, max_tokens: int) -> Dict[str, int]:
+        """Get the appropriate token parameter name and value based on model."""
+        # GPT-5 models use max_completion_tokens
+        if (self.model.startswith("gpt-5") or 
+            self.model.startswith("o1") or 
+            self.model.startswith("o3")):
+            return {"max_completion_tokens": max_tokens}
+        else:
+            # Older models (GPT-4, GPT-4o, etc.) use max_tokens
+            return {"max_tokens": max_tokens}
+    
+    def _get_temperature_params(self, desired_temperature: float = 0.1) -> Dict[str, float]:
+        """Get the appropriate temperature parameter based on model support."""
+        # GPT-5 models only support temperature = 1.0 (default), so don't include the parameter
+        if (self.model.startswith("gpt-5") or 
+            self.model.startswith("o1") or 
+            self.model.startswith("o3")):
+            return {}  # Don't include temperature parameter, let it use default (1.0)
+        else:
+            # Older models support custom temperature
+            return {"temperature": desired_temperature}
     
     def set_debug_callback(self, callback):
         """Set a callback function for debug logging."""
@@ -111,8 +131,8 @@ Example format:
                         "function": function_schema
                     }],
                     tool_choice={"type": "function", "function": {"name": function_schema["name"]}},
-                    temperature=0.1,  # Low for consistency
-                    max_tokens=2000
+                    **self._get_temperature_params(0.1),  # Low for consistency
+                    **self._get_token_params(2000)
                 )
                 
                 # Extract and validate the response
@@ -375,7 +395,16 @@ Example format:
         Generate a standard text response.
         Simplified version with better error handling.
         """
-        params = {**self.default_params, **kwargs}
+        # Build params with model-aware defaults
+        params = {**self.default_params}
+        
+        # Add model-aware temperature and token parameters if not overridden
+        if 'temperature' not in kwargs and 'max_completion_tokens' not in kwargs and 'max_tokens' not in kwargs:
+            params.update(self._get_temperature_params(0.7))  # Higher temp for creative text
+            params.update(self._get_token_params(2000))
+        
+        # Override with any user-provided kwargs
+        params.update(kwargs)
         
         await self._log_debug("LLM_TEXT_REQUEST", "Generating text response", {
             "prompt_length": len(prompt)
