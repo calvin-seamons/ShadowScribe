@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from typing import Dict, Any, List
 from models import (
     SourcesResponse, 
-    ValidationResponse, 
+    SystemValidationResponse, 
     CharacterSummary,
     SessionHistoryResponse,
     ModelUpdateRequest,
@@ -45,13 +45,13 @@ async def get_available_sources(engine=Depends(get_engine)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/validate", response_model=ValidationResponse)
+@router.post("/validate", response_model=SystemValidationResponse)
 async def validate_system(engine=Depends(get_engine)):
     """Validate system health and data integrity."""
     try:
         # Check if engine is initialized
         if not engine:
-            return ValidationResponse(
+            return SystemValidationResponse(
                 status="error",
                 message="Engine not initialized"
             )
@@ -66,7 +66,7 @@ async def validate_system(engine=Depends(get_engine)):
         except:
             character_status = False
         
-        return ValidationResponse(
+        return SystemValidationResponse(
             status="success" if kb_status and character_status else "partial",
             message="System validation complete",
             details={

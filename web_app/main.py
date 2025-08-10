@@ -74,8 +74,16 @@ app.add_middleware(
 from api_routes import set_dependencies
 set_dependencies(engine, session_manager)
 
+# Initialize knowledge base file manager and set dependencies
+from knowledge_base_service import KnowledgeBaseFileManager
+from knowledge_base_routes import router as knowledge_base_router, set_file_manager
+
+knowledge_base_file_manager = KnowledgeBaseFileManager(knowledge_base_path)
+set_file_manager(knowledge_base_file_manager)
+
 # Include API routes
 app.include_router(api_router, prefix="/api")
+app.include_router(knowledge_base_router, prefix="/api")
 
 # Serve static files in production
 if os.path.exists("../frontend/build"):

@@ -12,7 +12,10 @@
             {
               "name": "Eldaryth of Regret (I)",
               "type": "weapon_attack",
-              "properties": ["Hex Weapon", "Pact Weapon"],
+              "properties": [
+                "Hex Weapon",
+                "Pact Weapon"
+              ],
               "range": "5 ft",
               "reach": true,
               "attack_bonus": 15,
@@ -25,7 +28,11 @@
                 "current": 2,
                 "maximum": 3
               },
-              "weapon_properties": ["Martial", "Versatile", "Sap"]
+              "weapon_properties": [
+                "Martial",
+                "Versatile",
+                "Sap"
+              ]
             },
             {
               "name": "Unarmed Strike",

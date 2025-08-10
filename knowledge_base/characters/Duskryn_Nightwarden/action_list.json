@@ -1,0 +1,343 @@
+{
+  "character_actions": {
+    "attacks_per_action": 2,
+    "action_economy": {
+      "actions": [
+        {
+          "name": "Attack",
+          "type": "action",
+          "description": "Make weapon or spell attacks",
+          "uses_per_turn": 1,
+          "sub_actions": [
+            {
+              "name": "Eldaryth of Regret (I)",
+              "type": "weapon_attack",
+              "properties": [
+                "Hex Weapon",
+                "Pact Weapon"
+              ],
+              "range": "5 ft",
+              "reach": true,
+              "attack_bonus": 15,
+              "damage": {
+                "one_handed": "1d8+12",
+                "two_handed": "1d10+10"
+              },
+              "damage_type": "slashing",
+              "charges": {
+                "current": 2,
+                "maximum": 3
+              },
+              "weapon_properties": [
+                "Martial",
+                "Versatile",
+                "Sap"
+              ]
+            },
+            {
+              "name": "Unarmed Strike",
+              "type": "melee_attack",
+              "range": "5 ft",
+              "reach": true,
+              "attack_bonus": 7,
+              "damage": "3",
+              "damage_type": "bludgeoning",
+              "special_options": [
+                {
+                  "name": "Damage",
+                  "effect": "Deal 1 + STR modifier bludgeoning damage"
+                },
+                {
+                  "name": "Grapple",
+                  "effect": "Target must succeed on STR/DEX save (DC = 8 + Prof + STR) or be grappled"
+                },
+                {
+                  "name": "Shove",
+                  "effect": "Target must succeed on STR/DEX save (DC = 8 + Prof + STR) or be pushed 5 ft or knocked prone"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Channel Divinity",
+          "type": "action",
+          "uses": {
+            "maximum": 1,
+            "reset": "short_rest"
+          },
+          "save_dc": 20,
+          "options": [
+            {
+              "name": "Emissary of Peace",
+              "type": "bonus_action",
+              "effect": "Grant yourself +5 bonus to Charisma (Persuasion) checks for 10 minutes"
+            },
+            {
+              "name": "Rebuke the Violent",
+              "type": "reaction",
+              "trigger": "When an attacker within 30 ft deals damage to a creature other than you",
+              "effect": "Force attacker to make WIS save (DC 20). On failure, takes radiant damage equal to damage dealt, half on success"
+            }
+          ]
+        },
+        {
+          "name": "Create Pact Weapon",
+          "type": "action",
+          "description": "Create a pact weapon in your hand or transform a magic weapon into your pact weapon",
+          "effect": "Weapon appears in hand, you're proficient with it, counts as magical"
+        },
+        {
+          "name": "Divine Sense",
+          "type": "action",
+          "uses": {
+            "current": 8,
+            "maximum": 8,
+            "reset": "long_rest"
+          },
+          "range": "60 ft",
+          "effect": "Detect celestials, fiends, undead, and consecrated/desecrated areas until end of next turn"
+        },
+        {
+          "name": "Extra Attack",
+          "type": "feature",
+          "description": "You can attack twice, instead of once, whenever you take the Attack action on your turn"
+        },
+        {
+          "name": "Lay on Hands",
+          "type": "action",
+          "pool": {
+            "current": 0,
+            "maximum": 40,
+            "reset": "long_rest"
+          },
+          "effects": [
+            {
+              "name": "Heal",
+              "cost": "Variable",
+              "effect": "Restore HP equal to points spent"
+            },
+            {
+              "name": "Cure Disease",
+              "cost": 5,
+              "effect": "Cure one disease"
+            },
+            {
+              "name": "Neutralize Poison",
+              "cost": 5,
+              "effect": "Neutralize one poison"
+            }
+          ]
+        }
+      ],
+      "bonus_actions": [
+        {
+          "name": "Two-Weapon Fighting",
+          "type": "bonus_action",
+          "description": "Make an off-hand attack when you use the Attack action with a light melee weapon"
+        },
+        {
+          "name": "Hex",
+          "type": "spell",
+          "spell_level": 1,
+          "class": "Warlock",
+          "effect": "Curse target for extra 1d6 necrotic damage and disadvantage on one ability check"
+        },
+        {
+          "name": "Sanctuary",
+          "type": "spell",
+          "spell_level": 1,
+          "class": "Paladin",
+          "legacy": true,
+          "effect": "Ward a creature against attacks"
+        },
+        {
+          "name": "Shield of Faith",
+          "type": "spell",
+          "spell_level": 1,
+          "class": "Paladin",
+          "effect": "Grant +2 AC to target"
+        },
+        {
+          "name": "Misty Step",
+          "type": "spell",
+          "spell_level": 2,
+          "class": "Warlock",
+          "legacy": true,
+          "effect": "Teleport up to 30 feet"
+        },
+        {
+          "name": "Shining Smite",
+          "type": "spell",
+          "spell_level": 2,
+          "class": "Paladin",
+          "trigger": "Immediately after hitting with melee weapon or unarmed strike",
+          "effect": "Deal extra 2d6 radiant damage, target sheds bright light and attacks have advantage"
+        },
+        {
+          "name": "Divine Word",
+          "type": "spell",
+          "spell_level": 7,
+          "class": "Paladin",
+          "legacy": true,
+          "effect": "Speak word of power affecting creatures based on current HP"
+        },
+        {
+          "name": "Channel Divinity: Emissary of Peace",
+          "type": "bonus_action",
+          "effect": "Grant yourself +5 bonus to Charisma (Persuasion) checks for 10 minutes"
+        },
+        {
+          "name": "Harness Divine Power",
+          "type": "bonus_action",
+          "uses": {
+            "maximum": 1,
+            "reset": "long_rest"
+          },
+          "effect": "Expend Channel Divinity use to regain one spell slot (max 3rd level)"
+        },
+        {
+          "name": "Hexblade's Curse",
+          "type": "bonus_action",
+          "uses": {
+            "maximum": 1,
+            "reset": "short_rest"
+          },
+          "range": "30 ft",
+          "duration": "1 minute",
+          "effects": [
+            "+5 bonus to damage rolls against cursed target",
+            "Critical hit on 19-20",
+            "Regain 12 HP when cursed target dies"
+          ]
+        }
+      ],
+      "reactions": [
+        {
+          "name": "Opportunity Attack",
+          "type": "reaction",
+          "trigger": "A hostile creature you can see moves out of your reach",
+          "effect": "Make one melee attack against the triggering creature"
+        },
+        {
+          "name": "Hellish Rebuke",
+          "type": "spell",
+          "spell_level": 1,
+          "class": "Warlock",
+          "trigger": "Taking damage from a creature within 60 ft that you can see",
+          "effect": "Creature takes 2d10 fire damage (DEX save for half)"
+        },
+        {
+          "name": "Counterspell",
+          "type": "spell",
+          "spell_level": 3,
+          "class": "Warlock",
+          "trigger": "See a creature within 60 ft casting a spell",
+          "effect": "Attempt to interrupt the spell (CON save)"
+        },
+        {
+          "name": "Aura of the Guardian",
+          "type": "reaction",
+          "range": "10 ft",
+          "trigger": "When a creature within range takes damage",
+          "effect": "Magically take that damage instead"
+        },
+        {
+          "name": "Channel Divinity: Rebuke the Violent",
+          "type": "reaction",
+          "range": "30 ft",
+          "trigger": "Attacker deals damage to creature other than you",
+          "effect": "Force WIS save (DC 20) or take radiant damage equal to damage dealt"
+        }
+      ],
+      "other_actions": [
+        {
+          "name": "Interact with an Object",
+          "type": "free_action",
+          "description": "Interact with one object or environmental feature"
+        },
+        {
+          "name": "Ceremony",
+          "type": "spell",
+          "spell_level": 1,
+          "class": "Paladin",
+          "casting_time": "1 hour",
+          "effect": "Perform various religious ceremonies"
+        },
+        {
+          "name": "Prayer of Healing",
+          "type": "spell",
+          "spell_level": 2,
+          "class": "Paladin",
+          "casting_time": "10 minutes",
+          "effect": "Heal up to 5 creatures for 2d8 HP"
+        }
+      ],
+      "special_abilities": [
+        {
+          "name": "Divine Smite",
+          "type": "special",
+          "trigger": "On hit with melee weapon attack",
+          "cost": "1 spell slot",
+          "damage": {
+            "base": "2d8",
+            "per_spell_level": "+1d8",
+            "maximum": "5d8",
+            "vs_undead_fiend": "+1d8"
+          },
+          "damage_type": "radiant"
+        },
+        {
+          "name": "Hex Warrior",
+          "type": "passive",
+          "effects": [
+            "Proficiency with medium armor, shields, and martial weapons",
+            "Use CHA for attack and damage with one weapon (chosen on long rest)",
+            "Use CHA for all pact weapons"
+          ],
+          "restrictions": "Chosen weapon cannot have two-handed property"
+        },
+        {
+          "name": "Lucky",
+          "type": "special",
+          "action_required": "none",
+          "uses": {
+            "maximum": 3,
+            "reset": "long_rest"
+          },
+          "trigger": "When making attack roll, ability check, saving throw, or being attacked",
+          "effect": "Roll additional d20 and choose which to use"
+        }
+      ]
+    },
+    "combat_actions_reference": [
+      "Attack",
+      "Dash",
+      "Disengage",
+      "Dodge",
+      "Grapple",
+      "Help",
+      "Hide",
+      "Improvise",
+      "Influence",
+      "Magic",
+      "Ready",
+      "Search",
+      "Shove",
+      "Study",
+      "Utilize"
+    ]
+  },
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2025-08-02",
+    "notes": [
+      "Keep in mind you can only cast one spell per turn unless you have the Extra Attack feature",
+      "Attack bonuses and save DCs are pre-calculated",
+      "Uses tracking included for limited-use abilities",
+      "Legacy spells are marked",
+      "Some abilities can be used as different action types",
+      "Hexblade's Curse and Hex Warrior use CHA for attacks"
+    ]
+  }
+}

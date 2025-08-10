@@ -43,3 +43,6 @@ export async function updateModel(model: string) {
   if (!response.ok) throw new Error('Failed to update model');
   return response.json();
 }
+
+// Re-export knowledge base API functions for convenience
+export * from './knowledgeBaseApi';

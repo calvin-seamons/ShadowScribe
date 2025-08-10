@@ -71,3 +71,54 @@ export interface ModelInfo {
   available_models: string[];
   status: string;
 }
+
+// Knowledge Base Types
+export interface KnowledgeBaseFile {
+  filename: string;
+  file_type: 'character' | 'character_background' | 'feats_and_traits' | 'action_list' | 'inventory_list' | 'objectives_and_contracts' | 'spell_list' | 'other';
+  size: number;
+  last_modified: string;
+  is_editable: boolean;
+}
+
+export interface FileContent {
+  filename: string;
+  content: Record<string, any>;
+  schema_version?: string;
+}
+
+export interface ValidationError {
+  field_path: string;
+  message: string;
+  error_type: 'required' | 'type' | 'format' | 'custom';
+}
+
+export interface ValidationResult {
+  is_valid: boolean;
+  errors: ValidationError[];
+  warnings: string[];
+}
+
+export interface BackupInfo {
+  backup_id: string;
+  filename: string;
+  created_at: string;
+  size: number;
+}
+
+export interface CharacterCreationRequest {
+  character_name: string;
+  race: string;
+  character_class: string;
+  level?: number;
+  background?: string;
+  alignment?: string;
+  ability_scores?: Record<string, number>;
+}
+
+export interface CharacterCreationResponse {
+  character_name: string;
+  files_created: string[];
+  status: string;
+  message: string;
+}
