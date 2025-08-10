@@ -11,7 +11,6 @@ import {
   getFileSchema,
   getFileTemplate,
   listCharacters,
-  KnowledgeBaseApiError,
   isKnowledgeBaseApiError
 } from '../knowledgeBaseApi';
 
@@ -26,10 +25,10 @@ describe.skipIf(!runIntegrationTests)('Knowledge Base API Integration Tests', ()
   it('should get supported file types from backend', async () => {
     try {
       const supportedTypes = await getSupportedFileTypes();
-      
+
       expect(supportedTypes).toBeDefined();
       expect(typeof supportedTypes).toBe('object');
-      
+
       // Should include the core file types
       const expectedTypes = [
         'character.json',
@@ -40,11 +39,11 @@ describe.skipIf(!runIntegrationTests)('Knowledge Base API Integration Tests', ()
         'objectives_and_contracts.json',
         'spell_list.json'
       ];
-      
+
       expectedTypes.forEach(type => {
         expect(supportedTypes).toHaveProperty(type);
       });
-      
+
     } catch (error) {
       if (isKnowledgeBaseApiError(error) && error.status === 0) {
         console.warn('Backend not available for integration test');
@@ -57,11 +56,11 @@ describe.skipIf(!runIntegrationTests)('Knowledge Base API Integration Tests', ()
   it('should get schema for character file type', async () => {
     try {
       const schema = await getFileSchema('character');
-      
+
       expect(schema).toBeDefined();
       expect(typeof schema).toBe('object');
       expect(schema).toHaveProperty('type');
-      
+
     } catch (error) {
       if (isKnowledgeBaseApiError(error) && error.status === 0) {
         console.warn('Backend not available for integration test');
@@ -74,10 +73,10 @@ describe.skipIf(!runIntegrationTests)('Knowledge Base API Integration Tests', ()
   it('should get template for character file type', async () => {
     try {
       const template = await getFileTemplate('character');
-      
+
       expect(template).toBeDefined();
       expect(typeof template).toBe('object');
-      
+
     } catch (error) {
       if (isKnowledgeBaseApiError(error) && error.status === 0) {
         console.warn('Backend not available for integration test');
@@ -90,13 +89,13 @@ describe.skipIf(!runIntegrationTests)('Knowledge Base API Integration Tests', ()
   it('should list characters from backend', async () => {
     try {
       const result = await listCharacters();
-      
+
       expect(result).toBeDefined();
       expect(result).toHaveProperty('characters');
       expect(result).toHaveProperty('count');
       expect(Array.isArray(result.characters)).toBe(true);
       expect(typeof result.count).toBe('number');
-      
+
     } catch (error) {
       if (isKnowledgeBaseApiError(error) && error.status === 0) {
         console.warn('Backend not available for integration test');
