@@ -301,5 +301,70 @@ export function getFileTypeFromFilename(filename: string): FileType | 'other' {
   return 'other';
 }
 
+// File Management Functions
+export async function duplicateFile(filename: string, newFilename: string): Promise<void> {
+  await apiRequest(`/files/${encodeURIComponent(filename)}/duplicate?new_filename=${encodeURIComponent(newFilename)}`, {
+    method: 'POST',
+  });
+}
+
+export async function exportFile(filename: string): Promise<any> {
+  const response = await apiRequest<{ export_data: any; filename: string }>(`/files/${encodeURIComponent(filename)}/export`);
+  return response.export_data;
+}
+
+export async function importFile(exportData: any, filename?: string, overwrite: boolean = false): Promise<void> {
+  await apiRequest('/files/import', {
+    method: 'POST',
+    body: JSON.stringify({
+      export_data: exportData,
+      filename,
+      overwrite,
+    }),
+  });
+}
+
+export async function exportCharacter(characterName: string): Promise<any> {
+  const response = await apiRequest<{ export_package: any; character_name: string }>(`/characters/${encodeURIComponent(characterName)}/export`);
+  return response.export_package;
+}
+
+export async function importCharacter(exportPackage: any, characterName?: string, overwrite: boolean = false): Promise<{ imported_files: string[]; failed_files: string[] }> {
+  const response = await apiRequest<{ imported_files: string[]; failed_files: string[] }>('/characters/import', {
+    method: 'POST',
+    body: JSON.stringify({
+      export_package: exportPackage,
+      character_name: characterName,
+      overwrite,
+    }),
+  });
+  return response;
+}
+
+export interface ConflictInfo {
+  type: string;
+  message: string;
+  severity: 'warning' | 'error';
+  recommendation: string;
+  details?: any;
+}
+
+export interface ConflictCheckResult {
+  has_conflicts: boolean;
+  conflicts: ConflictInfo[];
+  file_info?: {
+    filename: string;
+    size: number;
+    last_modified: string;
+    recent_backups: number;
+  };
+  message?: string;
+}
+
+export async function checkFileConflicts(filename: string): Promise<ConflictCheckResult> {
+  const response = await apiRequest<ConflictCheckResult>(`/files/${encodeURIComponent(filename)}/conflicts`);
+  return response;
+}
+
 // Export the error class for external use
 export { KnowledgeBaseApiError };

@@ -5,12 +5,18 @@ import {
   Zap, 
   Eye,
   Calculator,
-  AlertCircle,
   Info,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
 import { ValidationError } from '../../services/knowledgeBaseApi';
+import { 
+  ValidationProvider, 
+  ValidationSummary, 
+  ValidatedInput, 
+  ValidatedSelect,
+  UnsavedChangesWarning 
+} from './validation';
 
 interface CharacterData {
   character_base: {
@@ -81,12 +87,16 @@ interface CharacterBasicEditorProps {
   data: CharacterData;
   onChange: (data: CharacterData) => void;
   onValidationErrors: (errors: ValidationError[]) => void;
+  filename?: string;
+  onSave?: () => void;
 }
 
 export const CharacterBasicEditor: React.FC<CharacterBasicEditorProps> = ({
   data,
   onChange,
-  onValidationErrors
+  onValidationErrors,
+  filename,
+  onSave
 }) => {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['character_base', 'ability_scores', 'combat_stats'])
@@ -404,18 +414,24 @@ export const CharacterBasicEditor: React.FC<CharacterBasicEditorProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-700">
-        <h2 className="text-xl font-bold text-white">Character Basic Information</h2>
-        <p className="text-sm text-gray-400 mt-1">
-          Edit your character's core stats and information
-        </p>
-      </div>
+    <ValidationProvider filename={filename} fileType="character">
+      <div className="h-full flex flex-col">
+        {/* Header */}
+        <div className="p-4 border-b border-gray-700">
+          <h2 className="text-xl font-bold text-white">Character Basic Information</h2>
+          <p className="text-sm text-gray-400 mt-1">
+            Edit your character's core stats and information
+          </p>
+        </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-6 max-w-4xl">
+        {/* Validation Summary */}
+        <div className="p-4 border-b border-gray-700">
+          <ValidationSummary showWhenValid />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="space-y-6 max-w-4xl">
           
           {/* Character Base */}
           {renderSection(
@@ -423,21 +439,84 @@ export const CharacterBasicEditor: React.FC<CharacterBasicEditorProps> = ({
             'Basic Information',
             <User className="w-5 h-5 text-purple-400" />,
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {renderInput('character_base.name', 'Character Name', 'text', true, undefined, undefined, 'Enter character name')}
-              {renderInput('character_base.race', 'Race', 'text', true, undefined, undefined, 'e.g., Human, Elf, Dwarf')}
-              {renderInput('character_base.subrace', 'Subrace', 'text', false, undefined, undefined, 'e.g., Hill Dwarf, High Elf')}
-              {renderInput('character_base.class', 'Class', 'text', true, undefined, undefined, 'e.g., Fighter, Wizard')}
-              {renderInput('character_base.total_level', 'Total Level', 'number', true, 1, 20)}
-              {renderInput('character_base.experience_points', 'Experience Points', 'number', false, 0)}
-              {renderSelect('character_base.alignment', 'Alignment', [
-                'Lawful Good', 'Neutral Good', 'Chaotic Good',
-                'Lawful Neutral', 'True Neutral', 'Chaotic Neutral',
-                'Lawful Evil', 'Neutral Evil', 'Chaotic Evil'
-              ], false, 'Select alignment')}
-              {renderInput('character_base.background', 'Background', 'text', false, undefined, undefined, 'e.g., Acolyte, Criminal')}
-              {renderSelect('character_base.lifestyle', 'Lifestyle', [
-                'Wretched', 'Squalid', 'Poor', 'Modest', 'Comfortable', 'Wealthy', 'Aristocrat'
-              ], false, 'Select lifestyle')}
+              <ValidatedInput
+                fieldPath="character_base.name"
+                label="Character Name"
+                value={data.character_base.name}
+                onChange={(value) => updateField('character_base.name', value)}
+                required
+                placeholder="Enter character name"
+              />
+              <ValidatedInput
+                fieldPath="character_base.race"
+                label="Race"
+                value={data.character_base.race}
+                onChange={(value) => updateField('character_base.race', value)}
+                required
+                placeholder="e.g., Human, Elf, Dwarf"
+              />
+              <ValidatedInput
+                fieldPath="character_base.subrace"
+                label="Subrace"
+                value={data.character_base.subrace || ''}
+                onChange={(value) => updateField('character_base.subrace', value)}
+                placeholder="e.g., Hill Dwarf, High Elf"
+              />
+              <ValidatedInput
+                fieldPath="character_base.class"
+                label="Class"
+                value={data.character_base.class}
+                onChange={(value) => updateField('character_base.class', value)}
+                required
+                placeholder="e.g., Fighter, Wizard"
+              />
+              <ValidatedInput
+                fieldPath="character_base.total_level"
+                label="Total Level"
+                type="number"
+                value={data.character_base.total_level}
+                onChange={(value) => updateField('character_base.total_level', value)}
+                required
+                min={1}
+                max={20}
+              />
+              <ValidatedInput
+                fieldPath="character_base.experience_points"
+                label="Experience Points"
+                type="number"
+                value={data.character_base.experience_points}
+                onChange={(value) => updateField('character_base.experience_points', value)}
+                min={0}
+              />
+              <ValidatedSelect
+                fieldPath="character_base.alignment"
+                label="Alignment"
+                value={data.character_base.alignment}
+                onChange={(value) => updateField('character_base.alignment', value)}
+                options={[
+                  'Lawful Good', 'Neutral Good', 'Chaotic Good',
+                  'Lawful Neutral', 'True Neutral', 'Chaotic Neutral',
+                  'Lawful Evil', 'Neutral Evil', 'Chaotic Evil'
+                ]}
+                placeholder="Select alignment"
+              />
+              <ValidatedInput
+                fieldPath="character_base.background"
+                label="Background"
+                value={data.character_base.background}
+                onChange={(value) => updateField('character_base.background', value)}
+                placeholder="e.g., Acolyte, Criminal"
+              />
+              <ValidatedSelect
+                fieldPath="character_base.lifestyle"
+                label="Lifestyle"
+                value={data.character_base.lifestyle}
+                onChange={(value) => updateField('character_base.lifestyle', value)}
+                options={[
+                  'Wretched', 'Squalid', 'Poor', 'Modest', 'Comfortable', 'Wealthy', 'Aristocrat'
+                ]}
+                placeholder="Select lifestyle"
+              />
             </div>
           )}
 
@@ -576,8 +655,15 @@ export const CharacterBasicEditor: React.FC<CharacterBasicEditorProps> = ({
             </div>
           )}
 
+          </div>
         </div>
+
+        {/* Unsaved Changes Warning */}
+        <UnsavedChangesWarning
+          onSave={onSave}
+          position="bottom"
+        />
       </div>
-    </div>
+    </ValidationProvider>
   );
 };

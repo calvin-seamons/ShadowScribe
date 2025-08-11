@@ -9,3 +9,8 @@ export { ActionListEditor } from './ActionListEditor';
 export { InventoryEditor } from './InventoryEditor';
 export { ObjectivesEditor } from './ObjectivesEditor';
 export { CharacterCreationWizard } from './CharacterCreationWizard';
+export { SpellListEditor } from './SpellListEditor';
+export { ValidationDemo } from './ValidationDemo';
+
+// Export validation components
+export * from './validation';

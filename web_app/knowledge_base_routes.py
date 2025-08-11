@@ -520,3 +520,376 @@ async def get_supported_file_types(file_manager=Depends(get_file_manager)):
     except Exception as e:
         logger.error(f"Error getting supported file types: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/files/{filename}/duplicate")
+async def duplicate_file(filename: str, new_filename: str, file_manager=Depends(get_file_manager)):
+    """
+    Duplicate a knowledge base file with a new name.
+    
+    Args:
+        filename: Name of the file to duplicate
+        new_filename: Name for the duplicated file
+        
+    Returns:
+        Success message with duplicated file info
+    """
+    try:
+        # Read the original file content
+        content = await file_manager.read_file(filename)
+        
+        # Create the duplicate with new filename
+        success = await file_manager.create_file(new_filename, content)
+        
+        if success:
+            logger.info(f"Successfully duplicated file {filename} to {new_filename}")
+            return {
+                "status": "success",
+                "message": f"File {filename} duplicated to {new_filename}",
+                "original_filename": filename,
+                "new_filename": new_filename
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to duplicate file")
+            
+    except FileNotFoundError:
+        logger.warning(f"Original file not found for duplication: {filename}")
+        raise HTTPException(status_code=404, detail=f"Original file not found: {filename}")
+    except FileExistsError:
+        logger.warning(f"Duplicate file already exists: {new_filename}")
+        raise HTTPException(status_code=409, detail=f"File already exists: {new_filename}")
+    except ValueError as e:
+        logger.error(f"Validation error duplicating {filename}: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error duplicating file {filename}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/files/{filename}/export")
+async def export_file(filename: str, file_manager=Depends(get_file_manager)):
+    """
+    Export a knowledge base file for download.
+    
+    Args:
+        filename: Name of the file to export
+        
+    Returns:
+        File content with export metadata
+    """
+    try:
+        content = await file_manager.read_file(filename)
+        
+        # Add export metadata
+        export_data = {
+            "export_metadata": {
+                "filename": filename,
+                "exported_at": datetime.now().isoformat(),
+                "export_version": "1.0",
+                "source": "ShadowScribe Knowledge Base"
+            },
+            "file_content": content
+        }
+        
+        logger.info(f"Exported file: {filename}")
+        return {
+            "status": "success",
+            "export_data": export_data,
+            "filename": filename
+        }
+        
+    except FileNotFoundError:
+        logger.warning(f"File not found for export: {filename}")
+        raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+    except Exception as e:
+        logger.error(f"Error exporting file {filename}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/files/import")
+async def import_file(request: dict, file_manager=Depends(get_file_manager)):
+    """
+    Import a knowledge base file from export data.
+    
+    Args:
+        request: Import request with export data and optional new filename
+        
+    Returns:
+        Success message with imported file info
+    """
+    try:
+        export_data = request.get("export_data")
+        new_filename = request.get("filename")  # Optional override
+        overwrite = request.get("overwrite", False)
+        
+        if not export_data or "file_content" not in export_data:
+            raise HTTPException(status_code=400, detail="Invalid export data")
+        
+        # Get filename from export metadata or use provided override
+        original_filename = export_data.get("export_metadata", {}).get("filename")
+        filename = new_filename or original_filename
+        
+        if not filename:
+            raise HTTPException(status_code=400, detail="No filename specified for import")
+        
+        content = export_data["file_content"]
+        
+        # Check if file exists and handle accordingly
+        try:
+            if overwrite:
+                success = await file_manager.write_file(filename, content)
+                action = "updated"
+            else:
+                success = await file_manager.create_file(filename, content)
+                action = "created"
+        except FileExistsError:
+            raise HTTPException(
+                status_code=409, 
+                detail=f"File already exists: {filename}. Set overwrite=true to replace it."
+            )
+        
+        if success:
+            logger.info(f"Successfully imported file: {filename}")
+            return {
+                "status": "success",
+                "message": f"File {filename} {action} successfully",
+                "filename": filename,
+                "action": action
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to import file")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error importing file: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/characters/{character_name}/export")
+async def export_character(character_name: str, file_manager=Depends(get_file_manager)):
+    """
+    Export all files for a character as a single package.
+    
+    Args:
+        character_name: Name of the character to export
+        
+    Returns:
+        Character export package with all files
+    """
+    try:
+        # Get all files for the character
+        files = await file_manager.list_files(character_name)
+        
+        if not files:
+            raise HTTPException(status_code=404, detail=f"No files found for character: {character_name}")
+        
+        # Read all file contents
+        character_data = {}
+        for file_info in files:
+            try:
+                content = await file_manager.read_file(file_info.filename)
+                # Extract just the filename part (remove character_name/ prefix)
+                file_key = file_info.filename.split('/')[-1] if '/' in file_info.filename else file_info.filename
+                character_data[file_key] = content
+            except Exception as e:
+                logger.warning(f"Failed to read file {file_info.filename} for character export: {e}")
+                continue
+        
+        # Create export package
+        export_package = {
+            "export_metadata": {
+                "character_name": character_name,
+                "exported_at": datetime.now().isoformat(),
+                "export_version": "1.0",
+                "source": "ShadowScribe Knowledge Base",
+                "file_count": len(character_data)
+            },
+            "character_data": character_data
+        }
+        
+        logger.info(f"Exported character '{character_name}' with {len(character_data)} files")
+        return {
+            "status": "success",
+            "export_package": export_package,
+            "character_name": character_name
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error exporting character {character_name}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/characters/import")
+async def import_character(request: dict, file_manager=Depends(get_file_manager)):
+    """
+    Import a character from an export package.
+    
+    Args:
+        request: Import request with export package and optional new character name
+        
+    Returns:
+        Success message with imported character info
+    """
+    try:
+        export_package = request.get("export_package")
+        new_character_name = request.get("character_name")  # Optional override
+        overwrite = request.get("overwrite", False)
+        
+        if not export_package or "character_data" not in export_package:
+            raise HTTPException(status_code=400, detail="Invalid export package")
+        
+        # Get character name from export metadata or use provided override
+        original_character_name = export_package.get("export_metadata", {}).get("character_name")
+        character_name = new_character_name or original_character_name
+        
+        if not character_name:
+            raise HTTPException(status_code=400, detail="No character name specified for import")
+        
+        character_data = export_package["character_data"]
+        
+        # Check if character already exists
+        existing_files = await file_manager.list_files(character_name)
+        if existing_files and not overwrite:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Character '{character_name}' already exists. Set overwrite=true to replace it."
+            )
+        
+        # Import all character files
+        imported_files = []
+        failed_files = []
+        
+        for filename, content in character_data.items():
+            try:
+                full_filename = f"{character_name}/{filename}"
+                
+                if overwrite:
+                    success = await file_manager.write_file(full_filename, content)
+                else:
+                    success = await file_manager.create_file(full_filename, content)
+                
+                if success:
+                    imported_files.append(full_filename)
+                else:
+                    failed_files.append(filename)
+                    
+            except Exception as e:
+                logger.warning(f"Failed to import file {filename} for character {character_name}: {e}")
+                failed_files.append(filename)
+        
+        if not imported_files:
+            raise HTTPException(status_code=500, detail="Failed to import any character files")
+        
+        action = "updated" if overwrite else "created"
+        message = f"Character '{character_name}' {action} successfully with {len(imported_files)} files"
+        
+        if failed_files:
+            message += f" ({len(failed_files)} files failed to import)"
+        
+        logger.info(f"Imported character '{character_name}': {len(imported_files)} files succeeded, {len(failed_files)} failed")
+        return {
+            "status": "success",
+            "message": message,
+            "character_name": character_name,
+            "imported_files": imported_files,
+            "failed_files": failed_files,
+            "action": action
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error importing character: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/files/{filename}/conflicts")
+async def check_file_conflicts(filename: str, file_manager=Depends(get_file_manager)):
+    """
+    Check for potential conflicts before modifying a file.
+    
+    Args:
+        filename: Name of the file to check for conflicts
+        
+    Returns:
+        Conflict information and recommendations
+    """
+    try:
+        # Check if file exists and get current metadata
+        try:
+            current_content = await file_manager.read_file(filename)
+            files = await file_manager.list_files()
+            current_file = next((f for f in files if f.filename == filename), None)
+            
+            if not current_file:
+                return {
+                    "status": "success",
+                    "has_conflicts": False,
+                    "message": "No conflicts - file does not exist"
+                }
+            
+            # Check for recent backups (potential concurrent editing)
+            backups = await file_manager.backup_service.list_backups(filename)
+            recent_backups = [b for b in backups if (datetime.now() - datetime.fromisoformat(b.created_at.replace('Z', '+00:00') if b.created_at.endswith('Z') else b.created_at)).total_seconds() < 300]  # 5 minutes
+            
+            conflicts = []
+            
+            # Check for recent modifications (potential concurrent editing)
+            if recent_backups:
+                conflicts.append({
+                    "type": "recent_modification",
+                    "message": f"File was recently modified ({len(recent_backups)} recent backups found)",
+                    "severity": "warning",
+                    "recommendation": "Review recent changes before modifying"
+                })
+            
+            # Check file size (potential corruption or unexpected changes)
+            if current_file.size > 1024 * 1024:  # 1MB
+                conflicts.append({
+                    "type": "large_file",
+                    "message": f"File is unusually large ({current_file.size} bytes)",
+                    "severity": "warning",
+                    "recommendation": "Verify file integrity before modifying"
+                })
+            
+            # Check for validation issues
+            character_name, file_name = file_manager._parse_file_path(filename)
+            if file_name in file_manager.SUPPORTED_FILE_TYPES:
+                file_type = file_manager.SUPPORTED_FILE_TYPES[file_name]
+                validation_result = await file_manager.validate_content(current_content, file_type)
+                
+                if not validation_result.is_valid:
+                    conflicts.append({
+                        "type": "validation_error",
+                        "message": f"File has validation errors: {len(validation_result.errors)} errors found",
+                        "severity": "error",
+                        "recommendation": "Fix validation errors before modifying",
+                        "details": validation_result.errors
+                    })
+            
+            logger.info(f"Checked conflicts for {filename}: {len(conflicts)} potential issues found")
+            return {
+                "status": "success",
+                "has_conflicts": len(conflicts) > 0,
+                "conflicts": conflicts,
+                "file_info": {
+                    "filename": filename,
+                    "size": current_file.size,
+                    "last_modified": current_file.last_modified.isoformat(),
+                    "recent_backups": len(recent_backups)
+                }
+            }
+            
+        except FileNotFoundError:
+            return {
+                "status": "success",
+                "has_conflicts": False,
+                "message": "No conflicts - file does not exist"
+            }
+            
+    except Exception as e:
+        logger.error(f"Error checking conflicts for {filename}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
