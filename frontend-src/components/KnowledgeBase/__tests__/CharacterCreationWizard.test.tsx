@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { CharacterCreationWizard } from '../CharacterCreationWizard';
-import * as knowledgeBaseApi from '../../../services/knowledgeBaseApi';
+// import * as knowledgeBaseApi from '../../../services/knowledgeBaseApi';
 
 // Mock the API
 vi.mock('../../../services/knowledgeBaseApi', () => ({
@@ -9,8 +9,8 @@ vi.mock('../../../services/knowledgeBaseApi', () => ({
   getFileTemplate: vi.fn(),
 }));
 
-const mockCreateNewCharacter = vi.mocked(knowledgeBaseApi.createNewCharacter);
-const mockGetFileTemplate = vi.mocked(knowledgeBaseApi.getFileTemplate);
+// const mockCreateNewCharacter = vi.mocked(knowledgeBaseApi.createNewCharacter);
+// const mockGetFileTemplate = vi.mocked(knowledgeBaseApi.getFileTemplate);
 
 describe('CharacterCreationWizard', () => {
   const mockOnComplete = vi.fn();
