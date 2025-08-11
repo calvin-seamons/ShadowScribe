@@ -13,7 +13,6 @@ export { CharacterCreationWizard } from './CharacterCreationWizard';
 export { SpellListEditor } from './SpellListEditor';
 export { FileManager } from './FileManager';
 export { BackupManager } from './BackupManager';
-export { ConflictResolver } from './ConflictResolver';
 export { ValidationDemo } from './ValidationDemo';
 
 // Export validation components

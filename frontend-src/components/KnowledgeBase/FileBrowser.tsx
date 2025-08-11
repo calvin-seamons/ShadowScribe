@@ -90,25 +90,21 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
     }
   };
 
-  // Group files by character name (extracted from filename)
-  const groupedFiles = files.reduce((groups, file) => {
-    // Extract character name from filename (assuming format like "character_name_file_type.json")
-    const parts = file.filename.replace('.json', '').split('_');
-    let characterName = 'Unknown';
-    
-    if (parts.length >= 2) {
-      // For files like "john_doe_character.json", take everything except the last part
-      characterName = parts.slice(0, -1).join('_');
-    } else {
-      characterName = parts[0] || 'Unknown';
-    }
-
-    if (!groups[characterName]) {
-      groups[characterName] = [];
-    }
-    groups[characterName].push(file);
-    return groups;
-  }, {} as Record<string, KnowledgeBaseFile[]>);
+  // Sort files by type for consistent ordering
+  const sortedFiles = [...files].sort((a, b) => {
+    const typePriority = {
+      'character': 0,
+      'character_background': 1,
+      'feats_and_traits': 2,
+      'action_list': 3,
+      'inventory_list': 4,
+      'objectives_and_contracts': 5,
+      'spell_list': 6,
+      'other': 7
+    };
+    return (typePriority[a.file_type as keyof typeof typePriority] || 7) - 
+           (typePriority[b.file_type as keyof typeof typePriority] || 7);
+  });
 
   return (
     <div className="h-full flex flex-col">
@@ -146,83 +142,49 @@ export const FileBrowser: React.FC<FileBrowserProps> = ({
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {Object.entries(groupedFiles).map(([characterName, characterFiles]) => (
-              <div key={characterName} className="px-4">
-                {/* Character Group Header */}
-                <div className="mb-2">
-                  <h4 className="text-sm font-medium text-purple-300 capitalize">
-                    {characterName.replace(/_/g, ' ')}
-                  </h4>
-                  <div className="h-px bg-gray-700 mt-1"></div>
+          <div className="px-4 py-2 space-y-1">
+            {sortedFiles.map((file) => (
+              <button
+                key={file.filename}
+                onClick={() => onFileSelect(file)}
+                className={`w-full text-left p-3 rounded-md transition-colors ${
+                  selectedFile?.filename === file.filename
+                    ? 'bg-purple-600 text-white'
+                    : 'text-gray-300 hover:bg-gray-700'
+                }`}
+              >
+                <div className="flex items-start space-x-3">
+                  <div className={`mt-0.5 ${
+                    selectedFile?.filename === file.filename
+                      ? 'text-purple-200'
+                      : 'text-gray-400'
+                  }`}>
+                    {getFileIcon(file.file_type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium">
+                        {getFileTypeLabel(file.file_type)}
+                      </p>
+                      {!file.is_editable && (
+                        <span className="text-xs text-yellow-400 ml-2">
+                          Read-only
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-3 mt-2 text-xs opacity-60">
+                      <div className="flex items-center space-x-1">
+                        <HardDrive className="w-3 h-3" />
+                        <span>{formatFileSize(file.size)}</span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Calendar className="w-3 h-3" />
+                        <span>{formatDate(file.last_modified)}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                {/* Files for this character */}
-                <div className="space-y-1">
-                  {characterFiles
-                    .sort((a, b) => {
-                      // Sort by file type priority
-                      const typePriority = {
-                        'character': 0,
-                        'character_background': 1,
-                        'feats_and_traits': 2,
-                        'action_list': 3,
-                        'inventory_list': 4,
-                        'objectives_and_contracts': 5,
-                        'spell_list': 6,
-                        'other': 7
-                      };
-                      return (typePriority[a.file_type as keyof typeof typePriority] || 7) - 
-                             (typePriority[b.file_type as keyof typeof typePriority] || 7);
-                    })
-                    .map((file) => (
-                      <button
-                        key={file.filename}
-                        onClick={() => onFileSelect(file)}
-                        className={`w-full text-left p-3 rounded-md transition-colors ${
-                          selectedFile?.filename === file.filename
-                            ? 'bg-purple-600 text-white'
-                            : 'text-gray-300 hover:bg-gray-700'
-                        }`}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <div className={`mt-0.5 ${
-                            selectedFile?.filename === file.filename
-                              ? 'text-purple-200'
-                              : 'text-gray-400'
-                          }`}>
-                            {getFileIcon(file.file_type)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm font-medium truncate">
-                                {getFileTypeLabel(file.file_type)}
-                              </p>
-                              {!file.is_editable && (
-                                <span className="text-xs text-yellow-400 ml-2">
-                                  Read-only
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs opacity-75 truncate mt-1">
-                              {file.filename}
-                            </p>
-                            <div className="flex items-center space-x-3 mt-2 text-xs opacity-60">
-                              <div className="flex items-center space-x-1">
-                                <HardDrive className="w-3 h-3" />
-                                <span>{formatFileSize(file.size)}</span>
-                              </div>
-                              <div className="flex items-center space-x-1">
-                                <Calendar className="w-3 h-3" />
-                                <span>{formatDate(file.last_modified)}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                </div>
-              </div>
+              </button>
             ))}
           </div>
         )}

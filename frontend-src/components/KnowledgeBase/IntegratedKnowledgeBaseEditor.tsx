@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Save, AlertCircle, Settings, History, Shield, X, BookOpen } from 'lucide-react';
+import { FileText, Plus, Save, AlertCircle, Settings, History, X, BookOpen } from 'lucide-react';
 import { FileBrowser } from './FileBrowser';
 import { DynamicForm } from './DynamicForm';
 import { CharacterCreationWizard } from './CharacterCreationWizard';
 import { CharacterSelector } from './CharacterSelector';
 import { FileManager } from './FileManager';
 import { BackupManager } from './BackupManager';
-import { ConflictResolver } from './ConflictResolver';
 import { 
   ValidationProvider, 
   ValidationSummary, 
@@ -37,12 +36,12 @@ const EditorContent: React.FC<{
   error: string | null;
   isLoading: boolean;
   isSaving: boolean;
-  activeTab: 'editor' | 'manager' | 'backups' | 'conflicts';
+  activeTab: 'editor' | 'manager' | 'backups';
   selectedCharacter: string | null;
   files: KnowledgeBaseFile[];
   onSave: () => void;
   onClose: () => void;
-  onTabChange: (tab: 'editor' | 'manager' | 'backups' | 'conflicts') => void;
+  onTabChange: (tab: 'editor' | 'manager' | 'backups') => void;
   onCreateNew: () => void;
   onCharacterSelect: (character: string | null) => void;
   onFileSelect: (file: KnowledgeBaseFile) => void;
@@ -176,17 +175,6 @@ const EditorContent: React.FC<{
             <History className="w-4 h-4 inline mr-2" />
             Backups
           </button>
-          <button
-            onClick={() => onTabChange('conflicts')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'conflicts'
-                ? 'border-purple-500 text-purple-400'
-                : 'border-transparent text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            <Shield className="w-4 h-4 inline mr-2" />
-            Conflicts
-          </button>
         </nav>
       </div>
 
@@ -239,12 +227,6 @@ const EditorContent: React.FC<{
             <BackupManager />
           </div>
         )}
-
-        {activeTab === 'conflicts' && (
-          <div className="flex-1 overflow-auto">
-            <ConflictResolver filename={selectedFile?.filename || ''} />
-          </div>
-        )}
       </div>
 
       {/* Unsaved Changes Warning */}
@@ -280,7 +262,7 @@ export const IntegratedKnowledgeBaseEditor: React.FC = () => {
   const [schema, setSchema] = useState<Record<string, any> | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [showWizard, setShowWizard] = useState(false);
-  const [activeTab, setActiveTab] = useState<'editor' | 'manager' | 'backups' | 'conflicts'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'manager' | 'backups'>('editor');
 
   // Load files when character selection changes
   useEffect(() => {
@@ -320,7 +302,7 @@ export const IntegratedKnowledgeBaseEditor: React.FC = () => {
     return (
       <div className="h-full flex items-center justify-center bg-gray-900">
         <div className="text-center text-gray-400">
-          <Shield className="w-16 h-16 mx-auto mb-4 opacity-50" />
+          <AlertCircle className="w-16 h-16 mx-auto mb-4 opacity-50" />
           <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
           <p>You need a valid session to access the Knowledge Base Editor.</p>
           <button

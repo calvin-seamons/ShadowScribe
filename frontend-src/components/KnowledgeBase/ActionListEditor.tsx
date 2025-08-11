@@ -142,21 +142,43 @@ export const ActionListEditor: React.FC<ActionListEditorProps> = ({
     onChange,
     validationErrors = []
 }) => {
+    // Ensure data has the required structure with defaults
+    const safeData: ActionListData = {
+        character_actions: {
+            ...data?.character_actions,
+            attacks_per_action: data?.character_actions?.attacks_per_action ?? 1,
+            action_economy: data?.character_actions?.action_economy ?? {
+                actions: [],
+                bonus_actions: [],
+                reactions: [],
+                other_actions: [],
+                special_abilities: []
+            },
+            combat_actions_reference: data?.character_actions?.combat_actions_reference ?? []
+        },
+        metadata: {
+            ...data?.metadata,
+            version: data?.metadata?.version ?? '1.0',
+            last_updated: data?.metadata?.last_updated ?? new Date().toISOString(),
+            notes: data?.metadata?.notes ?? []
+        }
+    };
+
     const [activeTab, setActiveTab] = useState<'actions' | 'bonus_actions' | 'reactions' | 'other_actions' | 'special_abilities'>('actions');
     const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
     const updateData = useCallback((updates: Partial<ActionListData>) => {
-        onChange({ ...data, ...updates });
-    }, [data, onChange]);
+        onChange({ ...safeData, ...updates });
+    }, [safeData, onChange]);
 
     const updateActionEconomy = useCallback((actionEconomy: ActionEconomy) => {
         updateData({
             character_actions: {
-                ...data.character_actions,
+                ...safeData.character_actions,
                 action_economy: actionEconomy
             }
         });
-    }, [data, updateData]);
+    }, [safeData, updateData]);
 
     const toggleItemExpansion = (itemKey: string) => {
         const newExpanded = new Set(expandedItems);
@@ -179,19 +201,19 @@ export const ActionListEditor: React.FC<ActionListEditorProps> = ({
         };
 
         const updatedEconomy = {
-            ...data.character_actions.action_economy,
-            [category]: [...data.character_actions.action_economy[category], newAction]
+            ...safeData.character_actions.action_economy,
+            [category]: [...safeData.character_actions.action_economy[category], newAction]
         };
 
         updateActionEconomy(updatedEconomy);
     };
 
     const updateAction = (category: keyof ActionEconomy, index: number, updatedAction: any) => {
-        const updatedActions = [...data.character_actions.action_economy[category]];
+        const updatedActions = [...safeData.character_actions.action_economy[category]];
         updatedActions[index] = updatedAction;
 
         const updatedEconomy = {
-            ...data.character_actions.action_economy,
+            ...safeData.character_actions.action_economy,
             [category]: updatedActions
         };
 
@@ -199,10 +221,10 @@ export const ActionListEditor: React.FC<ActionListEditorProps> = ({
     };
 
     const removeAction = (category: keyof ActionEconomy, index: number) => {
-        const updatedActions = data.character_actions.action_economy[category].filter((_, i) => i !== index);
+        const updatedActions = safeData.character_actions.action_economy[category].filter((_, i) => i !== index);
 
         const updatedEconomy = {
-            ...data.character_actions.action_economy,
+            ...safeData.character_actions.action_economy,
             [category]: updatedActions
         };
 
@@ -211,7 +233,7 @@ export const ActionListEditor: React.FC<ActionListEditorProps> = ({
 
     const renderWeaponAttackEditor = (attack: WeaponAttack, actionIndex: number, attackIndex: number) => {
         const updateAttack = (updatedAttack: WeaponAttack) => {
-            const action = data.character_actions.action_economy.actions[actionIndex] as Action;
+            const action = safeData.character_actions.action_economy.actions[actionIndex] as Action;
             const updatedSubActions = [...(action.sub_actions || [])];
             updatedSubActions[attackIndex] = updatedAttack;
 
@@ -1205,7 +1227,7 @@ export const ActionListEditor: React.FC<ActionListEditorProps> = ({
         );
     };
     const renderTabContent = () => {
-        const actions = data.character_actions.action_economy[activeTab];
+        const actions = safeData.character_actions.action_economy[activeTab];
 
         return (
             <div className="space-y-4">
@@ -1250,10 +1272,10 @@ export const ActionListEditor: React.FC<ActionListEditorProps> = ({
                         <label className="text-sm text-gray-400">Attacks per Action:</label>
                         <input
                             type="number"
-                            value={data.character_actions.attacks_per_action || 1}
+                            value={safeData.character_actions.attacks_per_action || 1}
                             onChange={(e) => updateData({
                                 character_actions: {
-                                    ...data.character_actions,
+                                    ...safeData.character_actions,
                                     attacks_per_action: Number(e.target.value) || 1
                                 }
                             })}
@@ -1301,7 +1323,7 @@ export const ActionListEditor: React.FC<ActionListEditorProps> = ({
                             <Icon className={`w-4 h-4 ${activeTab === key ? 'text-purple-400' : color}`} />
                             <span>{label}</span>
                             <span className="bg-gray-700 text-gray-300 px-2 py-1 rounded-full text-xs">
-                                {data.character_actions.action_economy[key as keyof ActionEconomy].length}
+                                {safeData.character_actions.action_economy[key as keyof ActionEconomy].length}
                             </span>
                         </button>
                     ))}
@@ -1320,10 +1342,10 @@ export const ActionListEditor: React.FC<ActionListEditorProps> = ({
                 <div>
                     <label className="block text-sm font-medium text-white mb-2">Available Combat Actions</label>
                     <ArrayEditor
-                        items={data.character_actions.combat_actions_reference || []}
+                        items={safeData.character_actions.combat_actions_reference || []}
                         onChange={(combat_actions_reference) => updateData({
                             character_actions: {
-                                ...data.character_actions,
+                                ...safeData.character_actions,
                                 combat_actions_reference
                             }
                         })}
@@ -1349,10 +1371,10 @@ export const ActionListEditor: React.FC<ActionListEditorProps> = ({
                         <label className="block text-sm font-medium text-white mb-2">Version</label>
                         <input
                             type="text"
-                            value={data.metadata.version}
+                            value={safeData.metadata.version}
                             onChange={(e) => updateData({
                                 metadata: {
-                                    ...data.metadata,
+                                    ...safeData.metadata,
                                     version: e.target.value
                                 }
                             })}
@@ -1363,10 +1385,10 @@ export const ActionListEditor: React.FC<ActionListEditorProps> = ({
                         <label className="block text-sm font-medium text-white mb-2">Last Updated</label>
                         <input
                             type="date"
-                            value={data.metadata.last_updated}
+                            value={safeData.metadata.last_updated}
                             onChange={(e) => updateData({
                                 metadata: {
-                                    ...data.metadata,
+                                    ...safeData.metadata,
                                     last_updated: e.target.value
                                 }
                             })}
@@ -1377,10 +1399,10 @@ export const ActionListEditor: React.FC<ActionListEditorProps> = ({
                 <div className="mt-4">
                     <label className="block text-sm font-medium text-white mb-2">Notes</label>
                     <ArrayEditor
-                        items={data.metadata.notes}
+                        items={safeData.metadata.notes}
                         onChange={(notes) => updateData({
                             metadata: {
-                                ...data.metadata,
+                                ...safeData.metadata,
                                 notes
                             }
                         })}

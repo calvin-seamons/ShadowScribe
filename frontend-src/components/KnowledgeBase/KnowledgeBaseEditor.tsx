@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, FileText, Plus, Save, AlertCircle, Settings, History, Shield } from 'lucide-react';
+import { X, FileText, Save, AlertCircle, Settings, History } from 'lucide-react';
 import { FileBrowser } from './FileBrowser';
 import { DynamicForm } from './DynamicForm';
 import { CharacterCreationWizard } from './CharacterCreationWizard';
 import { CharacterSelector } from './CharacterSelector';
 import { FileManager } from './FileManager';
 import { BackupManager } from './BackupManager';
-import { ConflictResolver } from './ConflictResolver';
 // Validation imports removed - using integrated editor instead
 import { 
   KnowledgeBaseFile, 
@@ -37,7 +36,7 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
-  const [activeTab, setActiveTab] = useState<'editor' | 'manager' | 'backups' | 'conflicts'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'manager' | 'backups'>('editor');
 
   // Load files when character selection changes
   useEffect(() => {
@@ -219,13 +218,13 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
+<button onClick={handleClose} className="flex items-center space-x-2 p-2 -ml-2 rounded-lg hover:bg-gray-750 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500">
               <FileText className="w-6 h-6 text-purple-400" />
               <h2 className="text-xl font-semibold text-white">Knowledge Base Editor</h2>
               {hasUnsavedChanges && (
-                <span className="text-yellow-400 text-sm">• Unsaved changes</span>
+                <span className="text-yellow-400 text-sm ml-2">• Unsaved changes</span>
               )}
-            </div>
+            </button>
             
             {/* Character Selector */}
             <div className="w-64">
@@ -291,17 +290,6 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
             >
               <History className="h-4 w-4 inline mr-2" />
               Backups
-            </button>
-            <button
-              onClick={() => setActiveTab('conflicts')}
-              className={`py-3 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'conflicts'
-                  ? 'border-purple-500 text-purple-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
-              }`}
-            >
-              <Shield className="h-4 w-4 inline mr-2" />
-              Conflicts
             </button>
           </nav>
         </div>
@@ -403,23 +391,6 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
                   filename={selectedFile?.filename}
                   onRestore={() => {
                     loadFiles();
-                    if (selectedFile) {
-                      handleFileSelect(selectedFile);
-                    }
-                  }}
-                />
-              </div>
-            )}
-
-            {activeTab === 'conflicts' && (
-              <div className="flex-1 overflow-auto p-4">
-                <ConflictResolver
-                  filename={selectedFile?.filename || ''}
-                  onConflictResolved={(canProceed) => {
-                    // Could use this to enable/disable save button or show warnings
-                    console.log('Conflict resolution status:', canProceed);
-                  }}
-                  onRefresh={() => {
                     if (selectedFile) {
                       handleFileSelect(selectedFile);
                     }

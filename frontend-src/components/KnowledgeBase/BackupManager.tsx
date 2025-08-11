@@ -13,7 +13,6 @@ import {
   History, 
   RotateCcw, 
   Eye, 
-  Calendar, 
   HardDrive, 
   FileText,
   ChevronDown,
@@ -24,10 +23,8 @@ import {
 } from 'lucide-react';
 import {
   BackupInfo,
-  FileContent,
   listBackups,
   restoreBackup,
-  getFileContent,
   getErrorMessage
 } from '../../services/knowledgeBaseApi';
 
@@ -47,16 +44,12 @@ export const BackupManager: React.FC<BackupManagerProps> = ({
   onRestore
 }) => {
   const [backups, setBackups] = useState<BackupWithPreview[]>([]);
-  const [currentContent, setCurrentContent] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [restoreConfirmation, setRestoreConfirmation] = useState<string | null>(null);
 
   useEffect(() => {
     loadBackups();
-    if (filename) {
-      loadCurrentContent();
-    }
   }, [filename]);
 
   const loadBackups = async () => {
@@ -69,18 +62,6 @@ export const BackupManager: React.FC<BackupManagerProps> = ({
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadCurrentContent = async () => {
-    if (!filename) return;
-    
-    try {
-      const content = await getFileContent(filename);
-      setCurrentContent(content.content);
-    } catch (err) {
-      // File might not exist, that's okay
-      setCurrentContent(null);
     }
   };
 
@@ -137,7 +118,6 @@ export const BackupManager: React.FC<BackupManagerProps> = ({
       await restoreBackup(restoreConfirmation);
       setRestoreConfirmation(null);
       await loadBackups();
-      await loadCurrentContent();
       onRestore?.();
     } catch (err) {
       setError(getErrorMessage(err));

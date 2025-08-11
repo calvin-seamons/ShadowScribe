@@ -61,7 +61,7 @@ export const CharacterSelector: React.FC<CharacterSelectorProps> = ({
           <User className="w-4 h-4" />
           <span>
             {isLoading ? 'Loading...' : 
-             selectedCharacter ? selectedCharacter : 
+             selectedCharacter ? selectedCharacter.replace(/_/g, ' ') : 
              'All Characters'}
           </span>
         </div>
@@ -99,7 +99,7 @@ export const CharacterSelector: React.FC<CharacterSelectorProps> = ({
             >
               <div className="flex items-center space-x-2">
                 <User className="w-4 h-4" />
-                <span>{character}</span>
+                <span>{character.replace(/_/g, ' ')}</span>
               </div>
             </button>
           ))}
