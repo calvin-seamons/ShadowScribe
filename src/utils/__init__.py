@@ -1,8 +1,8 @@
 """
-Utilities module for ShadowScribe LLM Engine.
+Utilities module for ShadowScribe Direct JSON LLM Engine.
 """
 
-from .llm_client import LLMClient
+from .direct_llm_client import DirectLLMClient
 from .validation import ValidationHelper
 from .output_parsers import RobustJSONParser, ResponseValidator
 from .error_handling import (
@@ -12,7 +12,7 @@ from .error_handling import (
 from . import prompt_templates
 
 __all__ = [
-    'LLMClient',
+    'DirectLLMClient',
     'ValidationHelper',
     'RobustJSONParser',
     'ResponseValidator',

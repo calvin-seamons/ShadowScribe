@@ -30,14 +30,14 @@ class DirectLLMClient:
     
     def _get_temperature_params(self, desired_temperature: float = 0.1) -> Dict[str, float]:
         """Get the appropriate temperature parameter based on model support."""
-        # GPT-5 models only support temperature = 1.0 (default), so don't include the parameter
-        if (self.model.startswith("gpt-5") or 
-            self.model.startswith("o1") or 
+        # GPT-5, o1, and o3 models have a fixed temperature, so we don't send the parameter
+        if (self.model.startswith("gpt-5") or
+            self.model.startswith("o1") or
             self.model.startswith("o3")):
-            return {}  # Don't include temperature parameter, let it use default (1.0)
-        else:
-            # Older models support custom temperature
-            return {"temperature": desired_temperature}
+            return {}
+        
+        # All other models support a custom temperature
+        return {"temperature": desired_temperature}
     
     def set_debug_callback(self, callback: Callable):
         """Set debug callback for progress tracking."""
