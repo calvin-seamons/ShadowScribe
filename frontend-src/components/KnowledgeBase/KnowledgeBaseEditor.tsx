@@ -3,15 +3,11 @@ import { X, FileText, Plus, Save, AlertCircle, Settings, History, Shield } from 
 import { FileBrowser } from './FileBrowser';
 import { DynamicForm } from './DynamicForm';
 import { CharacterCreationWizard } from './CharacterCreationWizard';
+import { CharacterSelector } from './CharacterSelector';
 import { FileManager } from './FileManager';
 import { BackupManager } from './BackupManager';
 import { ConflictResolver } from './ConflictResolver';
-import { 
-  ValidationProvider, 
-  ValidationSummary, 
-  UnsavedChangesWarning,
-  useUnsavedChangesWarning 
-} from './validation';
+// Validation imports removed - using integrated editor instead
 import { 
   KnowledgeBaseFile, 
   FileContent, 
@@ -30,6 +26,7 @@ interface KnowledgeBaseEditorProps {
 }
 
 export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClose }) => {
+  const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
   const [files, setFiles] = useState<KnowledgeBaseFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<KnowledgeBaseFile | null>(null);
   const [fileContent, setFileContent] = useState<FileContent | null>(null);
@@ -42,22 +39,46 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
   const [showWizard, setShowWizard] = useState(false);
   const [activeTab, setActiveTab] = useState<'editor' | 'manager' | 'backups' | 'conflicts'>('editor');
 
-  // Load files on component mount
+  // Load files when character selection changes
   useEffect(() => {
     loadFiles();
-  }, []);
+  }, [selectedCharacter]);
 
   const loadFiles = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const fileList = await listKnowledgeBaseFiles();
+      const fileList = await listKnowledgeBaseFiles(selectedCharacter || undefined);
       setFiles(fileList);
+      
+      // Clear selected file if it's not in the new list
+      if (selectedFile && !fileList.find(f => f.filename === selectedFile.filename)) {
+        setSelectedFile(null);
+        setFileContent(null);
+        setSchema(null);
+        setHasUnsavedChanges(false);
+      }
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCharacterSelect = (characterName: string | null) => {
+    if (hasUnsavedChanges) {
+      const confirmDiscard = window.confirm(
+        'You have unsaved changes. Are you sure you want to switch characters? Your changes will be lost.'
+      );
+      if (!confirmDiscard) return;
+    }
+
+    setSelectedCharacter(characterName);
+    setSelectedFile(null);
+    setFileContent(null);
+    setSchema(null);
+    setHasUnsavedChanges(false);
+    setValidationErrors([]);
   };
 
   const handleFileSelect = async (file: KnowledgeBaseFile) => {
@@ -154,24 +175,27 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
     setShowWizard(true);
   };
 
-  const handleWizardComplete = async (_characterName: string, filesCreated: string[]) => {
+  const handleWizardComplete = async (characterName: string, filesCreated: string[]) => {
     setShowWizard(false);
     setError(null);
     
-    // Refresh the file list to show the newly created files
-    await loadFiles();
+    // Switch to the newly created character
+    setSelectedCharacter(characterName);
     
-    // Optionally, select the main character file
-    const mainCharacterFile = filesCreated.find(filename => 
-      filename.includes('character.json') && !filename.includes('background')
-    );
-    
-    if (mainCharacterFile) {
-      const file = files.find(f => f.filename === mainCharacterFile);
-      if (file) {
-        await handleFileSelect(file);
+    // The useEffect will trigger loadFiles() when selectedCharacter changes
+    // Then we can select the main character file
+    setTimeout(async () => {
+      const mainCharacterFile = filesCreated.find(filename => 
+        filename.includes('character.json') && !filename.includes('background')
+      );
+      
+      if (mainCharacterFile) {
+        const file = files.find(f => f.filename === mainCharacterFile);
+        if (file) {
+          await handleFileSelect(file);
+        }
       }
-    }
+    }, 100); // Small delay to ensure files are loaded
   };
 
   const handleWizardCancel = () => {
@@ -194,12 +218,23 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
         <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-7xl h-5/6 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <div className="flex items-center space-x-2">
-            <FileText className="w-6 h-6 text-purple-400" />
-            <h2 className="text-xl font-semibold text-white">Knowledge Base Editor</h2>
-            {hasUnsavedChanges && (
-              <span className="text-yellow-400 text-sm">• Unsaved changes</span>
-            )}
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <FileText className="w-6 h-6 text-purple-400" />
+              <h2 className="text-xl font-semibold text-white">Knowledge Base Editor</h2>
+              {hasUnsavedChanges && (
+                <span className="text-yellow-400 text-sm">• Unsaved changes</span>
+              )}
+            </div>
+            
+            {/* Character Selector */}
+            <div className="w-64">
+              <CharacterSelector
+                selectedCharacter={selectedCharacter}
+                onCharacterSelect={handleCharacterSelect}
+                onCreateNew={handleCreateNew}
+              />
+            </div>
           </div>
           <div className="flex items-center space-x-2">
             {selectedFile && activeTab === 'editor' && (
@@ -301,15 +336,6 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
           {/* File Browser Sidebar - Only show for editor tab */}
           {activeTab === 'editor' && (
             <div className="w-80 border-r border-gray-700 flex flex-col">
-              <div className="p-4 border-b border-gray-700">
-                <button
-                  onClick={handleCreateNew}
-                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Create New Character</span>
-                </button>
-              </div>
               <div className="flex-1 overflow-hidden">
                 <FileBrowser
                   files={files}

@@ -22,6 +22,8 @@ class CharacterHandler:
     def __init__(self, knowledge_base_path: str):
         """Initialize character handler with file paths."""
         self.base_path = knowledge_base_path
+        self.characters_path = os.path.join(knowledge_base_path, "characters")
+        self.current_character = None
         self.character_files = {
             "character.json": "character.json",
             "inventory_list.json": "inventory_list.json", 
@@ -170,19 +172,46 @@ class CharacterHandler:
         self.data: Dict[str, Any] = {}
         self._loaded = False
     
+    def _get_default_character(self) -> str:
+        """Get the default character to load."""
+        if not os.path.exists(self.characters_path):
+            return None
+            
+        # Get all character directories
+        characters = []
+        for item in os.listdir(self.characters_path):
+            char_path = os.path.join(self.characters_path, item)
+            if os.path.isdir(char_path):
+                characters.append(item)
+        
+        # Return the first character found, or None if no characters exist
+        return characters[0] if characters else None
+    
     def load_data(self):
         """Load all character data files."""
         self.data = {}
         loaded_files = 0
         
+        # If no current character is set, try to find a default one
+        if not self.current_character:
+            self.current_character = self._get_default_character()
+        
+        if not self.current_character:
+            print("Warning: No character found in characters directory")
+            self._loaded = False
+            return
+        
+        # Load files from the character's directory
+        character_dir = os.path.join(self.characters_path, self.current_character)
+        
         for file_key, filename in self.character_files.items():
-            file_path = os.path.join(self.base_path, filename)
+            file_path = os.path.join(character_dir, filename)
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     self.data[file_key] = json.load(f)
                 loaded_files += 1
             except Exception as e:
-                print(f"Warning: Could not load {filename}: {str(e)}")
+                print(f"Warning: Could not load {filename} for character {self.current_character}: {str(e)}")
                 self.data[file_key] = {}
         
         self._loaded = loaded_files > 0
@@ -202,6 +231,10 @@ class CharacterHandler:
         
         character_data = self.data.get("character.json", {})
         return character_data.get("character_base", {}).get("name", "Unknown Character")
+    
+    def get_current_character_folder(self) -> str:
+        """Get the current character folder name."""
+        return self.current_character or "Unknown"
     
     def _find_field_in_nested_dict(self, data: Dict[str, Any], field_name: str, current_path: str = "") -> List[tuple]:
         """

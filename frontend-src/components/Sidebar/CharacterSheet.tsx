@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Shield, Heart } from 'lucide-react';
 import { getCharacterSummary } from '../../services/api';
 import type { Character } from '../../types/index';
@@ -7,20 +7,33 @@ export const CharacterSheet: React.FC = () => {
   const [character, setCharacter] = useState<Character | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const loadCharacter = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await getCharacterSummary();
+      setCharacter(data);
+    } catch (error) {
+      console.error('Failed to load character:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const loadCharacter = async () => {
-      try {
-        const data = await getCharacterSummary();
-        setCharacter(data);
-      } catch (error) {
-        console.error('Failed to load character:', error);
-      } finally {
-        setLoading(false);
-      }
+    loadCharacter();
+
+    // Listen for character data changes from the knowledge base editor
+    const handleCharacterDataChanged = (event: CustomEvent) => {
+      console.log('Character data changed, refreshing character sheet:', event.detail);
+      loadCharacter();
     };
 
-    loadCharacter();
-  }, []);
+    window.addEventListener('character-data-changed', handleCharacterDataChanged as EventListener);
+
+    return () => {
+      window.removeEventListener('character-data-changed', handleCharacterDataChanged as EventListener);
+    };
+  }, [loadCharacter]);
 
   if (loading) {
     return (

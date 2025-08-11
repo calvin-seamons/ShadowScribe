@@ -1,4 +1,5 @@
 export { KnowledgeBaseEditor } from './KnowledgeBaseEditor';
+export { IntegratedKnowledgeBaseEditor } from './IntegratedKnowledgeBaseEditor';
 export { FileBrowser } from './FileBrowser';
 export { DynamicForm } from './DynamicForm';
 export { ArrayEditor } from './ArrayEditor';

@@ -113,7 +113,7 @@ async def list_knowledge_base_files(character_name: Optional[str] = None, file_m
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/files/{filename}", response_model=FileContentResponse)
+@router.get("/files/{filename:path}", response_model=FileContentResponse)
 async def get_file_content(filename: str, file_manager=Depends(get_file_manager)):
     """
     Get the content of a specific knowledge base file.
@@ -125,15 +125,19 @@ async def get_file_content(filename: str, file_manager=Depends(get_file_manager)
         FileContentResponse: File content and metadata
     """
     try:
-        content = await file_manager.read_file(filename)
+        # URL decode the filename to handle encoded slashes
+        from urllib.parse import unquote
+        decoded_filename = unquote(filename)
+        
+        content = await file_manager.read_file(decoded_filename)
         
         file_content = FileContent(
-            filename=filename,
+            filename=decoded_filename,
             content=content,
             schema_version="1.0"
         )
         
-        logger.info(f"Retrieved content for file: {filename}")
+        logger.info(f"Retrieved content for file: {decoded_filename}")
         return FileContentResponse(
             content=file_content,
             status="success"
@@ -167,13 +171,17 @@ async def update_file_content(
         Success message
     """
     try:
-        success = await file_manager.write_file(filename, request.content)
+        # URL decode the filename to handle encoded slashes
+        from urllib.parse import unquote
+        decoded_filename = unquote(filename)
+        
+        success = await file_manager.write_file(decoded_filename, request.content)
         
         if success:
-            logger.info(f"Successfully updated file: {filename}")
+            logger.info(f"Successfully updated file: {decoded_filename}")
             return {
                 "status": "success",
-                "message": f"File {filename} updated successfully",
+                "message": f"File {decoded_filename} updated successfully",
                 "filename": filename
             }
         else:

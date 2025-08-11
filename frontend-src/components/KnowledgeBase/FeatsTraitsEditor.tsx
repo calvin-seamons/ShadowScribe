@@ -572,12 +572,15 @@ export const FeatsTraitsEditor: React.FC<FeatsTraitsEditorProps> = ({
         );
     };
 
-    const renderClassFeaturesTab = () => (
-        <div className="space-y-6">
-            {Object.entries(data.features_and_traits.class_features).map(([className, classData]) => {
-                const isExpanded = expandedClasses.has(className);
+    const renderClassFeaturesTab = () => {
+        const classFeatures = data?.features_and_traits?.class_features || {};
+        
+        return (
+            <div className="space-y-6">
+                {Object.entries(classFeatures).map(([className, classData]) => {
+                    const isExpanded = expandedClasses.has(className);
 
-                return (
+                    return (
                     <div key={className} className="border border-gray-600 rounded-lg">
                         <div className="flex items-center justify-between p-4 bg-gray-750">
                             <div className="flex items-center space-x-3">
@@ -687,6 +690,7 @@ export const FeatsTraitsEditor: React.FC<FeatsTraitsEditorProps> = ({
             </button>
         </div>
     );
+}
 
     const renderSpeciesTraitsTab = () => (
         <div className="space-y-6">
@@ -704,7 +708,7 @@ export const FeatsTraitsEditor: React.FC<FeatsTraitsEditorProps> = ({
                         </label>
                         <input
                             type="text"
-                            value={data.features_and_traits.species_traits.species}
+                            value={data?.features_and_traits?.species_traits?.species || ''}
                             onChange={(e) => updateSpeciesTraits({
                                 ...data.features_and_traits.species_traits,
                                 species: e.target.value
@@ -717,7 +721,7 @@ export const FeatsTraitsEditor: React.FC<FeatsTraitsEditorProps> = ({
                         <label className="block text-sm font-medium text-white mb-2">Subrace</label>
                         <input
                             type="text"
-                            value={data.features_and_traits.species_traits.subrace || ''}
+                            value={data?.features_and_traits?.species_traits?.subrace || ''}
                             onChange={(e) => updateSpeciesTraits({
                                 ...data.features_and_traits.species_traits,
                                 subrace: e.target.value
@@ -1073,7 +1077,7 @@ export const FeatsTraitsEditor: React.FC<FeatsTraitsEditorProps> = ({
                 )}
             </div>
         </div>
-    );
+    )
 
     return (
         <div className="space-y-6">

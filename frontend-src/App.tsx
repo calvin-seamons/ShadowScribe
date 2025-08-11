@@ -5,7 +5,10 @@ import { CharacterSheet } from './components/Sidebar/CharacterSheet';
 import { SourcesPanel } from './components/Sidebar/SourcesPanel';
 import { SessionHistory } from './components/Sidebar/SessionHistory';
 import { ModelSelector } from './components/Sidebar/ModelSelector';
+import { NavigationMenu } from './components/Sidebar/NavigationMenu';
+import { IntegratedKnowledgeBaseEditor } from './components/KnowledgeBase/IntegratedKnowledgeBaseEditor';
 import { useSessionStore } from './stores/sessionStore';
+import { useNavigationStore } from './stores/navigationStore';
 import { validateSystem } from './services/api';
 import { ProgressProvider, useProgress } from './contexts/ProgressContext';
 
@@ -13,6 +16,7 @@ function AppContent() {
   const [isValidated, setIsValidated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { sessionId, initializeSession } = useSessionStore();
+  const { currentView } = useNavigationStore();
   const { currentProgress, activeSources, lastUsedSources } = useProgress();
 
   useEffect(() => {
@@ -21,8 +25,8 @@ function AppContent() {
       try {
         initializeSession();
         const validation = await validateSystem();
-        setIsValidated(validation.status === 'success');
-        if (validation.status !== 'success') {
+        setIsValidated(validation.status === 'success' || validation.status === 'partial');
+        if (validation.status === 'error') {
           setError('System validation failed');
         }
       } catch (err) {
@@ -59,21 +63,25 @@ function AppContent() {
   return (
     <Layout>
       <div className="flex h-full">
-        {/* Sidebar */}
-        <div className="w-80 bg-gray-800 border-r border-gray-700 flex flex-col">
-          <ModelSelector />
-          <CharacterSheet />
-          <SourcesPanel 
-            currentProgress={currentProgress} 
-            activeSources={activeSources} 
-            lastUsedSources={lastUsedSources}
-          />
-          <SessionHistory sessionId={sessionId} />
-        </div>
+        {/* Sidebar - Only show for chat view, responsive width */}
+        {currentView === 'chat' && (
+          <div className="w-80 lg:w-80 md:w-64 sm:w-full bg-gray-800 border-r border-gray-700 flex flex-col">
+            <NavigationMenu />
+            <ModelSelector />
+            <CharacterSheet />
+            <SourcesPanel 
+              currentProgress={currentProgress} 
+              activeSources={activeSources} 
+              lastUsedSources={lastUsedSources}
+            />
+            <SessionHistory sessionId={sessionId} />
+          </div>
+        )}
 
-        {/* Main Chat Area */}
-        <div className="flex-1">
-          <ChatContainer />
+        {/* Main Content Area */}
+        <div className="flex-1 min-w-0">
+          {currentView === 'chat' && <ChatContainer />}
+          {currentView === 'knowledge-base' && <IntegratedKnowledgeBaseEditor />}
         </div>
       </div>
     </Layout>

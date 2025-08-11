@@ -1,21 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  User, 
-  Shield, 
-  Zap, 
+import {
+  User,
+  Shield,
+  Zap,
   Eye,
   Calculator,
   Info,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
-import { ValidationError } from '../../services/knowledgeBaseApi';
-import { 
-  ValidationProvider, 
-  ValidationSummary, 
-  ValidatedInput, 
+import {
+  ValidationProvider,
+  ValidationSummary,
+  ValidatedInput,
   ValidatedSelect,
-  UnsavedChangesWarning 
+  UnsavedChangesWarning
 } from './validation';
 
 interface CharacterData {
@@ -86,7 +85,6 @@ interface CharacterData {
 interface CharacterBasicEditorProps {
   data: CharacterData;
   onChange: (data: CharacterData) => void;
-  onValidationErrors: (errors: ValidationError[]) => void;
   filename?: string;
   onSave?: () => void;
 }
@@ -94,14 +92,12 @@ interface CharacterBasicEditorProps {
 export const CharacterBasicEditor: React.FC<CharacterBasicEditorProps> = ({
   data,
   onChange,
-  onValidationErrors,
   filename,
   onSave
 }) => {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
     new Set(['character_base', 'ability_scores', 'combat_stats'])
   );
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
   // Calculate proficiency bonus based on total level
   const calculateProficiencyBonus = useCallback((level: number): number => {
@@ -156,88 +152,6 @@ export const CharacterBasicEditor: React.FC<CharacterBasicEditorProps> = ({
     }
   }, [data, onChange, calculateProficiencyBonus, calculateModifier]);
 
-  // Validation
-  const validateData = useCallback((): ValidationError[] => {
-    const errors: ValidationError[] = [];
-
-    // Required fields validation
-    if (!data.character_base.name?.trim()) {
-      errors.push({
-        field_path: 'character_base.name',
-        message: 'Character name is required',
-        error_type: 'required'
-      });
-    }
-
-    if (!data.character_base.race?.trim()) {
-      errors.push({
-        field_path: 'character_base.race',
-        message: 'Race is required',
-        error_type: 'required'
-      });
-    }
-
-    if (!data.character_base.class?.trim()) {
-      errors.push({
-        field_path: 'character_base.class',
-        message: 'Class is required',
-        error_type: 'required'
-      });
-    }
-
-    if (data.character_base.total_level < 1 || data.character_base.total_level > 20) {
-      errors.push({
-        field_path: 'character_base.total_level',
-        message: 'Total level must be between 1 and 20',
-        error_type: 'custom'
-      });
-    }
-
-    // Ability scores validation (typically 1-30 range)
-    Object.entries(data.ability_scores).forEach(([ability, score]) => {
-      if (score < 1 || score > 30) {
-        errors.push({
-          field_path: `ability_scores.${ability}`,
-          message: `${ability.charAt(0).toUpperCase() + ability.slice(1)} must be between 1 and 30`,
-          error_type: 'custom'
-        });
-      }
-    });
-
-    // Combat stats validation
-    if (data.combat_stats.max_hp < 1) {
-      errors.push({
-        field_path: 'combat_stats.max_hp',
-        message: 'Maximum HP must be at least 1',
-        error_type: 'custom'
-      });
-    }
-
-    if (data.combat_stats.current_hp < 0) {
-      errors.push({
-        field_path: 'combat_stats.current_hp',
-        message: 'Current HP cannot be negative',
-        error_type: 'custom'
-      });
-    }
-
-    if (data.combat_stats.armor_class < 1) {
-      errors.push({
-        field_path: 'combat_stats.armor_class',
-        message: 'Armor Class must be at least 1',
-        error_type: 'custom'
-      });
-    }
-
-    return errors;
-  }, [data]);
-
-  useEffect(() => {
-    const errors = validateData();
-    setValidationErrors(errors);
-    onValidationErrors(errors);
-  }, [validateData, onValidationErrors]);
-
   const toggleSection = (sectionKey: string) => {
     const newExpanded = new Set(expandedSections);
     if (newExpanded.has(sectionKey)) {
@@ -254,16 +168,16 @@ export const CharacterBasicEditor: React.FC<CharacterBasicEditorProps> = ({
     let current: any = updatedData;
 
     for (let i = 0; i < keys.length - 1; i++) {
-      current[keys[i]] = { ...current[keys[i]] };
+      if (!current[keys[i]]) {
+        current[keys[i]] = {};
+      } else {
+        current[keys[i]] = { ...current[keys[i]] };
+      }
       current = current[keys[i]];
     }
 
     current[keys[keys.length - 1]] = value;
     onChange(updatedData);
-  };
-
-  const getFieldError = (fieldPath: string): ValidationError | undefined => {
-    return validationErrors.find(error => error.field_path === fieldPath);
   };
 
   const renderSection = (
@@ -291,94 +205,10 @@ export const CharacterBasicEditor: React.FC<CharacterBasicEditorProps> = ({
             <ChevronRight className="w-5 h-5 text-gray-400" />
           )}
         </button>
-        
+
         {isExpanded && (
           <div className="p-4 bg-gray-800 border-t border-gray-600">
             {children}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderInput = (
-    fieldPath: string,
-    label: string,
-    type: 'text' | 'number' = 'text',
-    required: boolean = false,
-    min?: number,
-    max?: number,
-    placeholder?: string
-  ) => {
-    const value = fieldPath.split('.').reduce((obj: any, key) => obj?.[key], data);
-    const error = getFieldError(fieldPath);
-    const hasError = !!error;
-
-    return (
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-white">
-          {label}
-          {required && <span className="text-red-400 ml-1">*</span>}
-        </label>
-        <input
-          type={type}
-          value={String(value || '')}
-          onChange={(e) => {
-            const newValue = type === 'number' 
-              ? (e.target.value ? Number(e.target.value) : 0)
-              : e.target.value;
-            updateField(fieldPath, newValue);
-          }}
-          min={min}
-          max={max}
-          placeholder={placeholder}
-          className={`w-full px-3 py-2 bg-gray-700 border rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-            hasError ? 'border-red-500' : 'border-gray-600'
-          }`}
-        />
-        {error && (
-          <div className="flex items-center space-x-2 text-sm text-red-400">
-            <AlertCircle className="w-4 h-4" />
-            <span>{error.message}</span>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderSelect = (
-    fieldPath: string,
-    label: string,
-    options: string[],
-    required: boolean = false,
-    placeholder: string = 'Select...'
-  ) => {
-    const value = fieldPath.split('.').reduce((obj: any, key) => obj?.[key], data);
-    const error = getFieldError(fieldPath);
-    const hasError = !!error;
-
-    return (
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-white">
-          {label}
-          {required && <span className="text-red-400 ml-1">*</span>}
-        </label>
-        <select
-          value={String(value || '')}
-          onChange={(e) => updateField(fieldPath, e.target.value)}
-          className={`w-full px-3 py-2 bg-gray-700 border rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-            hasError ? 'border-red-500' : 'border-gray-600'
-          }`}
-        >
-          <option value="">{placeholder}</option>
-          {options.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-        {error && (
-          <div className="flex items-center space-x-2 text-sm text-red-400">
-            <AlertCircle className="w-4 h-4" />
-            <span>{error.message}</span>
           </div>
         )}
       </div>
@@ -414,7 +244,7 @@ export const CharacterBasicEditor: React.FC<CharacterBasicEditorProps> = ({
   };
 
   return (
-    <ValidationProvider filename={filename} fileType="character">
+    <ValidationProvider filename={filename}>
       <div className="h-full flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-gray-700">
@@ -432,228 +262,342 @@ export const CharacterBasicEditor: React.FC<CharacterBasicEditorProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4">
           <div className="space-y-6 max-w-4xl">
-          
-          {/* Character Base */}
-          {renderSection(
-            'character_base',
-            'Basic Information',
-            <User className="w-5 h-5 text-purple-400" />,
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ValidatedInput
-                fieldPath="character_base.name"
-                label="Character Name"
-                value={data.character_base.name}
-                onChange={(value) => updateField('character_base.name', value)}
-                required
-                placeholder="Enter character name"
-              />
-              <ValidatedInput
-                fieldPath="character_base.race"
-                label="Race"
-                value={data.character_base.race}
-                onChange={(value) => updateField('character_base.race', value)}
-                required
-                placeholder="e.g., Human, Elf, Dwarf"
-              />
-              <ValidatedInput
-                fieldPath="character_base.subrace"
-                label="Subrace"
-                value={data.character_base.subrace || ''}
-                onChange={(value) => updateField('character_base.subrace', value)}
-                placeholder="e.g., Hill Dwarf, High Elf"
-              />
-              <ValidatedInput
-                fieldPath="character_base.class"
-                label="Class"
-                value={data.character_base.class}
-                onChange={(value) => updateField('character_base.class', value)}
-                required
-                placeholder="e.g., Fighter, Wizard"
-              />
-              <ValidatedInput
-                fieldPath="character_base.total_level"
-                label="Total Level"
-                type="number"
-                value={data.character_base.total_level}
-                onChange={(value) => updateField('character_base.total_level', value)}
-                required
-                min={1}
-                max={20}
-              />
-              <ValidatedInput
-                fieldPath="character_base.experience_points"
-                label="Experience Points"
-                type="number"
-                value={data.character_base.experience_points}
-                onChange={(value) => updateField('character_base.experience_points', value)}
-                min={0}
-              />
-              <ValidatedSelect
-                fieldPath="character_base.alignment"
-                label="Alignment"
-                value={data.character_base.alignment}
-                onChange={(value) => updateField('character_base.alignment', value)}
-                options={[
-                  'Lawful Good', 'Neutral Good', 'Chaotic Good',
-                  'Lawful Neutral', 'True Neutral', 'Chaotic Neutral',
-                  'Lawful Evil', 'Neutral Evil', 'Chaotic Evil'
-                ]}
-                placeholder="Select alignment"
-              />
-              <ValidatedInput
-                fieldPath="character_base.background"
-                label="Background"
-                value={data.character_base.background}
-                onChange={(value) => updateField('character_base.background', value)}
-                placeholder="e.g., Acolyte, Criminal"
-              />
-              <ValidatedSelect
-                fieldPath="character_base.lifestyle"
-                label="Lifestyle"
-                value={data.character_base.lifestyle}
-                onChange={(value) => updateField('character_base.lifestyle', value)}
-                options={[
-                  'Wretched', 'Squalid', 'Poor', 'Modest', 'Comfortable', 'Wealthy', 'Aristocrat'
-                ]}
-                placeholder="Select lifestyle"
-              />
-            </div>
-          )}
 
-          {/* Characteristics */}
-          {renderSection(
-            'characteristics',
-            'Physical Characteristics',
-            <Eye className="w-5 h-5 text-blue-400" />,
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {renderSelect('characteristics.gender', 'Gender', [
-                'Male', 'Female', 'Non-binary', 'Other'
-              ], false, 'Select gender')}
-              {renderInput('characteristics.age', 'Age', 'number', false, 0, 1000)}
-              {renderInput('characteristics.height', 'Height', 'text', false, undefined, undefined, 'e.g., 5\'10"')}
-              {renderInput('characteristics.weight', 'Weight', 'text', false, undefined, undefined, 'e.g., 180 lb')}
-              {renderInput('characteristics.eyes', 'Eye Color', 'text', false, undefined, undefined, 'e.g., Brown, Blue')}
-              {renderInput('characteristics.hair', 'Hair', 'text', false, undefined, undefined, 'e.g., Long black hair')}
-              {renderInput('characteristics.skin', 'Skin', 'text', false, undefined, undefined, 'e.g., Pale, Tanned')}
-              {renderSelect('characteristics.size', 'Size', [
-                'Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan'
-              ], false, 'Select size')}
-            </div>
-          )}
+            {/* Character Base */}
+            {renderSection(
+              'character_base',
+              'Basic Information',
+              <User className="w-5 h-5 text-purple-400" />,
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ValidatedInput
+                  fieldPath="character_base.name"
+                  label="Character Name"
+                  value={data.character_base.name}
+                  onChange={(value) => updateField('character_base.name', value)}
+                  required
+                  placeholder="Enter character name"
+                />
+                <ValidatedInput
+                  fieldPath="character_base.race"
+                  label="Race"
+                  value={data.character_base.race}
+                  onChange={(value) => updateField('character_base.race', value)}
+                  required
+                  placeholder="e.g., Human, Elf, Dwarf"
+                />
+                <ValidatedInput
+                  fieldPath="character_base.subrace"
+                  label="Subrace"
+                  value={data.character_base.subrace || ''}
+                  onChange={(value) => updateField('character_base.subrace', value)}
+                  placeholder="e.g., Hill Dwarf, High Elf"
+                />
+                <ValidatedInput
+                  fieldPath="character_base.class"
+                  label="Class"
+                  value={data.character_base.class}
+                  onChange={(value) => updateField('character_base.class', value)}
+                  required
+                  placeholder="e.g., Fighter, Wizard"
+                />
+                <ValidatedInput
+                  fieldPath="character_base.total_level"
+                  label="Total Level"
+                  type="number"
+                  value={data.character_base.total_level}
+                  onChange={(value) => updateField('character_base.total_level', value)}
+                  required
+                  min={1}
+                  max={20}
+                />
+                <ValidatedInput
+                  fieldPath="character_base.experience_points"
+                  label="Experience Points"
+                  type="number"
+                  value={data.character_base.experience_points}
+                  onChange={(value) => updateField('character_base.experience_points', value)}
+                  min={0}
+                />
+                <ValidatedSelect
+                  fieldPath="character_base.alignment"
+                  label="Alignment"
+                  value={data.character_base.alignment}
+                  onChange={(value) => updateField('character_base.alignment', value)}
+                  options={[
+                    'Lawful Good', 'Neutral Good', 'Chaotic Good',
+                    'Lawful Neutral', 'True Neutral', 'Chaotic Neutral',
+                    'Lawful Evil', 'Neutral Evil', 'Chaotic Evil'
+                  ]}
+                  placeholder="Select alignment"
+                />
+                <ValidatedInput
+                  fieldPath="character_base.background"
+                  label="Background"
+                  value={data.character_base.background}
+                  onChange={(value) => updateField('character_base.background', value)}
+                  placeholder="e.g., Acolyte, Criminal"
+                />
+                <ValidatedSelect
+                  fieldPath="character_base.lifestyle"
+                  label="Lifestyle"
+                  value={data.character_base.lifestyle}
+                  onChange={(value) => updateField('character_base.lifestyle', value)}
+                  options={[
+                    'Wretched', 'Squalid', 'Poor', 'Modest', 'Comfortable', 'Wealthy', 'Aristocrat'
+                  ]}
+                  placeholder="Select lifestyle"
+                />
+              </div>
+            )}
 
-          {/* Ability Scores */}
-          {renderSection(
-            'ability_scores',
-            'Ability Scores',
-            <Zap className="w-5 h-5 text-yellow-400" />,
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {Object.entries(data.ability_scores).map(([ability, score]) => (
-                <div key={ability} className="space-y-2">
-                  <div className="text-center">
-                    <div className="text-sm font-medium text-white capitalize mb-1">
-                      {ability}
-                    </div>
-                    <input
-                      type="number"
-                      value={score}
-                      onChange={(e) => updateField(`ability_scores.${ability}`, Number(e.target.value) || 0)}
-                      min={1}
-                      max={30}
-                      className="w-16 h-16 text-center text-lg font-bold bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    />
-                    <div className="text-xs text-gray-400 mt-1">
-                      Modifier: {calculateModifier(score) >= 0 ? '+' : ''}{calculateModifier(score)}
+            {/* Characteristics */}
+            {renderSection(
+              'characteristics',
+              'Physical Characteristics',
+              <Eye className="w-5 h-5 text-blue-400" />,
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ValidatedSelect
+                  fieldPath="characteristics.gender"
+                  label="Gender"
+                  value={data.characteristics.gender}
+                  onChange={(value) => updateField('characteristics.gender', value)}
+                  options={['Male', 'Female', 'Non-binary', 'Other']}
+                  placeholder="Select gender"
+                />
+                <ValidatedInput
+                  fieldPath="characteristics.age"
+                  label="Age"
+                  type="number"
+                  value={data.characteristics.age}
+                  onChange={(value) => updateField('characteristics.age', value)}
+                  min={0}
+                  max={1000}
+                />
+                <ValidatedInput
+                  fieldPath="characteristics.height"
+                  label="Height"
+                  value={data.characteristics.height}
+                  onChange={(value) => updateField('characteristics.height', value)}
+                  placeholder="e.g., 5'10&quot;"
+                />
+                <ValidatedInput
+                  fieldPath="characteristics.weight"
+                  label="Weight"
+                  value={data.characteristics.weight}
+                  onChange={(value) => updateField('characteristics.weight', value)}
+                  placeholder="e.g., 180 lb"
+                />
+                <ValidatedInput
+                  fieldPath="characteristics.eyes"
+                  label="Eye Color"
+                  value={data.characteristics.eyes}
+                  onChange={(value) => updateField('characteristics.eyes', value)}
+                  placeholder="e.g., Brown, Blue"
+                />
+                <ValidatedInput
+                  fieldPath="characteristics.hair"
+                  label="Hair"
+                  value={data.characteristics.hair}
+                  onChange={(value) => updateField('characteristics.hair', value)}
+                  placeholder="e.g., Long black hair"
+                />
+                <ValidatedInput
+                  fieldPath="characteristics.skin"
+                  label="Skin"
+                  value={data.characteristics.skin}
+                  onChange={(value) => updateField('characteristics.skin', value)}
+                  placeholder="e.g., Pale, Tanned"
+                />
+                <ValidatedSelect
+                  fieldPath="characteristics.size"
+                  label="Size"
+                  value={data.characteristics.size}
+                  onChange={(value) => updateField('characteristics.size', value)}
+                  options={['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Gargantuan']}
+                  placeholder="Select size"
+                />
+              </div>
+            )}
+
+            {/* Ability Scores */}
+            {renderSection(
+              'ability_scores',
+              'Ability Scores',
+              <Zap className="w-5 h-5 text-yellow-400" />,
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {Object.entries(data.ability_scores).map(([ability, score]) => (
+                  <div key={ability} className="space-y-2">
+                    <div className="text-center">
+                      <div className="text-sm font-medium text-white capitalize mb-1">
+                        {ability}
+                      </div>
+                      <input
+                        type="number"
+                        value={score}
+                        onChange={(e) => updateField(`ability_scores.${ability}`, Number(e.target.value) || 0)}
+                        min={1}
+                        max={30}
+                        className="w-16 h-16 text-center text-lg font-bold bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                      <div className="text-xs text-gray-400 mt-1">
+                        Modifier: {calculateModifier(score) >= 0 ? '+' : ''}{calculateModifier(score)}
+                      </div>
                     </div>
                   </div>
+                ))}
+              </div>
+            )}
+
+            {/* Combat Stats */}
+            {renderSection(
+              'combat_stats',
+              'Combat Statistics',
+              <Shield className="w-5 h-5 text-red-400" />,
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ValidatedInput
+                  fieldPath="combat_stats.max_hp"
+                  label="Maximum HP"
+                  type="number"
+                  value={data.combat_stats.max_hp}
+                  onChange={(value) => updateField('combat_stats.max_hp', value)}
+                  required
+                  min={1}
+                />
+                <ValidatedInput
+                  fieldPath="combat_stats.current_hp"
+                  label="Current HP"
+                  type="number"
+                  value={data.combat_stats.current_hp}
+                  onChange={(value) => updateField('combat_stats.current_hp', value)}
+                  required
+                  min={0}
+                />
+                <ValidatedInput
+                  fieldPath="combat_stats.temp_hp"
+                  label="Temporary HP"
+                  type="number"
+                  value={data.combat_stats.temp_hp}
+                  onChange={(value) => updateField('combat_stats.temp_hp', value)}
+                  min={0}
+                />
+                <ValidatedInput
+                  fieldPath="combat_stats.armor_class"
+                  label="Armor Class"
+                  type="number"
+                  value={data.combat_stats.armor_class}
+                  onChange={(value) => updateField('combat_stats.armor_class', value)}
+                  required
+                  min={1}
+                />
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white">
+                    Initiative Bonus
+                    <span className="text-xs text-gray-400 ml-2">(Auto-calculated from Dexterity)</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={data.combat_stats.initiative_bonus}
+                    readOnly
+                    className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-gray-300 cursor-not-allowed"
+                  />
                 </div>
-              ))}
-            </div>
-          )}
+                <ValidatedInput
+                  fieldPath="combat_stats.speed"
+                  label="Speed (feet)"
+                  type="number"
+                  value={data.combat_stats.speed}
+                  onChange={(value) => updateField('combat_stats.speed', value)}
+                  min={0}
+                />
+                {renderCheckbox('combat_stats.inspiration', 'Has Inspiration', 'Whether the character currently has inspiration')}
+              </div>
+            )}
 
-          {/* Combat Stats */}
-          {renderSection(
-            'combat_stats',
-            'Combat Statistics',
-            <Shield className="w-5 h-5 text-red-400" />,
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {renderInput('combat_stats.max_hp', 'Maximum HP', 'number', true, 1)}
-              {renderInput('combat_stats.current_hp', 'Current HP', 'number', true, 0)}
-              {renderInput('combat_stats.temp_hp', 'Temporary HP', 'number', false, 0)}
-              {renderInput('combat_stats.armor_class', 'Armor Class', 'number', true, 1)}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-white">
-                  Initiative Bonus
-                  <span className="text-xs text-gray-400 ml-2">(Auto-calculated from Dexterity)</span>
-                </label>
-                <input
-                  type="number"
-                  value={data.combat_stats.initiative_bonus}
-                  readOnly
-                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-gray-300 cursor-not-allowed"
-                />
+            {/* Passive Scores */}
+            {renderSection(
+              'passive_scores',
+              'Passive Scores',
+              <Calculator className="w-5 h-5 text-green-400" />,
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white">
+                    Passive Perception
+                    <span className="text-xs text-gray-400 ml-2">(Auto-calculated)</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={data.passive_scores.perception}
+                    readOnly
+                    className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-gray-300 cursor-not-allowed"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white">
+                    Passive Investigation
+                    <span className="text-xs text-gray-400 ml-2">(Auto-calculated)</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={data.passive_scores.investigation}
+                    readOnly
+                    className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-gray-300 cursor-not-allowed"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-white">
+                    Passive Insight
+                    <span className="text-xs text-gray-400 ml-2">(Auto-calculated)</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={data.passive_scores.insight}
+                    readOnly
+                    className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-gray-300 cursor-not-allowed"
+                  />
+                </div>
               </div>
-              {renderInput('combat_stats.speed', 'Speed (feet)', 'number', false, 0)}
-              {renderCheckbox('combat_stats.inspiration', 'Has Inspiration', 'Whether the character currently has inspiration')}
-            </div>
-          )}
+            )}
 
-          {/* Passive Scores */}
-          {renderSection(
-            'passive_scores',
-            'Passive Scores',
-            <Calculator className="w-5 h-5 text-green-400" />,
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-white">
-                  Passive Perception
-                  <span className="text-xs text-gray-400 ml-2">(Auto-calculated)</span>
-                </label>
-                <input
+            {/* Senses */}
+            {renderSection(
+              'senses',
+              'Special Senses',
+              <Eye className="w-5 h-5 text-indigo-400" />,
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ValidatedInput
+                  fieldPath="senses.darkvision"
+                  label="Darkvision (feet)"
                   type="number"
-                  value={data.passive_scores.perception}
-                  readOnly
-                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-gray-300 cursor-not-allowed"
+                  value={data.senses?.darkvision || 0}
+                  onChange={(value) => updateField('senses.darkvision', value)}
+                  min={0}
+                />
+                <ValidatedInput
+                  fieldPath="senses.blindsight"
+                  label="Blindsight (feet)"
+                  type="number"
+                  value={data.senses?.blindsight || 0}
+                  onChange={(value) => updateField('senses.blindsight', value)}
+                  min={0}
+                />
+                <ValidatedInput
+                  fieldPath="senses.tremorsense"
+                  label="Tremorsense (feet)"
+                  type="number"
+                  value={data.senses?.tremorsense || 0}
+                  onChange={(value) => updateField('senses.tremorsense', value)}
+                  min={0}
+                />
+                <ValidatedInput
+                  fieldPath="senses.truesight"
+                  label="Truesight (feet)"
+                  type="number"
+                  value={data.senses?.truesight || 0}
+                  onChange={(value) => updateField('senses.truesight', value)}
+                  min={0}
                 />
               </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-white">
-                  Passive Investigation
-                  <span className="text-xs text-gray-400 ml-2">(Auto-calculated)</span>
-                </label>
-                <input
-                  type="number"
-                  value={data.passive_scores.investigation}
-                  readOnly
-                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-gray-300 cursor-not-allowed"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-white">
-                  Passive Insight
-                  <span className="text-xs text-gray-400 ml-2">(Auto-calculated)</span>
-                </label>
-                <input
-                  type="number"
-                  value={data.passive_scores.insight}
-                  readOnly
-                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-gray-300 cursor-not-allowed"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Senses */}
-          {renderSection(
-            'senses',
-            'Special Senses',
-            <Eye className="w-5 h-5 text-indigo-400" />,
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {renderInput('senses.darkvision', 'Darkvision (feet)', 'number', false, 0)}
-              {renderInput('senses.blindsight', 'Blindsight (feet)', 'number', false, 0)}
-              {renderInput('senses.tremorsense', 'Tremorsense (feet)', 'number', false, 0)}
-              {renderInput('senses.truesight', 'Truesight (feet)', 'number', false, 0)}
-            </div>
-          )}
+            )}
 
           </div>
         </div>
