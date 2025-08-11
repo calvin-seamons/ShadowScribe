@@ -111,6 +111,63 @@ class CharacterCreationResponse(BaseModel):
     message: str
 
 
+# File Management Models
+class ConflictInfo(BaseModel):
+    """Information about a file conflict."""
+    type: str
+    message: str
+    severity: str  # 'warning', 'error', 'info'
+    recommendation: str
+    details: Optional[Dict[str, Any]] = None
+
+
+class ConflictCheckResponse(BaseModel):
+    """Response for conflict checking."""
+    has_conflicts: bool
+    conflicts: List[ConflictInfo]
+    file_info: Optional[Dict[str, Any]] = None
+    message: Optional[str] = None
+    status: str
+
+
+class ExportResponse(BaseModel):
+    """Response for file export."""
+    export_data: Dict[str, Any]
+    filename: str
+    status: str
+
+
+class ImportRequest(BaseModel):
+    """Request for file import."""
+    export_data: Dict[str, Any]
+    filename: Optional[str] = None
+    overwrite: bool = False
+
+
+class CharacterExportResponse(BaseModel):
+    """Response for character export."""
+    export_package: Dict[str, Any]
+    character_name: str
+    status: str
+
+
+class CharacterImportRequest(BaseModel):
+    """Request for character import."""
+    export_package: Dict[str, Any]
+    character_name: Optional[str] = None
+    overwrite: bool = False
+
+
+class CharacterImportResponse(BaseModel):
+    """Response for character import."""
+    character_name: str
+    imported_files: List[str]
+    failed_files: List[str]
+    action: str
+    status: str
+    message: str
+
+
 # Existing Models
 class SourcesResponse(BaseModel):
     """Response model for available sources endpoint."""

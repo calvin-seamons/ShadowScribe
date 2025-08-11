@@ -23,7 +23,14 @@ from models import (
     SchemaResponse,
     TemplateResponse,
     CharacterCreationRequest,
-    CharacterCreationResponse
+    CharacterCreationResponse,
+    ConflictInfo,
+    ConflictCheckResponse,
+    ExportResponse,
+    ImportRequest,
+    CharacterExportResponse,
+    CharacterImportRequest,
+    CharacterImportResponse
 )
 from knowledge_base_service import KnowledgeBaseFileManager
 
@@ -566,7 +573,7 @@ async def duplicate_file(filename: str, new_filename: str, file_manager=Depends(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/files/{filename}/export")
+@router.get("/files/{filename}/export", response_model=ExportResponse)
 async def export_file(filename: str, file_manager=Depends(get_file_manager)):
     """
     Export a knowledge base file for download.
@@ -592,11 +599,11 @@ async def export_file(filename: str, file_manager=Depends(get_file_manager)):
         }
         
         logger.info(f"Exported file: {filename}")
-        return {
-            "status": "success",
-            "export_data": export_data,
-            "filename": filename
-        }
+        return ExportResponse(
+            status="success",
+            export_data=export_data,
+            filename=filename
+        )
         
     except FileNotFoundError:
         logger.warning(f"File not found for export: {filename}")
@@ -607,7 +614,7 @@ async def export_file(filename: str, file_manager=Depends(get_file_manager)):
 
 
 @router.post("/files/import")
-async def import_file(request: dict, file_manager=Depends(get_file_manager)):
+async def import_file(request: ImportRequest, file_manager=Depends(get_file_manager)):
     """
     Import a knowledge base file from export data.
     
@@ -618,9 +625,9 @@ async def import_file(request: dict, file_manager=Depends(get_file_manager)):
         Success message with imported file info
     """
     try:
-        export_data = request.get("export_data")
-        new_filename = request.get("filename")  # Optional override
-        overwrite = request.get("overwrite", False)
+        export_data = request.export_data
+        new_filename = request.filename  # Optional override
+        overwrite = request.overwrite
         
         if not export_data or "file_content" not in export_data:
             raise HTTPException(status_code=400, detail="Invalid export data")
@@ -666,7 +673,7 @@ async def import_file(request: dict, file_manager=Depends(get_file_manager)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/characters/{character_name}/export")
+@router.get("/characters/{character_name}/export", response_model=CharacterExportResponse)
 async def export_character(character_name: str, file_manager=Depends(get_file_manager)):
     """
     Export all files for a character as a single package.
@@ -709,11 +716,11 @@ async def export_character(character_name: str, file_manager=Depends(get_file_ma
         }
         
         logger.info(f"Exported character '{character_name}' with {len(character_data)} files")
-        return {
-            "status": "success",
-            "export_package": export_package,
-            "character_name": character_name
-        }
+        return CharacterExportResponse(
+            status="success",
+            export_package=export_package,
+            character_name=character_name
+        )
         
     except HTTPException:
         raise
@@ -722,8 +729,8 @@ async def export_character(character_name: str, file_manager=Depends(get_file_ma
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/characters/import")
-async def import_character(request: dict, file_manager=Depends(get_file_manager)):
+@router.post("/characters/import", response_model=CharacterImportResponse)
+async def import_character(request: CharacterImportRequest, file_manager=Depends(get_file_manager)):
     """
     Import a character from an export package.
     
@@ -734,9 +741,9 @@ async def import_character(request: dict, file_manager=Depends(get_file_manager)
         Success message with imported character info
     """
     try:
-        export_package = request.get("export_package")
-        new_character_name = request.get("character_name")  # Optional override
-        overwrite = request.get("overwrite", False)
+        export_package = request.export_package
+        new_character_name = request.character_name  # Optional override
+        overwrite = request.overwrite
         
         if not export_package or "character_data" not in export_package:
             raise HTTPException(status_code=400, detail="Invalid export package")
@@ -790,14 +797,14 @@ async def import_character(request: dict, file_manager=Depends(get_file_manager)
             message += f" ({len(failed_files)} files failed to import)"
         
         logger.info(f"Imported character '{character_name}': {len(imported_files)} files succeeded, {len(failed_files)} failed")
-        return {
-            "status": "success",
-            "message": message,
-            "character_name": character_name,
-            "imported_files": imported_files,
-            "failed_files": failed_files,
-            "action": action
-        }
+        return CharacterImportResponse(
+            status="success",
+            message=message,
+            character_name=character_name,
+            imported_files=imported_files,
+            failed_files=failed_files,
+            action=action
+        )
         
     except HTTPException:
         raise
@@ -806,7 +813,7 @@ async def import_character(request: dict, file_manager=Depends(get_file_manager)
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/files/{filename}/conflicts")
+@router.get("/files/{filename}/conflicts", response_model=ConflictCheckResponse)
 async def check_file_conflicts(filename: str, file_manager=Depends(get_file_manager)):
     """
     Check for potential conflicts before modifying a file.
@@ -825,11 +832,12 @@ async def check_file_conflicts(filename: str, file_manager=Depends(get_file_mana
             current_file = next((f for f in files if f.filename == filename), None)
             
             if not current_file:
-                return {
-                    "status": "success",
-                    "has_conflicts": False,
-                    "message": "No conflicts - file does not exist"
-                }
+                return ConflictCheckResponse(
+                    status="success",
+                    has_conflicts=False,
+                    conflicts=[],
+                    message="No conflicts - file does not exist"
+                )
             
             # Check for recent backups (potential concurrent editing)
             backups = await file_manager.backup_service.list_backups(filename)
@@ -870,25 +878,38 @@ async def check_file_conflicts(filename: str, file_manager=Depends(get_file_mana
                         "details": validation_result.errors
                     })
             
+            # Convert conflicts to ConflictInfo models
+            conflict_models = [
+                ConflictInfo(
+                    type=conflict["type"],
+                    message=conflict["message"],
+                    severity=conflict["severity"],
+                    recommendation=conflict["recommendation"],
+                    details=conflict.get("details")
+                )
+                for conflict in conflicts
+            ]
+            
             logger.info(f"Checked conflicts for {filename}: {len(conflicts)} potential issues found")
-            return {
-                "status": "success",
-                "has_conflicts": len(conflicts) > 0,
-                "conflicts": conflicts,
-                "file_info": {
+            return ConflictCheckResponse(
+                status="success",
+                has_conflicts=len(conflicts) > 0,
+                conflicts=conflict_models,
+                file_info={
                     "filename": filename,
                     "size": current_file.size,
                     "last_modified": current_file.last_modified.isoformat(),
                     "recent_backups": len(recent_backups)
                 }
-            }
+            )
             
         except FileNotFoundError:
-            return {
-                "status": "success",
-                "has_conflicts": False,
-                "message": "No conflicts - file does not exist"
-            }
+            return ConflictCheckResponse(
+                status="success",
+                has_conflicts=False,
+                conflicts=[],
+                message="No conflicts - file does not exist"
+            )
             
     except Exception as e:
         logger.error(f"Error checking conflicts for {filename}: {e}")

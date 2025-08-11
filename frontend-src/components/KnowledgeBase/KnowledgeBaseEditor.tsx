@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, FileText, Plus, Save, AlertCircle } from 'lucide-react';
+import { X, FileText, Plus, Save, AlertCircle, Settings, History, Shield } from 'lucide-react';
 import { FileBrowser } from './FileBrowser';
 import { DynamicForm } from './DynamicForm';
 import { CharacterCreationWizard } from './CharacterCreationWizard';
+import { FileManager } from './FileManager';
+import { BackupManager } from './BackupManager';
+import { ConflictResolver } from './ConflictResolver';
 import { 
   ValidationProvider, 
   ValidationSummary, 
@@ -37,6 +40,7 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [activeTab, setActiveTab] = useState<'editor' | 'manager' | 'backups' | 'conflicts'>('editor');
 
   // Load files on component mount
   useEffect(() => {
@@ -198,7 +202,7 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
             )}
           </div>
           <div className="flex items-center space-x-2">
-            {selectedFile && (
+            {selectedFile && activeTab === 'editor' && (
               <button
                 onClick={handleSave}
                 disabled={isSaving || !hasUnsavedChanges}
@@ -215,6 +219,56 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
               <X className="w-6 h-6" />
             </button>
           </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-700">
+          <nav className="flex space-x-8 px-4">
+            <button
+              onClick={() => setActiveTab('editor')}
+              className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'editor'
+                  ? 'border-purple-500 text-purple-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+              }`}
+            >
+              <FileText className="h-4 w-4 inline mr-2" />
+              Editor
+            </button>
+            <button
+              onClick={() => setActiveTab('manager')}
+              className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'manager'
+                  ? 'border-purple-500 text-purple-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+              }`}
+            >
+              <Settings className="h-4 w-4 inline mr-2" />
+              File Manager
+            </button>
+            <button
+              onClick={() => setActiveTab('backups')}
+              className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'backups'
+                  ? 'border-purple-500 text-purple-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+              }`}
+            >
+              <History className="h-4 w-4 inline mr-2" />
+              Backups
+            </button>
+            <button
+              onClick={() => setActiveTab('conflicts')}
+              className={`py-3 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'conflicts'
+                  ? 'border-purple-500 text-purple-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+              }`}
+            >
+              <Shield className="h-4 w-4 inline mr-2" />
+              Conflicts
+            </button>
+          </nav>
         </div>
 
         {/* Error Display */}
@@ -244,54 +298,107 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
 
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
-          {/* File Browser Sidebar */}
-          <div className="w-80 border-r border-gray-700 flex flex-col">
-            <div className="p-4 border-b border-gray-700">
-              <button
-                onClick={handleCreateNew}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Create New Character</span>
-              </button>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <FileBrowser
-                files={files}
-                selectedFile={selectedFile}
-                onFileSelect={handleFileSelect}
-                onRefresh={loadFiles}
-                isLoading={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Editor Area */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {isLoading ? (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
-                  <p className="text-gray-400">Loading...</p>
-                </div>
+          {/* File Browser Sidebar - Only show for editor tab */}
+          {activeTab === 'editor' && (
+            <div className="w-80 border-r border-gray-700 flex flex-col">
+              <div className="p-4 border-b border-gray-700">
+                <button
+                  onClick={handleCreateNew}
+                  className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Create New Character</span>
+                </button>
               </div>
-            ) : selectedFile && fileContent && schema ? (
               <div className="flex-1 overflow-hidden">
-                <DynamicForm
-                  schema={schema}
-                  data={fileContent.content}
-                  onChange={handleContentChange}
-                  onValidationErrors={handleValidationErrors}
-                  fileType={selectedFile.file_type}
+                <FileBrowser
+                  files={files}
+                  selectedFile={selectedFile}
+                  onFileSelect={handleFileSelect}
+                  onRefresh={loadFiles}
+                  isLoading={isLoading}
                 />
               </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center text-gray-400">
-                  <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-lg">Select a file to start editing</p>
-                  <p className="text-sm">Choose a file from the sidebar to view and edit its contents</p>
-                </div>
+            </div>
+          )}
+
+          {/* Content Area */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {activeTab === 'editor' && (
+              <>
+                {isLoading ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                      <p className="text-gray-400">Loading...</p>
+                    </div>
+                  </div>
+                ) : selectedFile && fileContent && schema ? (
+                  <div className="flex-1 overflow-hidden">
+                    <DynamicForm
+                      schema={schema}
+                      data={fileContent.content}
+                      onChange={handleContentChange}
+                      onValidationErrors={handleValidationErrors}
+                      fileType={selectedFile.file_type}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center">
+                    <div className="text-center text-gray-400">
+                      <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                      <p className="text-lg">Select a file to start editing</p>
+                      <p className="text-sm">Choose a file from the sidebar to view and edit its contents</p>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === 'manager' && (
+              <div className="flex-1 overflow-auto p-4">
+                <FileManager
+                  selectedFile={selectedFile?.filename}
+                  onFileSelect={(filename) => {
+                    const file = files.find(f => f.filename === filename);
+                    if (file) {
+                      setActiveTab('editor');
+                      handleFileSelect(file);
+                    }
+                  }}
+                  onFileChange={loadFiles}
+                />
+              </div>
+            )}
+
+            {activeTab === 'backups' && (
+              <div className="flex-1 overflow-auto p-4">
+                <BackupManager
+                  filename={selectedFile?.filename}
+                  onRestore={() => {
+                    loadFiles();
+                    if (selectedFile) {
+                      handleFileSelect(selectedFile);
+                    }
+                  }}
+                />
+              </div>
+            )}
+
+            {activeTab === 'conflicts' && (
+              <div className="flex-1 overflow-auto p-4">
+                <ConflictResolver
+                  filename={selectedFile?.filename || ''}
+                  onConflictResolved={(canProceed) => {
+                    // Could use this to enable/disable save button or show warnings
+                    console.log('Conflict resolution status:', canProceed);
+                  }}
+                  onRefresh={() => {
+                    if (selectedFile) {
+                      handleFileSelect(selectedFile);
+                    }
+                  }}
+                />
               </div>
             )}
           </div>
