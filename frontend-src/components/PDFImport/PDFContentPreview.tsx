@@ -17,7 +17,8 @@ interface PDFContentPreviewProps {
   structureInfo: PDFStructureInfo | null;
   onConfirm: (finalText: string) => void;
   onReject: () => void;
-  onEdit?: (editedText: string) => void;
+  onEdit?: (text: string) => void;
+  isLoading?: boolean;
 }
 
 interface TextQualityIndicator {
@@ -33,7 +34,8 @@ export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
   structureInfo,
   onConfirm,
   onReject,
-  onEdit
+  onEdit,
+  isLoading = false
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(extractedText);
@@ -311,7 +313,8 @@ export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
           </div>
           <button
             onClick={handleConfirm}
-            className="inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+            disabled={isLoading}
+            className="inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Check className="h-4 w-4 mr-2" />
             Continue to Parsing

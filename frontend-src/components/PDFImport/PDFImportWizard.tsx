@@ -105,12 +105,13 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
     }
   ]);
 
-  // Update step completion status based on import state
+  // Update step validity when import state changes
   useEffect(() => {
-    console.log('Updating steps - importState:', {
-      sessionId: importState.sessionId,
-      extractedTextLength: importState.extractedText?.length || 0,
-      parsedData: !!importState.parsedData,
+    console.log('Import state or current step changed:', {
+      hasSessionId: !!importState.sessionId,
+      hasExtractedText: !!importState.extractedText,
+      hasParsedData: !!importState.parsedData,
+      isLoading: importState.isLoading,
       currentStep
     });
     
@@ -133,8 +134,13 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
       
       return newSteps;
     });
+    
+    // Auto-advance from upload step to preview step when upload is complete
+    if (currentStep === 0 && importState.sessionId && importState.extractedText && !importState.isLoading) {
+      console.log('Auto-advancing from upload step to preview step');
+      setCurrentStep(1);
+    }
   }, [importState, currentStep]);
-
   // Navigation functions
   const canGoNext = useCallback((): boolean => {
     if (currentStep >= steps.length - 1) {
@@ -219,14 +225,13 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
         error: null
       }));
 
-      console.log('About to call goNext()');
-      // Auto-advance to preview step
-      goNext();
+      // Don't call goNext() here - let the useEffect handle navigation
+      // after state has been updated and steps validity has been recalculated
     } catch (error) {
       console.error('Error in handleUploadComplete:', error);
       handleError(error instanceof Error ? error.message : 'Failed to process uploaded PDF');
     }
-  }, [goNext, handleError]);
+  }, [handleError]);
 
   const handleUploadError = useCallback((error: string) => {
     handleError(error, true);
@@ -234,11 +239,18 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
 
   // PDF Content Preview handlers
   const handlePreviewConfirm = useCallback(async (finalText: string) => {
+    // Prevent double-clicks by checking if already loading
+    if (importState.isLoading) {
+      console.log('Already processing, ignoring duplicate click');
+      return;
+    }
+
     if (!importState.sessionId) {
       handleError('No active session found');
       return;
     }
 
+    // Update state and immediately move to processing step
     setImportState(prev => ({
       ...prev,
       isLoading: true,
@@ -246,6 +258,9 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
       extractedText: finalText,
       error: null
     }));
+
+    // Move to the AI Processing step immediately
+    setCurrentStep(2);
 
     try {
       const response = await fetch('/api/character/import-pdf/parse', {
@@ -282,21 +297,42 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
       // Auto-advance to review step
       setCurrentStep(3);
     } catch (error) {
+      console.error('Parsing error:', error);
+      // Make sure to set isLoading to false on error
+      setImportState(prev => ({
+        ...prev,
+        isLoading: false,
+        loadingMessage: ''
+      }));
+      // Go back to preview step on error
+      setCurrentStep(1);
       handleError(error instanceof Error ? error.message : 'Failed to parse character data', false);
     }
-  }, [importState.sessionId, handleError]);
+  }, [importState.sessionId, importState.isLoading, handleError]);
 
   const handlePreviewReject = useCallback(() => {
-    // Go back to upload step
-    setCurrentStep(0);
-    setImportState(prev => ({
-      ...prev,
-      sessionId: null,
-      extractedText: '',
-      structureInfo: null,
-      error: null
-    }));
-  }, []);
+    // Only cleanup if not currently processing
+    if (!importState.isLoading) {
+      // Cleanup the session if it exists
+      if (importState.sessionId) {
+        fetch(`/api/character/import-pdf/cleanup/${importState.sessionId}`, {
+          method: 'DELETE'
+        }).catch(() => {
+          // Ignore cleanup errors
+        });
+      }
+      
+      // Go back to upload step
+      setCurrentStep(0);
+      setImportState(prev => ({
+        ...prev,
+        sessionId: null,
+        extractedText: '',
+        structureInfo: null,
+        error: null
+      }));
+    }
+  }, [importState.sessionId, importState.isLoading]);
 
   // Character Data Review handlers
   const handleFieldEdit = useCallback((filePath: string, fieldPath: string, value: any) => {
@@ -374,7 +410,8 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
   // Cleanup session on unmount or cancel
   useEffect(() => {
     return () => {
-      if (importState.sessionId) {
+      // Only cleanup if not currently processing to avoid race conditions
+      if (importState.sessionId && !importState.isLoading) {
         fetch(`/api/character/import-pdf/cleanup/${importState.sessionId}`, {
           method: 'DELETE'
         }).catch(() => {
@@ -385,7 +422,8 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
   }, [importState.sessionId]);
 
   const handleCancel = useCallback(() => {
-    if (importState.sessionId) {
+    // Only cleanup if not currently processing
+    if (importState.sessionId && !importState.isLoading) {
       fetch(`/api/character/import-pdf/cleanup/${importState.sessionId}`, {
         method: 'DELETE'
       }).catch(() => {
@@ -393,7 +431,7 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
       });
     }
     onCancel();
-  }, [importState.sessionId, onCancel]);
+  }, [importState.sessionId, importState.isLoading, onCancel]);
 
   // Render step content
   const renderStepContent = () => {
@@ -412,6 +450,7 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
             structureInfo={importState.structureInfo}
             onConfirm={handlePreviewConfirm}
             onReject={handlePreviewReject}
+            isLoading={importState.isLoading}
           />
         ) : null;
       case 2:

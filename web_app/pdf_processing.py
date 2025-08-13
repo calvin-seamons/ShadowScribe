@@ -18,6 +18,7 @@ import pdfplumber
 from PIL import Image
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)  # Enable debug logging for PDF processing
 
 
 class PDFStructureType(Enum):
@@ -209,14 +210,57 @@ class PDFTextExtractor:
         try:
             extracted_text = ""
             structure_info = None
+            form_data = {}
             
             with pdfplumber.open(file_path) as pdf:
                 page_count = len(pdf.pages)
                 has_tables = False
                 has_form_fields = False
                 
+                # Try to extract form fields from PDF metadata
+                if hasattr(pdf, 'doc') and hasattr(pdf.doc, 'catalog'):
+                    try:
+                        # Access the AcroForm if it exists
+                        if 'AcroForm' in pdf.doc.catalog:
+                            has_form_fields = True
+                            logger.info("PDF contains AcroForm (fillable form fields)")
+                    except:
+                        pass
+                
+                # Extract form data from annotations (D&D Beyond style)
+                form_data = {}
                 for page in pdf.pages:
-                    # Extract text
+                    # Check for annotations (form fields in D&D Beyond PDFs)
+                    if hasattr(page, 'annots') and page.annots:
+                        for annot in page.annots:
+                            if annot and 'data' in annot:
+                                annot_data = annot['data']
+                                # Extract field name and value
+                                if 'T' in annot_data and 'V' in annot_data:
+                                    field_name = annot_data['T']
+                                    field_value = annot_data['V']
+                                    
+                                    # Decode bytes to string
+                                    if isinstance(field_name, bytes):
+                                        field_name = field_name.decode('utf-8', errors='ignore')
+                                    if isinstance(field_value, bytes):
+                                        field_value = field_value.decode('utf-8', errors='ignore')
+                                    
+                                    if field_name and field_value:
+                                        form_data[field_name] = field_value
+                                        has_form_fields = True
+                                        logger.debug(f"Found annotation field: {field_name} = {field_value}")
+                
+                # Add form data to extracted text if found
+                if form_data:
+                    logger.info(f"Found {len(form_data)} form fields in annotations")
+                    extracted_text += "\n=== Form Field Data ===\n"
+                    for field_name, field_value in form_data.items():
+                        extracted_text += f"{field_name}: {field_value}\n"
+                    extracted_text += "\n"
+                
+                for page in pdf.pages:
+                    # Extract regular text
                     page_text = page.extract_text()
                     if page_text:
                         extracted_text += page_text + "\n\n"
@@ -265,22 +309,98 @@ class PDFTextExtractor:
         """Extract text using PyPDF2 (fallback method)"""
         try:
             extracted_text = ""
+            has_form_fields = False
+            form_data = {}
             
             with open(file_path, 'rb') as file:
                 reader = PyPDF2.PdfReader(file)
                 page_count = len(reader.pages)
                 
+                # Extract form fields first (if present)
+                # PyPDF2 3.x uses different methods
+                try:
+                    form_fields = {}
+                    
+                    # Method 1: Try get_fields() for AcroForm fields
+                    if hasattr(reader, 'get_fields'):
+                        fields = reader.get_fields()
+                        if fields:
+                            logger.info(f"Found {len(fields)} form fields using get_fields()")
+                            form_fields.update(fields)
+                    
+                    # Method 2: Try accessing acro_form directly
+                    if hasattr(reader, 'acro_form') and reader.acro_form:
+                        logger.info("PDF has acro_form")
+                        try:
+                            # Get form field objects
+                            if '/Fields' in reader.acro_form:
+                                fields_array = reader.acro_form['/Fields']
+                                logger.info(f"Found {len(fields_array)} fields in AcroForm")
+                                
+                                for field_ref in fields_array:
+                                    field = field_ref.get_object()
+                                    if field:
+                                        field_name = field.get('/T', 'Unknown')
+                                        field_value = field.get('/V', '')
+                                        if field_value:
+                                            form_fields[str(field_name)] = str(field_value)
+                                            logger.debug(f"Field: {field_name} = {field_value}")
+                        except Exception as e:
+                            logger.warning(f"Error reading acro_form fields: {e}")
+                    
+                    # Method 3: Try getFormTextFields() (some versions)
+                    if hasattr(reader, 'getFormTextFields'):
+                        text_fields = reader.getFormTextFields()
+                        if text_fields:
+                            logger.info(f"Found {len(text_fields)} text fields using getFormTextFields()")
+                            form_fields.update(text_fields)
+                    
+                    # Process extracted form fields
+                    if form_fields:
+                        has_form_fields = True
+                        logger.info(f"Total form fields found: {len(form_fields)}")
+                        
+                        # Extract form field values
+                        for field_name, field_value in form_fields.items():
+                            if field_value and str(field_value).strip():
+                                # Handle different value types
+                                if hasattr(field_value, 'get_object'):
+                                    field_value = str(field_value.get_object())
+                                else:
+                                    field_value = str(field_value)
+                                
+                                # Clean up field value
+                                field_value = field_value.strip()
+                                if field_value and field_value not in ['', 'None', '/']:
+                                    form_data[field_name] = field_value
+                                    # Add form field data to extracted text
+                                    field_label = field_name.replace('_', ' ').replace('-', ' ').replace('/', '').title()
+                                    extracted_text += f"{field_label}: {field_value}\n"
+                                    logger.debug(f"Added field: {field_label} = {field_value}")
+                    else:
+                        logger.info("No form fields found in PDF")
+                        
+                except Exception as e:
+                    logger.warning(f"Could not extract form fields: {e}")
+                    import traceback
+                    logger.debug(traceback.format_exc())
+                
+                # Extract regular page text
                 for page in reader.pages:
                     page_text = page.extract_text()
                     if page_text:
                         extracted_text += page_text + "\n\n"
+                
+                # If we found form data but no regular text, format the form data nicely
+                if form_data and len(extracted_text.strip()) < 100:
+                    extracted_text = self._format_form_data(form_data)
                 
                 # Basic structure detection
                 detected_format = self._detect_pdf_structure(extracted_text)
                 text_quality = self._assess_text_quality(extracted_text)
                 
                 structure_info = PDFStructureInfo(
-                    has_form_fields=False,  # PyPDF2 doesn't easily detect form fields
+                    has_form_fields=has_form_fields,
                     has_tables=False,       # PyPDF2 doesn't preserve table structure
                     detected_format=detected_format,
                     text_quality=text_quality,
@@ -428,3 +548,80 @@ class PDFTextExtractor:
             page_count=0,
             has_images=False
         )
+    
+    def _format_form_data(self, form_data: Dict[str, str]) -> str:
+        """Format form field data into readable text"""
+        formatted_text = "Character Sheet Form Data:\n\n"
+        
+        # Group related fields for better organization
+        character_info = {}
+        abilities = {}
+        skills = {}
+        combat = {}
+        equipment = {}
+        spells = {}
+        other = {}
+        
+        for field_name, field_value in form_data.items():
+            field_lower = field_name.lower()
+            
+            # Categorize fields
+            if any(term in field_lower for term in ['name', 'race', 'class', 'level', 'background', 'alignment']):
+                character_info[field_name] = field_value
+            elif any(term in field_lower for term in ['str', 'dex', 'con', 'int', 'wis', 'cha', 'strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma']):
+                abilities[field_name] = field_value
+            elif any(term in field_lower for term in ['skill', 'proficiency', 'expertise']):
+                skills[field_name] = field_value
+            elif any(term in field_lower for term in ['hp', 'ac', 'initiative', 'speed', 'attack', 'damage', 'hit']):
+                combat[field_name] = field_value
+            elif any(term in field_lower for term in ['equipment', 'weapon', 'armor', 'item', 'gold', 'inventory']):
+                equipment[field_name] = field_value
+            elif any(term in field_lower for term in ['spell', 'cantrip', 'slot', 'magic']):
+                spells[field_name] = field_value
+            else:
+                other[field_name] = field_value
+        
+        # Format each category
+        if character_info:
+            formatted_text += "=== Character Information ===\n"
+            for field, value in character_info.items():
+                formatted_text += f"{field.replace('_', ' ').title()}: {value}\n"
+            formatted_text += "\n"
+        
+        if abilities:
+            formatted_text += "=== Abilities ===\n"
+            for field, value in abilities.items():
+                formatted_text += f"{field.replace('_', ' ').title()}: {value}\n"
+            formatted_text += "\n"
+        
+        if skills:
+            formatted_text += "=== Skills & Proficiencies ===\n"
+            for field, value in skills.items():
+                formatted_text += f"{field.replace('_', ' ').title()}: {value}\n"
+            formatted_text += "\n"
+        
+        if combat:
+            formatted_text += "=== Combat Stats ===\n"
+            for field, value in combat.items():
+                formatted_text += f"{field.replace('_', ' ').title()}: {value}\n"
+            formatted_text += "\n"
+        
+        if equipment:
+            formatted_text += "=== Equipment ===\n"
+            for field, value in equipment.items():
+                formatted_text += f"{field.replace('_', ' ').title()}: {value}\n"
+            formatted_text += "\n"
+        
+        if spells:
+            formatted_text += "=== Spells ===\n"
+            for field, value in spells.items():
+                formatted_text += f"{field.replace('_', ' ').title()}: {value}\n"
+            formatted_text += "\n"
+        
+        if other:
+            formatted_text += "=== Other Information ===\n"
+            for field, value in other.items():
+                formatted_text += f"{field.replace('_', ' ').title()}: {value}\n"
+            formatted_text += "\n"
+        
+        return formatted_text
