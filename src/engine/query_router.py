@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 from enum import Enum
 
-from ..utils.direct_llm_client import DirectLLMClient
+from ..utils.schema_driven_client import SchemaDrivenClient
 from ..utils.response_models import SourceTypeEnum
 
 
@@ -39,25 +39,25 @@ class QueryRouter:
     """
     
     def __init__(self, model: str = "gpt-4o-mini"):
-        """Initialize the query router with direct JSON client."""
-        self.direct_client = DirectLLMClient(model=model)
+        """Initialize the query router with schema-driven client."""
+        self.schema_client = SchemaDrivenClient(model=model)
     
     def set_debug_callback(self, callback):
-        """Set debug callback for the direct client."""
-        self.direct_client.set_debug_callback(callback)
+        """Set debug callback for the schema client."""
+        self.schema_client.set_debug_callback(callback)
     
     def update_model(self, model: str):
-        """Update the OpenAI model used by the direct client."""
-        old_callback = self.direct_client.debug_callback if hasattr(self.direct_client, 'debug_callback') else None
-        self.direct_client = DirectLLMClient(model=model)
+        """Update the OpenAI model used by the schema client."""
+        old_callback = self.schema_client.debug_callback if hasattr(self.schema_client, 'debug_callback') else None
+        self.schema_client = SchemaDrivenClient(model=model)
         if old_callback:
-            self.direct_client.set_debug_callback(old_callback)
+            self.schema_client.set_debug_callback(old_callback)
     
     async def _call_debug_callback(self, event_type: str, message: str, data: Dict[str, Any] = None):
         """Call debug callback if available."""
-        if hasattr(self.direct_client, '_call_debug_callback'):
+        if hasattr(self.schema_client, '_call_debug_callback'):
             try:
-                await self.direct_client._call_debug_callback(event_type, message, data or {})
+                await self.schema_client._call_debug_callback(event_type, message, data or {})
             except Exception as e:
                 # Don't let debug callback errors break the main flow
                 print(f"Debug callback error in query router: {e}")
@@ -70,8 +70,8 @@ class QueryRouter:
         await self._call_debug_callback("PASS_1_START", "Starting source selection", {"query": user_query})
         
         try:
-            # Use the direct client's source selection
-            result = await self.direct_client.select_sources(user_query)
+            # Use the schema client's source selection
+            result = await self.schema_client.select_sources(user_query)
             
             # Convert string source names to SourceType enums
             source_types = []
@@ -168,19 +168,12 @@ class QueryRouter:
     async def _target_character_content(self, query: str, confidence: float) -> ContentTarget:
         """Target character data using direct JSON parsing - no function calling."""
         
-        # Use the direct client for character targeting
-        file_fields = await self.direct_client.target_character_files(query)
+        # Use the schema client for character targeting
+        file_fields = await self.schema_client.target_character_files(query)
         
         # Create reasoning based on what was selected
         selected_files = list(file_fields.keys())
-        reasoning = f"Direct targeting selected {len(selected_files)} files: {', '.join(selected_files)}"
-        
-        # Add specific reasoning for backstory queries
-        if any(word in query.lower() for word in ["backstory", "background", "family", "parent", "thaldrin", "brenna"]):
-            if "character_background.json" in selected_files:
-                reasoning += " - correctly included character_background.json for backstory/family query"
-            else:
-                reasoning += " - WARNING: backstory query but character_background.json not selected"
+        reasoning = f"Schema-driven targeting selected {len(selected_files)} files: {', '.join(selected_files)}"
         
         return ContentTarget(
             source_type=SourceType.CHARACTER_DATA,
@@ -191,8 +184,8 @@ class QueryRouter:
     async def _target_session_content(self, query: str, confidence: float) -> ContentTarget:
         """Target session notes using direct JSON approach."""
         try:
-            # Use the direct client's session targeting
-            result = await self.direct_client.target_session_notes(query)
+            # Use the schema client's session targeting
+            result = await self.schema_client.target_session_notes(query)
             
             return ContentTarget(
                 source_type=SourceType.SESSION_NOTES,
@@ -283,34 +276,167 @@ class QueryRouter:
         )
     
     def _create_keyword_fallback(self, user_query: str, error_msg: str) -> SourceSelection:
-        """Create a keyword-based fallback when direct client fails."""
+        """Create a comprehensive keyword-based fallback when direct client fails."""
         sources = []
         
         # Get keyword hints
         query_lower = user_query.lower()
         
-        # Character-related keywords
-        if any(word in query_lower for word in [
-            'my', 'i', 'character', 'duskryn', 'paladin', 'warlock', 'spell', 'inventory', 
-            'equipment', 'stat', 'level', 'ability', 'feat', 'background', 'family', 
-            'parent', 'thaldrin', 'brenna', 'backstory', 'objective', 'contract'
-        ]):
+        # Comprehensive character-related keywords
+        character_keywords = [
+            # Personal pronouns and references
+            'my', 'i', 'me', 'character', 'pc', 'player character',
+            
+            # Character basics
+            'stat', 'stats', 'statistics', 'level', 'class', 'race', 'background', 'alignment',
+            'ability score', 'ability scores', 'strength', 'dexterity', 'constitution', 
+            'intelligence', 'wisdom', 'charisma', 'modifier', 'modifiers',
+            
+            # Combat stats
+            'hp', 'hit points', 'health', 'ac', 'armor class', 'initiative', 'speed',
+            'proficiency', 'proficiency bonus', 'saving throw', 'saving throws',
+            
+            # Equipment and inventory
+            'inventory', 'equipment', 'gear', 'weapon', 'weapons', 'armor', 'armour',
+            'shield', 'item', 'items', 'magic item', 'magic items', 'carry', 'carrying',
+            'gold', 'money', 'currency', 'treasure',
+            
+            # Spells and magic
+            'spell', 'spells', 'magic', 'magical', 'cast', 'casting', 'spellcasting',
+            'cantrip', 'cantrips', 'spell slot', 'spell slots', 'spell save', 'spell attack',
+            
+            # Abilities and features
+            'ability', 'abilities', 'feature', 'features', 'feat', 'feats', 'trait', 'traits',
+            'class feature', 'racial trait', 'special ability', 'power', 'powers',
+            
+            # Actions and combat
+            'action', 'actions', 'attack', 'attacks', 'damage', 'combat', 'fight', 'fighting',
+            'battle', 'maneuver', 'maneuvers', 'technique', 'techniques',
+            
+            # Background and story
+            'backstory', 'background', 'history', 'past', 'family', 'parent', 'parents',
+            'father', 'mother', 'sibling', 'siblings', 'ally', 'allies', 'enemy', 'enemies',
+            'friend', 'friends', 'relationship', 'relationships', 'personality', 'trait',
+            
+            # Quests and objectives
+            'quest', 'quests', 'objective', 'objectives', 'goal', 'goals', 'mission', 'missions',
+            'contract', 'contracts', 'task', 'tasks', 'job', 'jobs', 'assignment', 'assignments',
+            
+            # Skills and proficiencies
+            'skill', 'skills', 'proficient', 'expertise', 'acrobatics', 'animal handling',
+            'arcana', 'athletics', 'deception', 'history', 'insight', 'intimidation',
+            'investigation', 'medicine', 'nature', 'perception', 'performance', 'persuasion',
+            'religion', 'sleight of hand', 'stealth', 'survival'
+        ]
+        
+        if any(word in query_lower for word in character_keywords):
             sources.append(SourceType.CHARACTER_DATA)
         
-        # Rulebook keywords
-        if any(word in query_lower for word in [
-            'rule', 'mechanic', 'spell', 'combat', 'damage', 'attack', 'condition',
-            'action', 'bonus action', 'movement', 'casting', 'concentration', 'save',
-            'check', 'ability', 'skill', 'advantage', 'disadvantage', 'how do', 'how does'
-        ]):
+        # Comprehensive rulebook keywords
+        rulebook_keywords = [
+            # Core mechanics
+            'rule', 'rules', 'mechanic', 'mechanics', 'how do', 'how does', 'how to',
+            'can i', 'can you', 'what is', 'what are', 'explain', 'definition', 'meaning',
+            
+            # Combat mechanics
+            'combat', 'attack', 'attacks', 'damage', 'hit', 'miss', 'critical', 'crit',
+            'armor class', 'ac', 'initiative', 'action', 'bonus action', 'reaction',
+            'movement', 'move', 'opportunity attack', 'aoo', 'grapple', 'shove', 'trip',
+            'disarm', 'sunder', 'charge', 'full attack', 'flurry', 'two weapon fighting',
+            'dual wield', 'flanking', 'cover', 'concealment', 'prone', 'unconscious',
+            
+            # Spellcasting mechanics
+            'spellcasting', 'spell', 'spells', 'cast', 'casting', 'concentration',
+            'ritual', 'spell slot', 'spell slots', 'cantrip', 'cantrips', 'spell save',
+            'spell attack', 'counterspell', 'dispel', 'metamagic', 'sorcery points',
+            'spell components', 'verbal', 'somatic', 'material', 'focus', 'arcane focus',
+            
+            # Conditions and effects
+            'condition', 'conditions', 'status', 'effect', 'effects', 'buff', 'debuff',
+            'poisoned', 'charmed', 'frightened', 'paralyzed', 'stunned', 'unconscious',
+            'prone', 'restrained', 'grappled', 'incapacitated', 'blinded', 'deafened',
+            'exhaustion', 'petrified', 'invisible', 'hidden', 'surprised',
+            
+            # Saving throws and checks
+            'save', 'saves', 'saving throw', 'saving throws', 'ability check', 'skill check',
+            'proficiency', 'advantage', 'disadvantage', 'inspiration', 'luck', 'reroll',
+            'natural 1', 'natural 20', 'critical success', 'critical failure',
+            
+            # Rest and recovery
+            'rest', 'short rest', 'long rest', 'hit dice', 'recovery', 'heal', 'healing',
+            'hit points', 'hp', 'temporary hit points', 'temp hp', 'death save',
+            'death saves', 'dying', 'stabilize', 'unconscious',
+            
+            # Environment and exploration
+            'travel', 'exploration', 'environment', 'weather', 'terrain', 'climbing',
+            'swimming', 'flying', 'falling', 'suffocation', 'drowning', 'extreme cold',
+            'extreme heat', 'vision', 'light', 'darkness', 'dim light', 'bright light',
+            'darkvision', 'blindsight', 'tremorsense', 'truesight',
+            
+            # Equipment mechanics
+            'weapon', 'weapons', 'armor', 'armour', 'shield', 'magic item', 'magic items',
+            'attunement', 'curse', 'cursed', 'artifact', 'weapon property', 'weapon properties',
+            'finesse', 'heavy', 'light', 'loading', 'range', 'reach', 'thrown', 'two-handed',
+            'versatile', 'ammunition', 'silvered', 'adamantine', 'mithral'
+        ]
+        
+        if any(word in query_lower for word in rulebook_keywords):
             sources.append(SourceType.DND_RULEBOOK)
         
-        # Session/story keywords
-        if any(word in query_lower for word in [
-            'party', 'campaign', 'session', 'story', 'npc', 'ghul', 'elarion', 'pork',
-            'albrit', 'willow', 'zivu', 'quest', 'adventure', 'happened', 'event',
-            'character', 'other', 'who', 'member'
-        ]):
+        # Comprehensive session/story keywords
+        session_keywords = [
+            # Session references
+            'session', 'sessions', 'last session', 'previous session', 'last time', 'before',
+            'what happened', 'recap', 'summary', 'story so far', 'campaign', 'adventure',
+            
+            # Party and characters
+            'party', 'party member', 'party members', 'group', 'team', 'companion', 'companions',
+            'ally', 'allies', 'friend', 'friends', 'other character', 'other characters',
+            'pc', 'pcs', 'player character', 'player characters', 'who', 'member', 'members',
+            
+            # NPCs and characters (generic terms, no specific names)
+            'npc', 'npcs', 'non-player character', 'character', 'characters', 'person', 'people',
+            'individual', 'someone', 'somebody', 'villain', 'villains', 'enemy', 'enemies',
+            'boss', 'leader', 'captain', 'king', 'queen', 'lord', 'lady', 'sir', 'master',
+            'merchant', 'trader', 'shopkeeper', 'innkeeper', 'bartender', 'guard', 'soldier',
+            'priest', 'cleric', 'wizard', 'mage', 'rogue', 'thief', 'assassin', 'fighter',
+            
+            # Story elements
+            'story', 'plot', 'narrative', 'lore', 'history', 'background', 'backstory',
+            'tale', 'legend', 'myth', 'rumor', 'rumors', 'gossip', 'news', 'information',
+            'secret', 'secrets', 'mystery', 'mysteries', 'clue', 'clues', 'evidence',
+            'revelation', 'discovery', 'twist', 'surprise', 'shock', 'betrayal',
+            
+            # Events and encounters
+            'event', 'events', 'encounter', 'encounters', 'meeting', 'meetings',
+            'conversation', 'conversations', 'talk', 'discussion', 'negotiation', 'negotiations',
+            'battle', 'battles', 'fight', 'fights', 'combat', 'skirmish', 'war', 'conflict',
+            'investigation', 'search', 'exploration', 'journey', 'travel', 'trip',
+            
+            # Locations and world
+            'location', 'locations', 'place', 'places', 'where', 'city', 'cities', 'town', 'towns',
+            'village', 'villages', 'settlement', 'settlements', 'dungeon', 'dungeons', 'cave', 'caves',
+            'castle', 'fortress', 'keep', 'tower', 'temple', 'church', 'shrine', 'tavern', 'inn',
+            'shop', 'store', 'market', 'marketplace', 'guild', 'guildhall', 'palace', 'manor',
+            'house', 'home', 'building', 'structure', 'ruins', 'ancient', 'old', 'abandoned',
+            
+            # Organizations and factions
+            'organization', 'organizations', 'guild', 'guilds', 'faction', 'factions',
+            'group', 'groups', 'society', 'societies', 'order', 'orders', 'cult', 'cults',
+            'church', 'religion', 'religious', 'government', 'authority', 'council', 'court',
+            
+            # Relationships and politics
+            'relationship', 'relationships', 'reputation', 'standing', 'politics', 'political',
+            'diplomacy', 'diplomatic', 'war', 'peace', 'treaty', 'alliance', 'pact', 'agreement',
+            'betrayal', 'loyalty', 'trust', 'distrust', 'rivalry', 'competition', 'cooperation',
+            
+            # Time references
+            'when', 'time', 'date', 'day', 'week', 'month', 'year', 'ago', 'past', 'previous',
+            'recent', 'recently', 'lately', 'earlier', 'before', 'after', 'during', 'while',
+            'first', 'last', 'next', 'future', 'upcoming', 'planned', 'scheduled'
+        ]
+        
+        if any(word in query_lower for word in session_keywords):
             sources.append(SourceType.SESSION_NOTES)
         
         # Default to all sources if none detected or if it's a complex query

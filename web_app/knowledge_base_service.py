@@ -15,7 +15,7 @@ import logging
 from dataclasses import dataclass
 
 from backup_service import BackupService
-from json_schema_validator import JSONSchemaValidator
+from json_schema_loader import JSONSchemaLoader
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class KnowledgeBaseFileManager:
         self.base_path = Path(knowledge_base_path)
         self.characters_path = self.base_path / "characters"
         self.backup_service = BackupService(self.base_path / "backups")
-        self.validator = JSONSchemaValidator()
+        self.schema_loader = JSONSchemaLoader()
         
         # Ensure knowledge base and characters directories exist
         self.base_path.mkdir(parents=True, exist_ok=True)
@@ -388,12 +388,14 @@ class KnowledgeBaseFileManager:
             ValidationResult with validation status and any errors
         """
         try:
-            return await self.validator.validate(content, file_type)
+            return await self.schema_loader.validate_against_schema(content, file_type)
         except Exception as e:
             logger.error(f"Error validating content for {file_type}: {e}")
+            # Create a compatible ValidationResult
+            from json_schema_validator import ValidationResult, ValidationError
             return ValidationResult(
                 is_valid=False,
-                errors=[{"field": "validation", "message": str(e)}],
+                errors=[ValidationError("validation", str(e), "system_error")],
                 warnings=[]
             )
     
@@ -410,7 +412,7 @@ class KnowledgeBaseFileManager:
         Raises:
             ValueError: If file type not supported
         """
-        return await self.validator.get_template(file_type)
+        return self.schema_loader.get_template_for_file_type(file_type)
     
     async def get_schema(self, file_type: str) -> Dict[str, Any]:
         """
@@ -425,7 +427,7 @@ class KnowledgeBaseFileManager:
         Raises:
             ValueError: If file type not supported
         """
-        return await self.validator.get_schema(file_type)
+        return self.schema_loader.get_schema_for_file_type(file_type)
     
     async def create_character(self, character_name: str, character_data: Dict[str, Any]) -> List[str]:
         """

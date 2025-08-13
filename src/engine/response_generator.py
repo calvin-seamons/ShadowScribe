@@ -4,7 +4,7 @@ Simplified Response Generator - Uses direct JSON parsing for all LLM interaction
 
 from typing import Dict, Any, List, Optional
 import json
-from ..utils.direct_llm_client import DirectLLMClient
+from ..utils.schema_driven_client import SchemaDrivenClient
 from .content_retriever import RetrievedContent
 
 
@@ -15,21 +15,21 @@ class ResponseGenerator:
     
     def __init__(self, model: str = "gpt-4o-mini"):
         """Initialize response generator."""
-        self.direct_client = DirectLLMClient(model=model)
+        self.schema_client = SchemaDrivenClient(model=model)
         self.debug_callback = None
     
     def set_debug_callback(self, callback):
         """Set debug callback."""
         self.debug_callback = callback
-        if self.direct_client:
-            self.direct_client.set_debug_callback(callback)
+        if self.schema_client:
+            self.schema_client.set_debug_callback(callback)
     
     def update_model(self, model: str):
-        """Update the OpenAI model used by the direct client."""
-        old_callback = self.direct_client.debug_callback if hasattr(self.direct_client, 'debug_callback') else None
-        self.direct_client = DirectLLMClient(model=model)
+        """Update the OpenAI model used by the schema client."""
+        old_callback = self.schema_client.debug_callback if hasattr(self.schema_client, 'debug_callback') else None
+        self.schema_client = SchemaDrivenClient(model=model)
         if old_callback:
-            self.direct_client.set_debug_callback(old_callback)
+            self.schema_client.set_debug_callback(old_callback)
     
     async def generate_response(self, user_query: str, content: List[RetrievedContent]) -> str:
         """
@@ -56,8 +56,8 @@ class ResponseGenerator:
         print(f"[RESPONSE_GEN DEBUG] Prompt length: {len(prompt)} characters")
         print(f"[RESPONSE_GEN DEBUG] Prompt preview: {prompt[:200]}...")
         
-        # Generate response using direct client
-        response = await self.direct_client.generate_natural_response(
+        # Generate response using schema client
+        response = await self.schema_client.generate_natural_response(
             prompt,
             temperature=0.7,  # Slightly higher for more natural responses
             max_tokens=3000  # Increased token limit for longer, more detailed responses
@@ -146,82 +146,13 @@ class ResponseGenerator:
     
     def _create_response_prompt(self, query: str, content: Dict[str, Any]) -> str:
         """Create a clear, well-structured prompt for response generation."""
-        prompt = f"""You are Duskryn Nightwarden's D&D assistant. Answer the following query using the provided data.
+        # Import the generic prompts
+        from ..utils.prompt_templates.generic_prompts import GenericPrompts
+        
+        generic_prompts = GenericPrompts()
+        return generic_prompts.get_response_generation_prompt(query, content)
+        
 
-QUERY: {query}
-
-"""
-        
-        # Add character data if available
-        if "character" in content and content["character"]:
-            prompt += "=== CHARACTER DATA ===\n"
-            for section, data in content["character"].items():
-                prompt += f"\n{section.upper()}:\n"
-                if isinstance(data, dict):
-                    # Format nested data nicely
-                    prompt += self._format_dict(data, indent=1)
-                elif isinstance(data, list):
-                    prompt += self._format_list(data, indent=1)
-                else:
-                    prompt += f"  {data}\n"
-            prompt += "\n"
-        
-        # Add rules data if available
-        if "rules" in content and content["rules"]:
-            prompt += "=== D&D RULES ===\n"
-            if "relevant_rules" in content["rules"]:
-                for rule in content["rules"]["relevant_rules"][:3]:  # Limit to top 3
-                    if isinstance(rule, dict):
-                        prompt += f"\n{rule.get('title', 'Rule')}:\n"
-                        prompt += f"  {rule.get('content', rule.get('text', str(rule)))}\n"
-                    else:
-                        prompt += f"  {rule}\n"
-            prompt += "\n"
-        
-        # Add session data if available
-        if "sessions" in content and content["sessions"]:
-            prompt += "=== CAMPAIGN CONTEXT ===\n"
-            if "recent_session" in content["sessions"]:
-                session = content["sessions"]["recent_session"]
-                if isinstance(session, dict):
-                    prompt += f"Recent Events: {session.get('summary', str(session))}\n"
-                else:
-                    prompt += f"Recent Events: {session}\n"
-            
-            # Add party member information if available
-            if "party_members" in content["sessions"]:
-                party_info = content["sessions"]["party_members"]
-                if party_info:
-                    prompt += "\nKnown Party Members:\n"
-                    for member, actions in party_info.items():
-                        prompt += f"  {member}:\n"
-                        for action in actions[:3]:  # Limit to 3 most recent
-                            prompt += f"    - {action}\n"
-            
-            prompt += "\n"
-        
-        prompt += """=== INSTRUCTIONS ===
-1. Answer the query directly and accurately using the data provided
-2. Format your response using proper Markdown for better readability:
-   - Use headers (##, ###) to organize different sections
-   - Use **bold** for important stats, modifiers, and key terms
-   - Use *italics* for spell names, item names, and abilities
-   - Use tables for comparing stats, spell slots, or item lists
-   - Use bullet points for lists of abilities, actions, or options
-   - Use code blocks (```text) for stat blocks or complex game mechanics
-   - Use line breaks to separate logical sections
-3. Include specific numbers, modifiers, and mechanics when relevant
-4. Reference character abilities, items, or spells by name with proper formatting
-5. When presenting multiple options or comparisons, use tables or organized lists
-6. For combat actions or spell effects, use clear step-by-step formatting
-7. If providing build advice or optimization, organize it with clear headers
-8. Always include a brief summary at the end if the response is long
-
-**Character Context:** Duskryn is a Level 13 Hill Dwarf (Warlock 5/Paladin 8) with divine obligations to Ghul'Vor.
-
-Remember: Your response will be rendered as Markdown, so use formatting to make it clear and visually appealing."""
-        
-        return prompt
     
     def _format_dict(self, data: dict, indent: int = 0) -> str:
         """Format dictionary data for readable output - include ALL information."""
