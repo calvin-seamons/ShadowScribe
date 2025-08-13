@@ -23,7 +23,7 @@ class ResponsePrompts:
     def get_synthesis_prompt(self, query: str, formatted_context: Dict[str, Any]) -> str:
         """Generate the main synthesis prompt with minimal processing of raw JSON data."""
         
-        prompt = f"""You are Duskryn Nightwarden's intelligent D&D assistant. Use the following JSON data to answer the user's query accurately and helpfully.
+        prompt = f"""You are an intelligent D&D assistant. Use the following JSON data to answer the user's query accurately and helpfully.
 
 User Query: "{query}"
 
@@ -56,15 +56,15 @@ Using the JSON data above, provide a comprehensive answer that:
 2. Extracts relevant stats, modifiers, and mechanical details from the JSON
 3. References specific abilities, spells, or equipment from the data
 4. Uses campaign context when relevant
-5. Provides clear, helpful guidance for Duskryn Nightwarden
+5. Provides clear, helpful guidance based on the character data
 
-Important notes about the character:
-- Level 13 Hill Dwarf Warlock 5/Paladin 8 multiclass
-- Character data includes active contracts, completed objectives, and divine covenants
+Important notes:
+- Character data may include class levels, multiclass information, and progression
 - Extract actual values from the JSON rather than making assumptions
 - Calculate modifiers and bonuses based on the provided data
 - Reference specific spell names, weapon stats, and abilities from the JSON
-- Consider character's obligations and goals when providing guidance"""
+- Consider any character objectives, contracts, or goals when providing guidance
+- Use the character's name from the JSON data when referencing them"""
 
         return prompt
     

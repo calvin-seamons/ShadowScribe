@@ -45,19 +45,24 @@ class SchemaDrivenClient:
     
     def _get_token_params(self, max_tokens: int) -> Dict[str, int]:
         """Get the appropriate token parameter name and value based on model."""
+        # GPT-5 models use max_completion_tokens
         if (self.model.startswith("gpt-5") or 
             self.model.startswith("o1") or 
             self.model.startswith("o3")):
             return {"max_completion_tokens": max_tokens}
         else:
+            # Older models (GPT-4, GPT-4o, etc.) use max_tokens
             return {"max_tokens": max_tokens}
     
     def _get_temperature_params(self, desired_temperature: float = 0.1) -> Dict[str, float]:
         """Get the appropriate temperature parameter based on model support."""
+        # GPT-5, o1, and o3 models have a fixed temperature, so we don't send the parameter
         if (self.model.startswith("gpt-5") or
             self.model.startswith("o1") or
             self.model.startswith("o3")):
             return {}
+        
+        # All other models support a custom temperature
         return {"temperature": desired_temperature}
     
     def set_debug_callback(self, callback: Callable):

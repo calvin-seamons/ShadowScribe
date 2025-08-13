@@ -86,34 +86,10 @@ class ResponseGenerator:
         return organized
     
     def _extract_character_data(self, content: Dict[str, Any]) -> Dict[str, Any]:
-        """Extract and flatten character data for easier LLM consumption."""
-        extracted = {}
-        
-        for filename, data in content.items():
-            if not data or filename == "basic_info":
-                continue
-            
-            # Flatten nested structures
-            if isinstance(data, dict):
-                # Handle different file structures
-                if "character_base" in data:
-                    extracted["character_info"] = data
-                elif "inventory" in data:
-                    extracted["equipment"] = data["inventory"]
-                elif "character_spells" in data:
-                    extracted["spells"] = data["character_spells"]
-                elif "character_actions" in data:
-                    extracted["actions"] = data["character_actions"]
-                elif "features_and_traits" in data:
-                    extracted["abilities"] = data["features_and_traits"]
-                elif "objectives_and_contracts" in data:
-                    extracted["quests"] = data["objectives_and_contracts"]
-                else:
-                    # Generic handling
-                    key = filename.replace(".json", "").replace("_", " ")
-                    extracted[key] = data
-        
-        return extracted
+        """Extract character data - pass through the full JSON structure."""
+        # Don't try to flatten or extract - just pass through the full data
+        # The response_prompts will handle the JSON serialization
+        return content
     
     def _extract_rulebook_data(self, content: Dict[str, Any]) -> Dict[str, Any]:
         """Extract rulebook sections and search results."""
@@ -146,11 +122,33 @@ class ResponseGenerator:
     
     def _create_response_prompt(self, query: str, content: Dict[str, Any]) -> str:
         """Create a clear, well-structured prompt for response generation."""
-        # Import the generic prompts
-        from ..utils.prompt_templates.generic_prompts import GenericPrompts
+        # Import the response prompts that handle JSON properly
+        from ..utils.prompt_templates.response_prompts import ResponsePrompts
         
-        generic_prompts = GenericPrompts()
-        return generic_prompts.get_response_generation_prompt(query, content)
+        response_prompts = ResponsePrompts()
+        
+        # Format content for the response prompts
+        formatted_context = {}
+        
+        # Add character data if available
+        if "character" in content and content["character"]:
+            formatted_context["character_data"] = {
+                "content": content["character"]
+            }
+        
+        # Add rules data if available
+        if "rules" in content and content["rules"]:
+            formatted_context["dnd_rulebook"] = {
+                "content": content["rules"]
+            }
+        
+        # Add session data if available  
+        if "sessions" in content and content["sessions"]:
+            formatted_context["session_notes"] = {
+                "content": content["sessions"]
+            }
+        
+        return response_prompts.get_response_prompt(query, formatted_context)
         
 
     
