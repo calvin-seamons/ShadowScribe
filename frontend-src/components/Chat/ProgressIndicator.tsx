@@ -42,7 +42,7 @@ export default function ProgressIndicator({ progress }: ProgressIndicatorProps) 
         
         // Clear current pass so next one can start
         setCurrentPass(0);
-      } else if (progress.status === 'starting') {
+      } else if (progress.status === 'starting' || progress.status === 'active') {
         setCurrentPass(progress.pass);
       }
     }

@@ -64,7 +64,11 @@ class ResponseGenerator:
         )
         
         print(f"[RESPONSE_GEN DEBUG] Generated response length: {len(response) if response else 0}")
-        print(f"[RESPONSE_GEN DEBUG] Response preview: {response[:100] if response else 'None or empty'}...")
+        # Safe Unicode printing for Windows console
+        try:
+            print(f"[RESPONSE_GEN DEBUG] Response preview: {response[:100] if response else 'None or empty'}...")
+        except UnicodeEncodeError:
+            print(f"[RESPONSE_GEN DEBUG] Response preview: [Unicode content - {len(response)} chars]")
         
         return response
     

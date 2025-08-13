@@ -159,9 +159,6 @@ class ShadowScribeEngine:
                 ))
                 response = await response_task
                 
-                print(f"[ENGINE DEBUG] Raw response from generator: type={type(response)}, length={len(response) if response else 0}")
-                print(f"[ENGINE DEBUG] Response preview: {response[:100] if response else 'None or empty'}...")
-                
                 await self._call_debug_callback("PASS_4_COMPLETE", "Response generation completed", {
                     "response_length": len(response) if response else 0,
                     "response_preview": response[:200] + "..." if response and len(response) > 200 else response

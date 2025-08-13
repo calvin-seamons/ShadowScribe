@@ -93,6 +93,12 @@ Consider what specific data is needed:
 - Rules interactions: specific abilities and their mechanics
 - Quest/story context: objectives_and_contracts.active_contracts, objectives_and_contracts.completed_objectives
 
+**Field Selection Guidelines:**
+- Be as specific as possible - target individual fields rather than entire files when you can
+- For focused queries, select only the fields that directly relate to the question
+- You can still select multiple fields or entire file sections when the query requires broader context
+- Consider whether the query needs general overview information or specific details
+
 You MUST respond with BOTH file_fields AND reasoning. The response MUST include:
 
 1. file_fields: A dictionary mapping filenames to lists of field names (use dot notation for nested fields)

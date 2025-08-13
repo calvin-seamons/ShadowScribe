@@ -38,7 +38,7 @@ export interface SourceUsage {
 
 export interface Progress {
   pass: number;
-  status: 'starting' | 'complete' | 'error' | 'unknown';
+  status: 'starting' | 'active' | 'complete' | 'error' | 'unknown';
   stage?: string;
   message: string;
   details?: string;

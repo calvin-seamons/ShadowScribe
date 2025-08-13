@@ -274,16 +274,17 @@ class SchemaDrivenClient:
                 schema_info = self.schema_loader.get_schema_info(file_type)
                 template = self.file_templates.get(file_type, {})
                 
-                # Generate description based on template structure
-                description = f"{filename} - "
+                # Get appropriate depth for this file type
+                max_depth = self._get_optimal_depth_for_file_type(file_type)
+                
+                # Generate comprehensive description with keys only
+                description = f"{filename} - Structure:\n"
                 
                 if isinstance(template, dict):
-                    top_level_keys = list(template.keys())[:5]  # First 5 keys
-                    description += f"Contains: {', '.join(top_level_keys)}"
-                    if len(template) > 5:
-                        description += f" and {len(template) - 5} more sections"
+                    structure = self._extract_key_structure(template, max_depth=max_depth)
+                    description += structure
                 else:
-                    description += "Character data file"
+                    description += "  Character data file"
                 
                 descriptions.append(description)
                 
@@ -291,6 +292,71 @@ class SchemaDrivenClient:
                 descriptions.append(f"{filename} - Character data file")
         
         return "\n".join(descriptions)
+    
+    def _get_optimal_depth_for_file_type(self, file_type: str) -> int:
+        """Determine the optimal depth to show for each file type."""
+        depth_map = {
+            # Simple structure files - just show top 2 levels
+            "character": 2,  # character_base, characteristics, ability_scores, combat_stats, etc.
+            "character_background": 2,  # personality, ideals, bonds, flaws, backstory sections
+            "objectives_and_contracts": 2,  # active_quests, completed_quests, contracts, etc.
+            
+            # Complex nested files - need deeper view  
+            "feats_and_traits": 4,  # features_and_traits > class_features > paladin/warlock > features[]
+            "spell_list": 3,  # spellcasting_classes > warlock/paladin > spells[]
+            "inventory_list": 3,  # inventory > weapons/armor/items > individual items
+            "action_list": 3,  # actions > combat/utility/special > individual actions
+            
+            # Default depth for unknown files
+            "default": 2
+        }
+        
+        return depth_map.get(file_type, depth_map["default"])
+    
+    def _extract_key_structure(self, data: Any, current_depth: int = 0, max_depth: int = 3, indent: str = "  ") -> str:
+        """Extract key structure of data (keys only, no values) up to specified depth."""
+        if current_depth >= max_depth:
+            return ""
+        
+        structure_lines = []
+        current_indent = indent * current_depth
+        
+        if isinstance(data, dict):
+            for key, value in data.items():
+                if isinstance(value, dict) and value and current_depth < max_depth - 1:
+                    # Show the key and its nested structure
+                    structure_lines.append(f"{current_indent}{key}:")
+                    nested = self._extract_key_structure(value, current_depth + 1, max_depth, indent)
+                    if nested:
+                        structure_lines.append(nested)
+                elif isinstance(value, list) and value and current_depth < max_depth - 1:
+                    # Show the key and sample list structure
+                    structure_lines.append(f"{current_indent}{key}: [array]")
+                    if isinstance(value[0], dict):
+                        # Show structure of first array item
+                        nested = self._extract_key_structure(value[0], current_depth + 1, max_depth, indent)
+                        if nested:
+                            structure_lines.append(f"{current_indent}{indent}[item]:")
+                            structure_lines.append(nested)
+                else:
+                    # Leaf node or at max depth - show key and type only
+                    if isinstance(value, list):
+                        if value and isinstance(value[0], dict):
+                            structure_lines.append(f"{current_indent}{key}: [array of objects]")
+                        else:
+                            structure_lines.append(f"{current_indent}{key}: [array]")
+                    elif isinstance(value, dict):
+                        structure_lines.append(f"{current_indent}{key}: {{object}}")
+                    elif isinstance(value, str):
+                        structure_lines.append(f"{current_indent}{key}: string")
+                    elif isinstance(value, (int, float)):
+                        structure_lines.append(f"{current_indent}{key}: number")
+                    elif isinstance(value, bool):
+                        structure_lines.append(f"{current_indent}{key}: boolean")
+                    else:
+                        structure_lines.append(f"{current_indent}{key}: {type(value).__name__}")
+        
+        return "\n".join(structure_lines)
     
     async def select_sources(self, query: str) -> Dict[str, Any]:
         """

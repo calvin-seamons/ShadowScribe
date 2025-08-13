@@ -139,7 +139,11 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                         response = result["response"]
                         source_usage = result.get("sourceUsage")
                         print(f"[DEBUG] Got structured result - response length: {len(response) if response else 0}")
-                        print(f"[DEBUG] Response preview: {response[:100] if response else 'None'}...")
+                        # Safe Unicode printing for Windows console
+                        try:
+                            print(f"[DEBUG] Response preview: {response[:100] if response else 'None'}...")
+                        except UnicodeEncodeError:
+                            print(f"[DEBUG] Response preview: [Unicode content - {len(response)} chars]")
                         print(f"[DEBUG] Source usage available: {source_usage is not None}")
                     else:
                         # Fallback for string responses (backwards compatibility)

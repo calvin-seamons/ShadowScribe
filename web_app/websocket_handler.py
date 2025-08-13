@@ -198,15 +198,47 @@ class WebSocketManager:
             "PASS_1_COMPLETE": (1, "complete", "Identified relevant sources"),
             "PASS_1_ERROR": (1, "error", "Source selection failed"),
             "PASS_1_SUCCESS": (1, "complete", "Identified relevant sources"),
+
+            # Source selection sub-stages (part of Pass 1)
+            "SOURCE_SELECTION_START": (1, "active", "Making API call for source selection"),
+            "SOURCE_SELECTION_RESPONSE_RECEIVED": (1, "active", "Source selection response received"),
+            "SOURCE_SELECTION_ANALYSIS": (1, "active", "Analyzing source selection response"),
+            "SOURCE_SUCCESS": (1, "active", "Source selection successful"),
+            "SOURCE_ERROR": (1, "error", "Source selection failed"),
+
             "PASS_2_START": (2, "starting", "Targeting specific content..."),
             "PASS_2_COMPLETE": (2, "complete", "Content targets identified"),
             "PASS_2_ERROR": (2, "error", "Content targeting failed"),
+
+            # Character targeting sub-stages (part of Pass 2)
+            "CHARACTER_TARGETING": (2, "active", "Targeting character-specific content"),
+            "CHARACTER_TARGETING_RESPONSE_RECEIVED": (2, "active", "Character targeting response received"),
+            "CHARACTER_TARGETING_ANALYSIS": (2, "active", "Analyzing character targeting response"),
+            "CHARACTER_SUCCESS": (2, "active", "Character targeting successful"),
+            "CHARACTER_ERROR": (2, "error", "Character targeting failed"),
+
+            # Session targeting sub-stages (part of Pass 2)
+            "SESSION_TARGETING": (2, "active", "Targeting session-specific content"),
+            "SESSION_SUCCESS": (2, "active", "Session targeting successful"),
+            "SESSION_ERROR": (2, "error", "Session targeting failed"),
+
+            # Rulebook targeting sub-stages (part of Pass 2)
+            "RULEBOOK_TARGETING": (2, "active", "Analyzing rulebook targeting response"),
+            "RULEBOOK_SUCCESS": (2, "active", "Rulebook targeting successful"),
+            "RULEBOOK_ERROR": (2, "error", "Rulebook targeting failed"),
             "PASS_3_START": (3, "starting", "Retrieving information..."),
             "PASS_3_COMPLETE": (3, "complete", "Information retrieved"),
             "PASS_3_ERROR": (3, "error", "Content retrieval failed"),
             "PASS_4_START": (4, "starting", "Generating response..."),
             "PASS_4_COMPLETE": (4, "complete", "Response ready"),
             "PASS_4_ERROR": (4, "error", "Response generation failed"),
+
+            # Natural response generation sub-stages (part of Pass 4)
+            "NATURAL_RESPONSE_START": (4, "active", "Generating natural language response"),
+            "NATURAL_RESPONSE_RESPONSE_RECEIVED": (4, "active", "API response received"),
+            "NATURAL_RESPONSE_ANALYSIS": (4, "active", "Analyzing response content"),
+            "NATURAL_RESPONSE_SUCCESS": (4, "active", "Response generation successful"),
+            "NATURAL_RESPONSE_ERROR": (4, "error", "Natural response generation failed"),
         }
         
         pass_number, status, friendly_message = pass_info.get(stage, (0, "unknown", message))

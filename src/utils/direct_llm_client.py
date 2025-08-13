@@ -679,7 +679,11 @@ RESPOND WITH ONLY VALID JSON, NO OTHER TEXT."""
             
             print(f"[DIRECT_LLM DEBUG] API response received")
             print(f"[DIRECT_LLM DEBUG] Content length: {len(content) if content else 0}")
-            print(f"[DIRECT_LLM DEBUG] Content preview: {content[:100] if content else 'None or empty'}...")
+            # Safe Unicode printing for Windows console
+            try:
+                print(f"[DIRECT_LLM DEBUG] Content preview: {content[:100] if content else 'None or empty'}...")
+            except UnicodeEncodeError:
+                print(f"[DIRECT_LLM DEBUG] Content preview: [Unicode content - {len(content)} chars]")
             
             await self._call_debug_callback(
                 "NATURAL_RESPONSE_SUCCESS", 

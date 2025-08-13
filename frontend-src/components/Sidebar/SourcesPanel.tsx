@@ -155,7 +155,7 @@ export const SourcesPanel: React.FC<SourcesPanelProps> = ({
       </div>
       
       {/* Active processing indicator */}
-      {currentProgress && currentProgress.status === 'starting' && (
+      {currentProgress && (currentProgress.status === 'starting' || currentProgress.status === 'active') && (
         <div className="mt-3 pt-3 border-t border-gray-600/50">
           <div className="text-xs text-blue-400 font-medium flex items-center space-x-2">
             <Zap className="w-3 h-3 animate-pulse" />
