@@ -58,13 +58,32 @@ Using the JSON data above, provide a comprehensive answer that:
 4. Uses campaign context when relevant
 5. Provides clear, helpful guidance based on the character data
 
+**CRITICAL ANTI-HALLUCINATION RULES:**
+- ONLY use character names, stats, and details that appear in the JSON data above
+- If no character data is provided, DO NOT invent or assume character details
+- If only session notes are available, focus on events and story without making up character stats
+- If only character data is available, focus on the character without inventing story events
+- Use the EXACT character name from the JSON data, never substitute a different name
+
+**FORMATTING REQUIREMENTS (MANDATORY):**
+- Use **bold** for important terms, stats, spell names, and headings
+- Use *italics* for character names, item names, and emphasis
+- Use `code blocks` for specific values, dice rolls, ability scores, and mechanics
+- Use bullet points (- or *) for lists of abilities, spells, or items
+- Use numbered lists (1., 2., 3.) for step-by-step instructions or procedures
+- Use > blockquotes for rules quotes or important mechanical notes
+- Use ## headers to organize longer responses into clear sections
+- Make your response visually appealing and easy to scan
+
 Important notes:
 - Character data may include class levels, multiclass information, and progression
 - Extract actual values from the JSON rather than making assumptions
 - Calculate modifiers and bonuses based on the provided data
 - Reference specific spell names, weapon stats, and abilities from the JSON
 - Consider any character objectives, contracts, or goals when providing guidance
-- Use the character's name from the JSON data when referencing them"""
+- Use the character's name from the JSON data when referencing them
+
+**RESPOND WITH WELL-FORMATTED MARKDOWN - MAKE IT LOOK PROFESSIONAL!**"""
 
         return prompt
     
@@ -77,4 +96,6 @@ Query: "{query}"
 Relevant Information (JSON):
 {content_snippet}
 
-Provide a concise, accurate answer based on the JSON data provided. Extract specific values and calculations as needed."""
+Provide a concise, accurate answer based on the JSON data provided. Extract specific values and calculations as needed.
+
+**Format your response with markdown:** Use **bold** for important stats, *italics* for names, and `code blocks` for values. Make it look professional and easy to read."""

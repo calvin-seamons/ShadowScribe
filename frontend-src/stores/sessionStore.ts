@@ -8,20 +8,31 @@ interface SessionStore {
 }
 
 export const useSessionStore = create<SessionStore>((set) => ({
-  sessionId: generateSessionId(),
-  setSessionId: (id) => set({ sessionId: id }),
+  sessionId: getInitialSessionId(),
+  setSessionId: (id) => {
+    console.log('[SessionStore] Setting sessionId to:', id);
+    set({ sessionId: id });
+  },
   initializeSession: () => {
     const existingSession = localStorage.getItem('shadowscribe_session');
     if (existingSession) {
+      console.log('[SessionStore] Using existing session:', existingSession);
       set({ sessionId: existingSession });
     } else {
       const newSessionId = uuidv4();
+      console.log('[SessionStore] Creating new session:', newSessionId);
       localStorage.setItem('shadowscribe_session', newSessionId);
       set({ sessionId: newSessionId });
     }
   },
 }));
 
-function generateSessionId(): string {
-  return `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+function getInitialSessionId(): string {
+  // Force a fresh session for debugging - clear any existing session
+  localStorage.removeItem('shadowscribe_session');
+  
+  const sessionId = uuidv4();
+  console.log('[SessionStore] FORCING FRESH SESSION:', sessionId);
+  localStorage.setItem('shadowscribe_session', sessionId);
+  return sessionId;
 }

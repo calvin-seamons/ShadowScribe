@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { NavigationMenu } from '../NavigationMenu';
@@ -9,7 +8,7 @@ vi.mock('../../../stores/navigationStore', () => ({
   useNavigationStore: vi.fn()
 }));
 
-const mockUseNavigationStore = useNavigationStore as vi.MockedFunction<typeof useNavigationStore>;
+const mockUseNavigationStore = useNavigationStore as unknown as ReturnType<typeof vi.fn>;
 
 describe('NavigationMenu', () => {
   const mockSetCurrentView = vi.fn();

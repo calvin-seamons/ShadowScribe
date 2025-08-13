@@ -11,129 +11,153 @@ export const ChatContainer: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const sourceUsageRef = useRef<Partial<QuerySourceUsage>>({});
+  const responseReceivedRef = useRef(false);
 
   const { sessionId } = useSessionStore();
-  const { sendMessage, lastMessage, connectionStatus } = useWebSocket(sessionId);
+  const { sendMessage, messageQueue, lastMessage, messageCount, connectionStatus } = useWebSocket(sessionId);
   const { currentProgress, setCurrentProgress, setActiveSources, setLastUsedSources } = useProgress();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastProcessedIdRef = useRef(0);
 
-  useEffect(() => {
-    // Handle incoming WebSocket messages
-    if (lastMessage) {
-      try {
-        const data: WebSocketData = JSON.parse(lastMessage);
-        
-        switch (data.type) {
-          case 'acknowledgment':
-            setIsProcessing(true);
-            // Reset source usage for new query
-            sourceUsageRef.current = {};
-            setActiveSources([]);
-            setLastUsedSources([]); // Clear previous used sources when starting new query
+  // Function to process a WebSocket message
+  const processWebSocketMessage = (messageData: string) => {
+    try {
+      const data: WebSocketData = JSON.parse(messageData);
+      console.log('[ChatContainer] Processing message type:', data.type);
+      
+      if (data.type === 'response') {
+        console.log('[ChatContainer] >>> RESPONSE MESSAGE FOUND <<<');
+      }
+      
+      switch (data.type) {
+        case 'acknowledgment':
+          setIsProcessing(true);
+          responseReceivedRef.current = false;
+          sourceUsageRef.current = {};
+          setActiveSources([]);
+          setLastUsedSources([]);
+          break;
+          
+        case 'progress':
+          if (responseReceivedRef.current) {
+            console.log('[ChatContainer] Skipping progress - response already received');
             break;
-            
-          case 'progress':
-            if (data.data.progress) {
-              setCurrentProgress(data.data.progress);
+          }
+          
+          if (data.data.progress) {
+            setCurrentProgress(data.data.progress);
+            const progress = data.data.progress;
+            if (progress.metadata) {
+              const metadata = progress.metadata;
+              const currentUsage = sourceUsageRef.current;
               
-              // Capture source usage information from progress metadata
-              const progress = data.data.progress;
-              if (progress.metadata) {
-                const metadata = progress.metadata;
-                
-                // Update source usage based on progress pass
-                const currentUsage = sourceUsageRef.current;
-                
-                // Pass 1: Capture selected sources
-                if (metadata.sources && Array.isArray(metadata.sources)) {
-                  currentUsage.sources = metadata.sources;
-                  setActiveSources(metadata.sources);
-                }
-                
-                // Pass 2: Capture targets
-                if (metadata.targets) {
-                  currentUsage.targets = metadata.targets;
-                }
-                
-                // Pass 3: Capture content summary
-                if (metadata.content) {
-                  currentUsage.content = metadata.content;
-                }
+              if (metadata.sources && Array.isArray(metadata.sources)) {
+                currentUsage.sources = metadata.sources;
+                setActiveSources(metadata.sources);
+              }
+              if (metadata.targets) {
+                currentUsage.targets = metadata.targets;
+              }
+              if (metadata.content) {
+                currentUsage.content = metadata.content;
               }
             }
-            break;
+          }
+          break;
+          
+        case 'response':
+          console.log('[ChatContainer] Processing response!');
+          responseReceivedRef.current = true;
+          setIsProcessing(false);
+          
+          const currentUsage = sourceUsageRef.current;
+          if (currentUsage.sources && currentUsage.sources.length > 0) {
+            setLastUsedSources(currentUsage.sources);
+          }
+          
+          setCurrentProgress(null);
+          setActiveSources([]);
+          
+          if (data.data.response) {
+            let sourceUsage: QuerySourceUsage | undefined;
             
-          case 'response':
-            setIsProcessing(false);
-            
-            // Preserve the last used sources before clearing progress
-            const currentUsage = sourceUsageRef.current;
-            if (currentUsage.sources && currentUsage.sources.length > 0) {
-              setLastUsedSources(currentUsage.sources);
+            if (data.data.sourceUsage) {
+              sourceUsage = {
+                sources: data.data.sourceUsage.sources || [],
+                targets: data.data.sourceUsage.targets || {},
+                content: data.data.sourceUsage.content || 'No content summary available',
+                retrievedAt: typeof data.data.sourceUsage.retrievedAt === 'number' 
+                  ? new Date(data.data.sourceUsage.retrievedAt * 1000) 
+                  : new Date()
+              };
+            } else {
+              const usage = sourceUsageRef.current;
+              sourceUsage = usage.sources && usage.sources.length > 0
+                ? {
+                    sources: usage.sources,
+                    targets: usage.targets || {},
+                    content: usage.content || 'No content summary available',
+                    retrievedAt: new Date()
+                  }
+                : undefined;
             }
             
-            setCurrentProgress(null);
-            setActiveSources([]);
-            if (data.data.response) {
-              // Check if sourceUsage is provided in the response data
-              let sourceUsage: QuerySourceUsage | undefined;
-              
-              if (data.data.sourceUsage) {
-                // Use sourceUsage from response if available
-                sourceUsage = {
-                  sources: data.data.sourceUsage.sources || [],
-                  targets: data.data.sourceUsage.targets || {},
-                  content: data.data.sourceUsage.content || 'No content summary available',
-                  retrievedAt: typeof data.data.sourceUsage.retrievedAt === 'number' 
-                    ? new Date(data.data.sourceUsage.retrievedAt * 1000) 
-                    : new Date()
-                };
-              } else {
-                // Fallback to accumulated data from progress updates
-                const currentUsage = sourceUsageRef.current;
-                sourceUsage = 
-                  currentUsage.sources && currentUsage.sources.length > 0
-                    ? {
-                        sources: currentUsage.sources,
-                        targets: currentUsage.targets || {},
-                        content: currentUsage.content || 'No content summary available',
-                        retrievedAt: new Date()
-                      }
-                    : undefined;
-              }
-              
-              setMessages(prev => [...prev, {
+            setMessages(prev => {
+              const newMessage = {
                 id: Date.now().toString(),
-                type: 'assistant',
+                type: 'assistant' as const,
                 content: data.data.response!,
                 timestamp: new Date(),
                 sourceUsage
-              }]);
-              
-              // Reset source usage after message is created
-              sourceUsageRef.current = {};
-            }
-            break;
+              };
+              console.log('[ChatContainer] Adding message to state');
+              return [...prev, newMessage];
+            });
             
-          case 'error':
-            setIsProcessing(false);
-            setCurrentProgress(null);
-            setActiveSources([]);
-            setMessages(prev => [...prev, {
-              id: Date.now().toString(),
-              type: 'assistant',
-              content: `Error: ${data.data.error || 'Unknown error'}`,
-              timestamp: new Date()
-            }]);
-            // Reset source usage on error
             sourceUsageRef.current = {};
-            break;
-        }
-      } catch (error) {
-        console.error('Failed to parse WebSocket message:', error);
+          }
+          break;
+          
+        case 'error':
+          setIsProcessing(false);
+          setCurrentProgress(null);
+          setActiveSources([]);
+          setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            type: 'assistant',
+            content: `Error: ${data.data.error || 'Unknown error'}`,
+            timestamp: new Date()
+          }]);
+          sourceUsageRef.current = {};
+          break;
       }
+    } catch (error) {
+      console.error('Failed to parse WebSocket message:', error);
     }
-  }, [lastMessage, setCurrentProgress, setActiveSources]);
+  };
+
+  // Debug: Log when messages change
+  useEffect(() => {
+    console.log('[ChatContainer] Messages state changed:', messages, 'SessionId:', sessionId);
+  }, [messages, sessionId]);
+
+  // Process message queue
+  useEffect(() => {
+    if (messageQueue.length === 0) return;
+    
+    // Find unprocessed messages
+    const unprocessed = messageQueue.filter(msg => msg.id > lastProcessedIdRef.current);
+    if (unprocessed.length === 0) return;
+    
+    console.log(`[ChatContainer] Processing ${unprocessed.length} messages from queue`);
+    
+    // Process each message in order
+    unprocessed.forEach(msg => {
+      console.log(`[ChatContainer] Processing queued message ID: ${msg.id}`);
+      processWebSocketMessage(msg.data);
+      lastProcessedIdRef.current = msg.id;
+    });
+  }, [messageQueue, processWebSocketMessage]);
 
   useEffect(() => {
     // Scroll to bottom when new messages arrive, with a small delay to ensure DOM is updated

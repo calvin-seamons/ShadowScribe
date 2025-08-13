@@ -56,11 +56,11 @@ class ResponseGenerator:
         print(f"[RESPONSE_GEN DEBUG] Prompt length: {len(prompt)} characters")
         print(f"[RESPONSE_GEN DEBUG] Prompt preview: {prompt[:200]}...")
         
-        # Generate response using schema client
+        # Generate response using schema client - NO TOKEN LIMITS FOR TESTING
+        print(f"[RESPONSE_GEN DEBUG] Calling generate_natural_response with NO token limits")
         response = await self.schema_client.generate_natural_response(
             prompt,
-            temperature=0.7,  # Slightly higher for more natural responses
-            max_tokens=3000  # Increased token limit for longer, more detailed responses
+            temperature=0.7  # No max_tokens limit for testing
         )
         
         print(f"[RESPONSE_GEN DEBUG] Generated response length: {len(response) if response else 0}")

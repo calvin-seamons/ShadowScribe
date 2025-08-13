@@ -3,7 +3,6 @@ import {
   FileText,
   Edit3,
   Check,
-  X,
   AlertTriangle,
   CheckCircle,
   Info,
@@ -17,11 +16,7 @@ import {
 } from 'lucide-react';
 import { ParsedCharacterData, UncertainField, ValidationError, ValidationResult } from '../../types';
 import { 
-  ValidationProvider, 
-  useValidation,
-  ValidatedInput,
-  ValidatedSelect,
-  ValidatedTextarea
+  ValidationProvider
 } from '../KnowledgeBase/validation';
 
 interface CharacterDataReviewProps {
@@ -291,7 +286,6 @@ export const CharacterDataReview: React.FC<CharacterDataReviewProps> = ({
       <div className="space-y-4">
         {fileSections.map((section) => {
           const isExpanded = expandedSections.has(section.fileType);
-          const sectionUncertainFields = showUncertainOnly ? section.uncertainFieldsInFile : [];
           const shouldShowSection = !showUncertainOnly || section.uncertainFieldsInFile.length > 0;
           
           if (!shouldShowSection) return null;
@@ -465,7 +459,6 @@ const FieldRenderer: React.FC<FieldRendererProps> = ({
   onFieldChange,
   editingFields,
   onToggleEdit,
-  getFieldValue,
   isFieldUncertain,
   validationErrors,
   showUncertainOnly
@@ -555,7 +548,9 @@ const FieldRenderer: React.FC<FieldRendererProps> = ({
                 <span className="px-2 py-1 text-xs bg-yellow-900/30 text-yellow-300 rounded">
                   {Math.round(uncertainField.confidence * 100)}% confident
                 </span>
-                <Info className="h-3 w-3 text-yellow-400" title={`Suggestions: ${uncertainField.suggestions.join(', ')}`} />
+                <div title={`Suggestions: ${uncertainField.suggestions.join(', ')}`}>
+                  <Info className="h-3 w-3 text-yellow-400" />
+                </div>
               </div>
             )}
             {hasError && (

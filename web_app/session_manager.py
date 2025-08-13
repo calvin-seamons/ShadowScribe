@@ -40,7 +40,7 @@ class SessionManager:
             if filename.endswith(".json"):
                 session_id = filename[:-5]  # Remove .json extension
                 try:
-                    with open(os.path.join(self.storage_path, filename), 'r') as f:
+                    with open(os.path.join(self.storage_path, filename), 'r', encoding='utf-8') as f:
                         data = json.load(f)
                         self.sessions[session_id] = [
                             ChatMessage(
@@ -79,11 +79,12 @@ class SessionManager:
         """Save session to disk."""
         if session_id in self.sessions:
             filepath = os.path.join(self.storage_path, f"{session_id}.json")
-            with open(filepath, 'w') as f:
+            with open(filepath, 'w', encoding='utf-8') as f:
                 json.dump(
                     [msg.to_dict() for msg in self.sessions[session_id]],
                     f,
-                    indent=2
+                    indent=2,
+                    ensure_ascii=False
                 )
     
     def get_recent_sessions(self, limit: int = 10) -> List[Dict]:

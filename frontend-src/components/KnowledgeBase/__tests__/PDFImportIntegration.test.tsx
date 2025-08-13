@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { IntegratedKnowledgeBaseEditor } from '../IntegratedKnowledgeBaseEditor';
@@ -18,10 +17,10 @@ vi.mock('../../../services/knowledgeBaseApi');
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-const mockUseNavigationStore = useNavigationStore as vi.MockedFunction<typeof useNavigationStore>;
-const mockUseKnowledgeBaseStore = useKnowledgeBaseStore as vi.MockedFunction<typeof useKnowledgeBaseStore>;
-const mockUseKnowledgeBaseSession = useKnowledgeBaseSession as vi.MockedFunction<typeof useKnowledgeBaseSession>;
-const mockUseCharacterSync = useCharacterSync as vi.MockedFunction<typeof useCharacterSync>;
+const mockUseNavigationStore = useNavigationStore as unknown as ReturnType<typeof vi.fn>;
+const mockUseKnowledgeBaseStore = useKnowledgeBaseStore as unknown as ReturnType<typeof vi.fn>;
+const mockUseKnowledgeBaseSession = useKnowledgeBaseSession as unknown as ReturnType<typeof vi.fn>;
+const mockUseCharacterSync = useCharacterSync as unknown as ReturnType<typeof vi.fn>;
 
 describe('PDF Import Integration', () => {
   const mockCloseKnowledgeBaseEditor = vi.fn();

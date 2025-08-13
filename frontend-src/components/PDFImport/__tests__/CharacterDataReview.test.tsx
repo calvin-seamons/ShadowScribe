@@ -1,13 +1,13 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import type { ReactNode } from 'react';
 import { CharacterDataReview } from '../CharacterDataReview';
-import { ParsedCharacterData, UncertainField, ValidationResult } from '../../../types';
+import { ParsedCharacterData, UncertainField } from '../../../types';
 
 // Mock the validation components
 vi.mock('../../KnowledgeBase/validation', () => ({
-  ValidationProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  ValidationProvider: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   useValidation: () => ({
     validationState: { errors: [], warnings: [], isValidating: false, hasUnsavedChanges: false, lastValidated: null },
     validateField: vi.fn(() => []),
@@ -244,7 +244,6 @@ describe('CharacterDataReview', () => {
     });
 
     it('calls onFieldEdit when field value changes', async () => {
-      const user = userEvent.setup();
       const mockOnFieldEdit = vi.fn();
       
       render(<CharacterDataReview {...defaultProps} onFieldEdit={mockOnFieldEdit} />);
@@ -427,7 +426,7 @@ describe('CharacterDataReview', () => {
       const user = userEvent.setup();
       render(<CharacterDataReview {...defaultProps} />);
       
-      const nameInput = screen.getByPlaceholderText('Enter character name for the imported files');
+      screen.getByPlaceholderText('Enter character name for the imported files');
       
       await user.tab();
       // The first focusable element should be focused

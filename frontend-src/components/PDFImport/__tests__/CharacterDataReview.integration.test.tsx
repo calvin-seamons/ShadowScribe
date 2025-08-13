@@ -1,13 +1,13 @@
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+import type { ReactNode } from 'react';
 import { CharacterDataReview } from '../CharacterDataReview';
-import { ParsedCharacterData, UncertainField } from '../../../types';
+import { ParsedCharacterData } from '../../../types';
 
 // Mock the validation components with more realistic behavior
 vi.mock('../../KnowledgeBase/validation', () => ({
-  ValidationProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="validation-provider">{children}</div>,
+  ValidationProvider: ({ children }: { children: ReactNode }) => <div data-testid="validation-provider">{children}</div>,
   useValidation: () => ({
     validationState: { errors: [], warnings: [], isValidating: false, hasUnsavedChanges: false, lastValidated: null },
     validateField: vi.fn(() => []),

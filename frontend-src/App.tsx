@@ -85,7 +85,7 @@ function AppContent() {
           {currentView === 'knowledge-base' && <IntegratedKnowledgeBaseEditor />}
           {currentView === 'pdf-import' && (
             <PDFImportWizard
-              onComplete={(characterName) => {
+              onComplete={(_characterName) => {
                 // Switch to knowledge base editor after successful import
                 useNavigationStore.getState().openKnowledgeBaseEditor();
               }}

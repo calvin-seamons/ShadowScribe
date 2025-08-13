@@ -4,13 +4,9 @@ import {
   FileText,
   Eye,
   CheckCircle,
-  AlertCircle,
   ArrowLeft,
   ArrowRight,
-  X,
   Loader2,
-  RefreshCw,
-  Save,
   Home,
   AlertTriangle
 } from 'lucide-react';
@@ -18,8 +14,6 @@ import { PDFUpload } from './PDFUpload';
 import { PDFContentPreview } from './PDFContentPreview';
 import { CharacterDataReview } from './CharacterDataReview';
 import { 
-  PDFImportSession, 
-  PDFExtractionResult, 
   CharacterParseResult, 
   ParsedCharacterData,
   UncertainField,
@@ -383,7 +377,7 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
         throw new Error(errorData.detail || 'Failed to create character files');
       }
 
-      const result = await response.json();
+      await response.json();
       
       // Clean up session
       await fetch(`/api/character/import-pdf/cleanup/${importState.sessionId}`, {

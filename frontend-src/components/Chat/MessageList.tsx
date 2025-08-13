@@ -10,6 +10,8 @@ interface MessageListProps {
 }
 
 export const MessageList: React.FC<MessageListProps> = ({ messages }) => {
+  console.log('[MessageList] Rendering with messages:', messages);
+  
   return (
     <div className="flex flex-col space-y-6 p-4">
       {messages.map((message) => (

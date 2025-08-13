@@ -147,7 +147,10 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                         source_usage = None
                         print(f"[DEBUG] Got string result - length: {len(response)}")
                     
-                    # Send the final response with source usage
+                    # Small delay to ensure PASS_4_COMPLETE message is sent first
+                    await asyncio.sleep(0.05)
+                    
+                    # Send the final response with source usage through the queue system
                     response_data = {
                         "response": response,
                         "timestamp": time.time()
@@ -157,12 +160,14 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                         response_data["sourceUsage"] = source_usage
                     
                     print(f"[DEBUG] Sending response message with {len(response_data)} fields")
-                    await websocket_manager.send_personal_message({
+                    
+                    # Use the queue system to ensure proper ordering
+                    await websocket_manager.broadcast_to_session(session_id, {
                         "type": "response",
                         "sessionId": session_id,
                         "data": response_data
-                    }, websocket)
-                    print(f"[DEBUG] Response message sent successfully")
+                    })
+                    print(f"[DEBUG] Response message queued successfully")
                     
                     # Save to session history (non-blocking)
                     asyncio.create_task(
