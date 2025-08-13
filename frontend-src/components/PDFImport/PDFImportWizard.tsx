@@ -406,7 +406,7 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
           />
         );
       case 1:
-        return importState.extractedText && importState.structureInfo ? (
+        return importState.extractedText ? (
           <PDFContentPreview
             extractedText={importState.extractedText}
             structureInfo={importState.structureInfo}
@@ -450,9 +450,9 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="h-screen flex flex-col bg-gray-900 text-white overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 px-6 py-4">
+      <div className="bg-gray-800 border-b border-gray-700 px-6 py-4 flex-shrink-0">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
@@ -478,7 +478,7 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
       </div>
 
       {/* Progress Steps */}
-      <div className="bg-gray-800 border-b border-gray-700 px-6 py-4">
+      <div className="bg-gray-800 border-b border-gray-700 px-6 py-4 flex-shrink-0">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between">
             {steps.map((step, index) => {
@@ -533,7 +533,7 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
 
       {/* Error Display */}
       {importState.error && (
-        <div className="bg-red-900/20 border-b border-red-700 px-6 py-4">
+        <div className="bg-red-900/20 border-b border-red-700 px-6 py-4 flex-shrink-0">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-start">
               <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 mr-3 flex-shrink-0" />
@@ -563,15 +563,15 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
       )}
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        <div className="py-6">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="py-6 px-6">
           {renderStepContent()}
         </div>
       </div>
 
       {/* Navigation Footer */}
       {currentStep !== 2 && ( // Hide navigation during parsing step
-        <div className="bg-gray-800 border-t border-gray-700 px-6 py-4">
+        <div className="bg-gray-800 border-t border-gray-700 px-6 py-4 flex-shrink-0">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <button
               onClick={goPrevious}

@@ -106,6 +106,7 @@ class LLMCharacterParser:
             CharacterParseResult with parsed data and metadata
         """
         logger.info(f"Starting character parsing for session {session_id}")
+        print(f"[PDF Import] Starting AI parsing for session {session_id}...")
         
         try:
             # Initialize result containers
@@ -116,9 +117,11 @@ class LLMCharacterParser:
             warnings = []
             
             # Parse each file type sequentially
-            for file_type in self.file_types:
+            total_files = len(self.file_types)
+            for idx, file_type in enumerate(self.file_types, 1):
                 try:
                     logger.info(f"Parsing {file_type} data")
+                    print(f"[PDF Import] Parsing {file_type} ({idx}/{total_files})...")
                     
                     # Generate and execute parsing prompt
                     parsed_data, uncertainties = await self._parse_file_type(pdf_text, file_type)
@@ -144,6 +147,7 @@ class LLMCharacterParser:
                                 ))
                         
                         # Validate mapped data
+                        print(f"[PDF Import] Validating {file_type} data...")
                         validation_result = await self.validator.validate(mapped_data, file_type)
                         validation_results[file_type] = validation_result
                         
@@ -182,6 +186,7 @@ class LLMCharacterParser:
             
             # Apply comprehensive intelligent data mapping across all files
             try:
+                print(f"[PDF Import] Applying intelligent data mapping...")
                 comprehensive_mapping = self.data_mapper.map_character_data(character_files)
                 
                 # Update character files with comprehensive mapping results
@@ -211,6 +216,7 @@ class LLMCharacterParser:
                     # Note: This would need to be adapted based on the actual validation result structure
                 
                 logger.info(f"Applied comprehensive intelligent mapping with confidence: {comprehensive_mapping.overall_confidence:.2f}")
+                print(f"[PDF Import] Intelligent mapping complete (confidence: {comprehensive_mapping.overall_confidence:.0%})")
                 
             except Exception as e:
                 logger.warning(f"Comprehensive intelligent mapping failed: {e}")
@@ -222,6 +228,8 @@ class LLMCharacterParser:
             )
             
             logger.info(f"Parsing completed with confidence: {parsing_confidence:.2f}")
+            print(f"[PDF Import] AI parsing complete! Overall confidence: {parsing_confidence:.0%}")
+            print(f"[PDF Import] Found {len(uncertain_fields)} fields that may need review")
             
             return CharacterParseResult(
                 session_id=session_id,
@@ -235,6 +243,8 @@ class LLMCharacterParser:
             
         except Exception as e:
             logger.error(f"Critical error during character parsing: {e}")
+            print(f"[PDF Import] Error during parsing: {str(e)}")
+            print(f"[PDF Import] Falling back to template data")
             
             # Return fallback result with templates
             fallback_files = {ft: self.templates[ft].copy() for ft in self.file_types}
@@ -265,6 +275,7 @@ class LLMCharacterParser:
         
         try:
             # Call LLM for parsing
+            print(f"[PDF Import] Sending {file_type} data to AI model...")
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -277,6 +288,7 @@ class LLMCharacterParser:
                 temperature=0.1,
                 max_tokens=2000
             )
+            print(f"[PDF Import] Received AI response for {file_type}")
             
             content = response.choices[0].message.content.strip()
             

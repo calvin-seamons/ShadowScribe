@@ -14,7 +14,7 @@ import { PDFStructureInfo } from '../../types';
 
 interface PDFContentPreviewProps {
   extractedText: string;
-  structureInfo: PDFStructureInfo;
+  structureInfo: PDFStructureInfo | null;
   onConfirm: (finalText: string) => void;
   onReject: () => void;
   onEdit?: (editedText: string) => void;
@@ -76,8 +76,9 @@ export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
       }
     };
     
-    return indicators[structureInfo.text_quality] || indicators.medium;
-  }, [structureInfo.text_quality]);
+    const quality = structureInfo?.text_quality || 'medium';
+    return indicators[quality] || indicators.medium;
+  }, [structureInfo]);
 
   // Format detection info
   const formatInfo = useMemo(() => {
@@ -104,8 +105,9 @@ export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
       }
     };
     
-    return formats[structureInfo.detected_format] || formats.unknown;
-  }, [structureInfo.detected_format]);
+    const format = structureInfo?.detected_format || 'unknown';
+    return formats[format] || formats.unknown;
+  }, [structureInfo]);
 
   // Text statistics
   const textStats = useMemo(() => {
@@ -194,12 +196,12 @@ export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
             {formatInfo.description}
           </p>
           <div className="mt-2 flex flex-wrap gap-2 text-xs">
-            {structureInfo.has_form_fields && (
+            {structureInfo?.has_form_fields && (
               <span className="px-2 py-1 bg-blue-900/30 text-blue-300 rounded">
                 Form Fields
               </span>
             )}
-            {structureInfo.has_tables && (
+            {structureInfo?.has_tables && (
               <span className="px-2 py-1 bg-green-900/30 text-green-300 rounded">
                 Tables
               </span>
