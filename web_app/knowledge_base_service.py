@@ -73,7 +73,10 @@ class KnowledgeBaseFileManager:
         self.base_path = Path(knowledge_base_path)
         self.characters_path = self.base_path / "characters"
         self.backup_service = BackupService(self.base_path / "backups")
-        self.schema_loader = JSONSchemaLoader()
+        
+        # Initialize schema loader with proper path
+        structures_path = self.base_path / "character-json-structures"
+        self.schema_loader = JSONSchemaLoader(str(structures_path))
         
         # Ensure knowledge base and characters directories exist
         self.base_path.mkdir(parents=True, exist_ok=True)

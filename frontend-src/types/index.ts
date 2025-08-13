@@ -122,3 +122,50 @@ export interface CharacterCreationResponse {
   status: string;
   message: string;
 }
+
+// PDF Import Types
+export interface PDFExtractionResult {
+  session_id: string;
+  extracted_text: string;
+  page_count: number;
+  structure_info: PDFStructureInfo;
+  confidence_score: number;
+}
+
+export interface PDFStructureInfo {
+  has_form_fields: boolean;
+  has_tables: boolean;
+  detected_format: string; // 'dnd_beyond', 'roll20', 'handwritten', 'unknown'
+  text_quality: string; // 'high', 'medium', 'low'
+}
+
+export interface CharacterParseResult {
+  session_id: string;
+  character_files: Record<string, Record<string, any>>;
+  uncertain_fields: UncertainField[];
+  parsing_confidence: number;
+  validation_results: Record<string, ValidationResult>;
+}
+
+export interface UncertainField {
+  file_type: string;
+  field_path: string;
+  extracted_value: any;
+  confidence: number;
+  suggestions: string[];
+}
+
+export interface PDFImportSession {
+  session_id: string;
+  status: 'upload' | 'extract' | 'parse' | 'review' | 'finalize';
+  progress: number;
+  extracted_text?: string;
+  parsed_data?: ParsedCharacterData;
+}
+
+export interface ParsedCharacterData {
+  character_files: Record<string, Record<string, any>>;
+  uncertain_fields: UncertainField[];
+  parsing_confidence: number;
+  validation_results: Record<string, ValidationResult>;
+}

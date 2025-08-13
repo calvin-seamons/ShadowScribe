@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, BookOpen } from 'lucide-react';
+import { MessageSquare, BookOpen, Upload } from 'lucide-react';
 import { useNavigationStore, AppView } from '../../stores/navigationStore';
 
 interface NavigationItem {
@@ -21,6 +21,12 @@ const navigationItems: NavigationItem[] = [
     label: 'Knowledge Base',
     icon: BookOpen,
     description: 'Edit character data and files'
+  },
+  {
+    id: 'pdf-import',
+    label: 'PDF Import',
+    icon: Upload,
+    description: 'Import character from PDF'
   }
 ];
 

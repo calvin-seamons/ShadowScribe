@@ -7,6 +7,7 @@ import { SessionHistory } from './components/Sidebar/SessionHistory';
 import { ModelSelector } from './components/Sidebar/ModelSelector';
 import { NavigationMenu } from './components/Sidebar/NavigationMenu';
 import { IntegratedKnowledgeBaseEditor } from './components/KnowledgeBase/IntegratedKnowledgeBaseEditor';
+import { PDFImportWizard } from './components/PDFImport/PDFImportWizard';
 import { useSessionStore } from './stores/sessionStore';
 import { useNavigationStore } from './stores/navigationStore';
 import { validateSystem } from './services/api';
@@ -82,6 +83,22 @@ function AppContent() {
         <div className="flex-1 min-w-0">
           {currentView === 'chat' && <ChatContainer />}
           {currentView === 'knowledge-base' && <IntegratedKnowledgeBaseEditor />}
+          {currentView === 'pdf-import' && (
+            <PDFImportWizard
+              onComplete={(characterName) => {
+                // Switch to knowledge base editor after successful import
+                useNavigationStore.getState().openKnowledgeBaseEditor();
+              }}
+              onCancel={() => {
+                // Return to chat view
+                useNavigationStore.getState().setCurrentView('chat');
+              }}
+              onFallbackToManual={() => {
+                // Switch to knowledge base editor for manual creation
+                useNavigationStore.getState().openKnowledgeBaseEditor();
+              }}
+            />
+          )}
         </div>
       </div>
     </Layout>

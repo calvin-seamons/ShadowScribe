@@ -25,8 +25,10 @@ class SchemaDrivenClient:
         self.client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.debug_callback: Optional[Callable] = None
         
-        # Initialize the schema loader
-        self.schema_loader = JSONSchemaLoader()
+        # Initialize the schema loader with proper base directory
+        base_dir = os.getenv("SHADOWSCRIBE_BASE_DIR", os.path.join(os.path.dirname(__file__), '..', '..'))
+        structures_path = os.path.join(base_dir, "knowledge_base", "character-json-structures")
+        self.schema_loader = JSONSchemaLoader(structures_path)
         
         # Get available file types and their schemas
         self.available_file_types = self.schema_loader.get_all_file_types()

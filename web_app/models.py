@@ -222,3 +222,99 @@ class ModelResponse(BaseModel):
     current_model: str
     available_models: List[str]
     status: str
+
+
+# PDF Import Models
+class PDFExtractionResult(BaseModel):
+    """Result of PDF text extraction."""
+    session_id: str
+    extracted_text: str
+    page_count: int
+    structure_info: Dict[str, Any]
+    confidence_score: float
+
+
+class PDFStructureInfo(BaseModel):
+    """Information about PDF structure and format."""
+    has_form_fields: bool
+    has_tables: bool
+    detected_format: str  # 'dnd_beyond', 'roll20', 'handwritten', 'unknown'
+    text_quality: str  # 'high', 'medium', 'low'
+
+
+class UncertainField(BaseModel):
+    """Field with uncertain parsing results."""
+    file_type: str
+    field_path: str
+    extracted_value: Any
+    confidence: float
+    suggestions: List[str]
+
+
+class CharacterParseResult(BaseModel):
+    """Result of LLM character parsing."""
+    session_id: str
+    character_files: Dict[str, Dict[str, Any]]
+    uncertain_fields: List[UncertainField]
+    parsing_confidence: float
+    validation_results: Dict[str, ValidationResult]
+
+
+class PDFImportSessionData(BaseModel):
+    """PDF import session data for API responses."""
+    session_id: str
+    user_id: str
+    created_at: str
+    last_activity: str
+    status: str
+    pdf_filename: Optional[str] = None
+    extracted_text: Optional[str] = None
+    parsed_data: Optional[Dict[str, Dict]] = None
+    uncertain_fields: Optional[List[UncertainField]] = None
+    parsing_confidence: Optional[float] = None
+    validation_results: Optional[Dict[str, Any]] = None
+    error_message: Optional[str] = None
+    progress: float = 0.0
+
+
+class PDFUploadRequest(BaseModel):
+    """Request for PDF file upload."""
+    filename: str
+    file_size: int
+
+
+class PDFUploadResponse(BaseModel):
+    """Response for PDF upload."""
+    session_id: str
+    upload_url: Optional[str] = None
+    status: str
+    message: str
+
+
+class PDFParseRequest(BaseModel):
+    """Request for PDF parsing."""
+    session_id: str
+    extracted_text: Optional[str] = None
+
+
+class PDFParseResponse(BaseModel):
+    """Response for PDF parsing."""
+    session_id: str
+    character_files: Dict[str, Dict[str, Any]]
+    uncertain_fields: List[UncertainField]
+    parsing_confidence: float
+    status: str
+
+
+class PDFImportStatusResponse(BaseModel):
+    """Response for PDF import status."""
+    session_data: PDFImportSessionData
+    status: str
+
+
+class PDFImportCleanupResponse(BaseModel):
+    """Response for PDF import cleanup."""
+    session_id: str
+    cleaned_up: bool
+    status: str
+    message: str
