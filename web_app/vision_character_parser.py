@@ -12,9 +12,9 @@ from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass
 from datetime import datetime
 
-from json_schema_loader import JSONSchemaLoader
-from json_schema_validator import JSONSchemaValidator, ValidationResult
-from intelligent_data_mapper import IntelligentDataMapper
+from .json_schema_loader import JSONSchemaLoader
+from .json_schema_validator import JSONSchemaValidator, ValidationResult
+from .intelligent_data_mapper import IntelligentDataMapper
 
 logger = logging.getLogger(__name__)
 

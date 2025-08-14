@@ -82,11 +82,13 @@ knowledge_base_file_manager = KnowledgeBaseFileManager(knowledge_base_path)
 set_file_manager(knowledge_base_file_manager)
 
 # Initialize PDF import services and set dependencies
-from llm_character_parser import LLMCharacterParser
+from vision_character_parser import VisionCharacterParser
+from pdf_image_converter import PDFImageConverter
 from pdf_import_routes import router as pdf_import_router, set_pdf_import_dependencies
 
-llm_parser = LLMCharacterParser()
-set_pdf_import_dependencies(llm_parser, knowledge_base_file_manager)
+vision_parser = VisionCharacterParser()
+pdf_converter = PDFImageConverter()
+set_pdf_import_dependencies(vision_parser, pdf_converter, knowledge_base_file_manager)
 
 # Include API routes
 app.include_router(api_router, prefix="/api")

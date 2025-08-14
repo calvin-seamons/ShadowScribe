@@ -28,7 +28,7 @@ class PDFImportStatus(Enum):
     """PDF import session status states."""
     CREATED = "created"
     UPLOADED = "uploaded"
-    CONVERTED = "converted"  # Changed from EXTRACTED to CONVERTED for images
+    CONVERTED = "converted"
     PARSED = "parsed"
     REVIEWED = "reviewed"
     COMPLETED = "completed"
@@ -46,7 +46,7 @@ class PDFImportSession:
     status: PDFImportStatus
     pdf_filename: Optional[str] = None
     pdf_file_path: Optional[str] = None
-    converted_images: Optional[List[str]] = None  # Changed from extracted_text to converted_images
+    converted_images: Optional[List[str]] = None
     image_count: Optional[int] = None  # Number of images converted
     image_format: Optional[str] = None  # Format of converted images (PNG/JPEG)
     total_image_size_mb: Optional[float] = None  # Total size of all images

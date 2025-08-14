@@ -58,7 +58,12 @@
   - Write tests for image-based session management
   - _Requirements: 5.3, 5.4, 8.1_
 
-- [ ] 5. Refactor PDF import API routes for vision processing
+- [x] 5. Refactor PDF import API routes for vision processing
+
+
+
+
+
   - Update /upload endpoint to convert PDF to images instead of extracting text
   - Modify /preview endpoint to return image previews instead of text content
   - Refactor /parse endpoint to use vision-based parsing with image inputs

@@ -225,23 +225,6 @@ class ModelResponse(BaseModel):
 
 
 # PDF Import Models
-class PDFExtractionResult(BaseModel):
-    """Result of PDF text extraction."""
-    session_id: str
-    extracted_text: str
-    page_count: int
-    structure_info: Dict[str, Any]
-    confidence_score: float
-
-
-class PDFStructureInfo(BaseModel):
-    """Information about PDF structure and format."""
-    has_form_fields: bool
-    has_tables: bool
-    detected_format: str  # 'dnd_beyond', 'roll20', 'handwritten', 'unknown'
-    text_quality: str  # 'high', 'medium', 'low'
-
-
 class UncertainField(BaseModel):
     """Field with uncertain parsing results."""
     file_type: str
@@ -249,15 +232,6 @@ class UncertainField(BaseModel):
     extracted_value: Any
     confidence: float
     suggestions: List[str]
-
-
-class CharacterParseResult(BaseModel):
-    """Result of LLM character parsing."""
-    session_id: str
-    character_files: Dict[str, Dict[str, Any]]
-    uncertain_fields: List[UncertainField]
-    parsing_confidence: float
-    validation_results: Dict[str, ValidationResult]
 
 
 class PDFImageResult(BaseModel):
@@ -277,7 +251,7 @@ class PDFImportSessionData(BaseModel):
     last_activity: str
     status: str
     pdf_filename: Optional[str] = None
-    converted_images: Optional[List[str]] = None  # Changed from extracted_text
+    converted_images: Optional[List[str]] = None
     image_count: Optional[int] = None
     image_format: Optional[str] = None
     total_image_size_mb: Optional[float] = None
@@ -289,10 +263,7 @@ class PDFImportSessionData(BaseModel):
     progress: float = 0.0
 
 
-class PDFUploadRequest(BaseModel):
-    """Request for PDF file upload."""
-    filename: str
-    file_size: int
+
 
 
 class PDFUploadResponse(BaseModel):
@@ -304,9 +275,9 @@ class PDFUploadResponse(BaseModel):
 
 
 class PDFParseRequest(BaseModel):
-    """Request for PDF parsing."""
+    """Request for PDF vision parsing."""
     session_id: str
-    extracted_text: Optional[str] = None
+    images: Optional[List[str]] = None  # Optional override images for parsing
 
 
 class PDFParseResponse(BaseModel):
