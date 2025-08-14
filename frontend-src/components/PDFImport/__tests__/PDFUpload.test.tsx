@@ -7,7 +7,7 @@ import { PDFUpload } from '../PDFUpload';
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-describe('PDFUpload', () => {
+describe('PDFUpload - Vision Processing', () => {
   const mockOnUploadComplete = vi.fn();
   const mockOnError = vi.fn();
 
@@ -38,22 +38,25 @@ describe('PDFUpload', () => {
   const getFileInput = () => document.querySelector('input[type="file"]') as HTMLInputElement;
 
   describe('Initial Render', () => {
-    it('renders upload interface with correct elements', () => {
+    it('renders upload interface with correct elements for vision processing', () => {
       renderComponent();
       
       expect(screen.getByText('Upload PDF Character Sheet')).toBeInTheDocument();
       expect(screen.getByText('Drop your PDF here or click to browse')).toBeInTheDocument();
       expect(screen.getByText('Maximum file size: 10MB • Supported format: PDF')).toBeInTheDocument();
       expect(screen.getByText('Supported PDF Formats')).toBeInTheDocument();
+      expect(screen.getByText(/The system will convert each page to high-quality images for AI vision processing/)).toBeInTheDocument();
     });
 
-    it('displays supported formats information', () => {
+    it('displays supported formats information including vision-specific formats', () => {
       renderComponent();
       
       expect(screen.getByText(/D&D Beyond character sheet exports/)).toBeInTheDocument();
       expect(screen.getByText(/Roll20 character sheet PDFs/)).toBeInTheDocument();
       expect(screen.getByText(/Official D&D 5e character sheets/)).toBeInTheDocument();
       expect(screen.getByText(/Handwritten or filled PDF character sheets/)).toBeInTheDocument();
+      expect(screen.getByText(/Scanned character sheets and images/)).toBeInTheDocument();
+      expect(screen.getByText(/Complex layouts and visual formats/)).toBeInTheDocument();
     });
   });
 
@@ -73,7 +76,7 @@ describe('PDFUpload', () => {
       expect(clickSpy).toHaveBeenCalled();
     });
 
-    it('handles file selection through input', async () => {
+    it('handles file selection through input for image conversion', async () => {
       const user = userEvent.setup();
       const mockFile = createMockFile('character.pdf', 'application/pdf', 1024 * 1024); // 1MB
       
@@ -81,7 +84,10 @@ describe('PDFUpload', () => {
         ok: true,
         json: async () => ({
           session_id: 'test-session-123',
-          extracted_text: 'Mock extracted text',
+          images: ['base64-image-1', 'base64-image-2'],
+          page_count: 2,
+          image_format: 'PNG',
+          total_size_mb: 1.5,
         }),
       });
 
@@ -127,7 +133,7 @@ describe('PDFUpload', () => {
       expect(mockFetch).not.toHaveBeenCalled();
     });
 
-    it('accepts valid PDF files', async () => {
+    it('accepts valid PDF files and converts to images', async () => {
       const user = userEvent.setup();
       const mockFile = createMockFile('character.pdf', 'application/pdf', 5 * 1024 * 1024); // 5MB
       
@@ -135,7 +141,10 @@ describe('PDFUpload', () => {
         ok: true,
         json: async () => ({
           session_id: 'test-session-123',
-          extracted_text: 'Mock extracted text',
+          images: ['base64-image-1', 'base64-image-2', 'base64-image-3'],
+          page_count: 3,
+          image_format: 'PNG',
+          total_size_mb: 2.1,
         }),
       });
 
@@ -164,14 +173,17 @@ describe('PDFUpload', () => {
       expect(uploadArea?.className).toContain('border-dashed');
     });
 
-    it('handles file drop with valid PDF', async () => {
+    it('handles file drop with valid PDF for image conversion', async () => {
       const mockFile = createMockFile('character.pdf', 'application/pdf', 1024 * 1024);
       
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           session_id: 'test-session-123',
-          extracted_text: 'Mock extracted text',
+          images: ['base64-image-1'],
+          page_count: 1,
+          image_format: 'PNG',
+          total_size_mb: 0.8,
         }),
       });
 
@@ -194,8 +206,8 @@ describe('PDFUpload', () => {
     });
   });
 
-  describe('Upload Progress', () => {
-    it('shows upload progress during file upload', async () => {
+  describe('Upload and Conversion Progress', () => {
+    it('shows upload and conversion progress during file processing', async () => {
       const user = userEvent.setup();
       const mockFile = createMockFile('character.pdf', 'application/pdf', 1024 * 1024);
       
@@ -206,7 +218,10 @@ describe('PDFUpload', () => {
             ok: true,
             json: async () => ({
               session_id: 'test-session-123',
-              extracted_text: 'Mock extracted text',
+              images: ['base64-image-1', 'base64-image-2'],
+              page_count: 2,
+              image_format: 'PNG',
+              total_size_mb: 1.2,
             }),
           }), 100)
         )
@@ -224,9 +239,14 @@ describe('PDFUpload', () => {
       
       // Check progress bar exists
       expect(document.querySelector('.bg-purple-500')).toBeInTheDocument();
+      
+      // Should eventually show conversion stage
+      await waitFor(() => {
+        expect(screen.getByText(/Converting PDF to images\.\.\./)).toBeInTheDocument();
+      }, { timeout: 2000 });
     });
 
-    it('shows cancel button during upload', async () => {
+    it('shows cancel button during upload and conversion', async () => {
       const user = userEvent.setup();
       const mockFile = createMockFile('character.pdf', 'application/pdf', 1024 * 1024);
       
@@ -237,7 +257,10 @@ describe('PDFUpload', () => {
             ok: true,
             json: async () => ({
               session_id: 'test-session-123',
-              extracted_text: 'Mock extracted text',
+              images: ['base64-image-1'],
+              page_count: 1,
+              image_format: 'PNG',
+              total_size_mb: 0.5,
             }),
           }), 100)
         )
@@ -252,18 +275,54 @@ describe('PDFUpload', () => {
       await waitFor(() => {
         expect(screen.getByText('Cancel Upload')).toBeInTheDocument();
       });
+      
+      // Should show conversion cancel button later
+      await waitFor(() => {
+        expect(screen.getByText('Cancel Conversion')).toBeInTheDocument();
+      }, { timeout: 2000 });
+    });
+
+    it('shows conversion progress indicators', async () => {
+      const user = userEvent.setup();
+      const mockFile = createMockFile('character.pdf', 'application/pdf', 1024 * 1024);
+      
+      // Mock a delayed response
+      mockFetch.mockImplementationOnce(() => 
+        new Promise(resolve => 
+          setTimeout(() => resolve({
+            ok: true,
+            json: async () => ({
+              session_id: 'test-session-123',
+              images: ['base64-image-1', 'base64-image-2'],
+              page_count: 2,
+              image_format: 'PNG',
+              total_size_mb: 1.1,
+            }),
+          }), 150)
+        )
+      );
+
+      renderComponent();
+      
+      const fileInput = getFileInput();
+      await user.upload(fileInput, mockFile);
+      
+      // Should show conversion-specific messaging
+      await waitFor(() => {
+        expect(screen.getByText(/Converting pages to high-quality images/)).toBeInTheDocument();
+      }, { timeout: 2000 });
     });
   });
 
   describe('Error Handling', () => {
-    it('handles API errors gracefully', async () => {
+    it('handles API errors gracefully during image conversion', async () => {
       const user = userEvent.setup();
       const mockFile = createMockFile('character.pdf', 'application/pdf', 1024 * 1024);
       
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: async () => ({ detail: 'Server error occurred' }),
+        json: async () => ({ detail: 'Image conversion failed' }),
       });
 
       renderComponent();
@@ -273,10 +332,10 @@ describe('PDFUpload', () => {
       
       await waitFor(() => {
         expect(screen.getByText('Upload Error')).toBeInTheDocument();
-        expect(screen.getByText('Server error occurred')).toBeInTheDocument();
+        expect(screen.getByText('Image conversion failed')).toBeInTheDocument();
       });
       
-      expect(mockOnError).toHaveBeenCalledWith('Server error occurred');
+      expect(mockOnError).toHaveBeenCalledWith('Image conversion failed');
     });
 
     it('provides retry functionality after error', async () => {
@@ -295,7 +354,10 @@ describe('PDFUpload', () => {
         ok: true,
         json: async () => ({
           session_id: 'test-session-123',
-          extracted_text: 'Mock extracted text',
+          images: ['base64-image-1'],
+          page_count: 1,
+          image_format: 'PNG',
+          total_size_mb: 0.7,
         }),
       });
 
@@ -342,7 +404,7 @@ describe('PDFUpload', () => {
   });
 
   describe('Success Flow', () => {
-    it('calls onUploadComplete with correct data on successful upload', async () => {
+    it('calls onUploadComplete with correct data on successful image conversion', async () => {
       const user = userEvent.setup();
       const mockFile = createMockFile('character.pdf', 'application/pdf', 1024 * 1024);
       
@@ -350,7 +412,10 @@ describe('PDFUpload', () => {
         ok: true,
         json: async () => ({
           session_id: 'test-session-123',
-          extracted_text: 'Mock extracted character data',
+          images: ['base64-image-1', 'base64-image-2'],
+          page_count: 2,
+          image_format: 'PNG',
+          total_size_mb: 1.3,
         }),
       });
 
@@ -362,12 +427,12 @@ describe('PDFUpload', () => {
       await waitFor(() => {
         expect(mockOnUploadComplete).toHaveBeenCalledWith(
           'test-session-123',
-          'Mock extracted character data'
+          2 // page_count
         );
       }, { timeout: 2000 });
     });
 
-    it('resets upload state after successful upload', async () => {
+    it('resets upload state after successful conversion', async () => {
       const user = userEvent.setup();
       const mockFile = createMockFile('character.pdf', 'application/pdf', 1024 * 1024);
       
@@ -375,7 +440,10 @@ describe('PDFUpload', () => {
         ok: true,
         json: async () => ({
           session_id: 'test-session-123',
-          extracted_text: 'Mock extracted text',
+          images: ['base64-image-1'],
+          page_count: 1,
+          image_format: 'PNG',
+          total_size_mb: 0.6,
         }),
       });
 
@@ -392,6 +460,34 @@ describe('PDFUpload', () => {
       await waitFor(() => {
         expect(screen.getByText('Drop your PDF here or click to browse')).toBeInTheDocument();
       });
+    });
+
+    it('handles multi-page PDF conversion correctly', async () => {
+      const user = userEvent.setup();
+      const mockFile = createMockFile('multi-page.pdf', 'application/pdf', 2 * 1024 * 1024);
+      
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          session_id: 'test-session-456',
+          images: ['base64-image-1', 'base64-image-2', 'base64-image-3', 'base64-image-4'],
+          page_count: 4,
+          image_format: 'PNG',
+          total_size_mb: 2.8,
+        }),
+      });
+
+      renderComponent();
+      
+      const fileInput = getFileInput();
+      await user.upload(fileInput, mockFile);
+      
+      await waitFor(() => {
+        expect(mockOnUploadComplete).toHaveBeenCalledWith(
+          'test-session-456',
+          4 // page_count for 4-page PDF
+        );
+      }, { timeout: 2000 });
     });
   });
 });

@@ -1,17 +1,19 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Upload, X, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { Upload, X, FileText, AlertCircle, CheckCircle, Image as ImageIcon } from 'lucide-react';
 
 interface PDFUploadProps {
-  onUploadComplete: (sessionId: string, extractedText: string) => void;
+  onUploadComplete: (sessionId: string, imageCount: number) => void;
   onError: (error: string) => void;
 }
 
 interface UploadState {
   isDragOver: boolean;
   isUploading: boolean;
+  isConverting: boolean;
   progress: number;
   error: string | null;
   file: File | null;
+  stage: 'upload' | 'convert' | 'complete';
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -21,9 +23,11 @@ export const PDFUpload: React.FC<PDFUploadProps> = ({ onUploadComplete, onError 
   const [uploadState, setUploadState] = useState<UploadState>({
     isDragOver: false,
     isUploading: false,
+    isConverting: false,
     progress: 0,
     error: null,
     file: null,
+    stage: 'upload',
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -45,9 +49,11 @@ export const PDFUpload: React.FC<PDFUploadProps> = ({ onUploadComplete, onError 
     setUploadState({
       isDragOver: false,
       isUploading: false,
+      isConverting: false,
       progress: 0,
       error: null,
       file: null,
+      stage: 'upload',
     });
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -67,7 +73,8 @@ export const PDFUpload: React.FC<PDFUploadProps> = ({ onUploadComplete, onError 
       isUploading: true, 
       progress: 0, 
       error: null, 
-      file 
+      file,
+      stage: 'upload'
     }));
 
     try {
@@ -77,6 +84,9 @@ export const PDFUpload: React.FC<PDFUploadProps> = ({ onUploadComplete, onError 
       const formData = new FormData();
       formData.append('file', file);
 
+      // Upload phase
+      setUploadState(prev => ({ ...prev, stage: 'upload', progress: 10 }));
+      
       const response = await fetch('/api/character/import-pdf/upload', {
         method: 'POST',
         body: formData,
@@ -88,32 +98,45 @@ export const PDFUpload: React.FC<PDFUploadProps> = ({ onUploadComplete, onError 
         throw new Error(errorData.detail || 'Upload failed');
       }
 
-      // Simulate progress for better UX (since we don't have real progress from fetch)
+      // Conversion phase
+      setUploadState(prev => ({ ...prev, stage: 'convert', progress: 50, isConverting: true }));
+
+      // Simulate conversion progress for better UX
       const progressInterval = setInterval(() => {
         setUploadState(prev => {
-          const newProgress = Math.min(prev.progress + 10, 90);
+          const newProgress = Math.min(prev.progress + 5, 90);
           return { ...prev, progress: newProgress };
         });
-      }, 100);
+      }, 200);
 
       const result = await response.json();
       
       clearInterval(progressInterval);
-      setUploadState(prev => ({ ...prev, progress: 100 }));
+      setUploadState(prev => ({ ...prev, progress: 100, stage: 'complete' }));
 
       // Small delay to show 100% progress
       setTimeout(() => {
-        onUploadComplete(result.session_id, ''); // Pass empty string for extracted_text since it will be fetched later
+        onUploadComplete(result.session_id, result.page_count || 0);
         resetUploadState();
       }, 500);
 
     } catch (error) {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          setUploadState(prev => ({ ...prev, error: 'Upload cancelled', isUploading: false }));
+          setUploadState(prev => ({ 
+            ...prev, 
+            error: 'Upload cancelled', 
+            isUploading: false, 
+            isConverting: false 
+          }));
         } else {
-          const errorMessage = error.message || 'Failed to upload PDF file';
-          setUploadState(prev => ({ ...prev, error: errorMessage, isUploading: false }));
+          const errorMessage = error.message || 'Failed to upload and convert PDF file';
+          setUploadState(prev => ({ 
+            ...prev, 
+            error: errorMessage, 
+            isUploading: false, 
+            isConverting: false 
+          }));
           onError(errorMessage);
         }
       }
@@ -170,8 +193,8 @@ export const PDFUpload: React.FC<PDFUploadProps> = ({ onUploadComplete, onError 
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white mb-2">Upload PDF Character Sheet</h2>
         <p className="text-gray-400">
-          Upload your D&D character sheet in PDF format. Supported sources include D&D Beyond exports, 
-          Roll20 sheets, and other PDF character sheets.
+          Upload your D&D character sheet in PDF format. The system will convert each page to high-quality images 
+          for AI vision processing, supporting handwritten sheets, complex layouts, and any visual format.
         </p>
       </div>
 
@@ -183,12 +206,12 @@ export const PDFUpload: React.FC<PDFUploadProps> = ({ onUploadComplete, onError 
             ? 'border-purple-400 bg-purple-900/20' 
             : 'border-gray-600 hover:border-gray-500'
           }
-          ${uploadState.isUploading ? 'pointer-events-none' : 'cursor-pointer'}
+          ${uploadState.isUploading || uploadState.isConverting ? 'pointer-events-none' : 'cursor-pointer'}
         `}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        onClick={() => !uploadState.isUploading && fileInputRef.current?.click()}
+        onClick={() => !(uploadState.isUploading || uploadState.isConverting) && fileInputRef.current?.click()}
       >
         <input
           ref={fileInputRef}
@@ -196,17 +219,23 @@ export const PDFUpload: React.FC<PDFUploadProps> = ({ onUploadComplete, onError 
           accept=".pdf,application/pdf"
           onChange={handleFileSelect}
           className="hidden"
-          disabled={uploadState.isUploading}
+          disabled={uploadState.isUploading || uploadState.isConverting}
         />
 
-        {uploadState.isUploading ? (
+        {(uploadState.isUploading || uploadState.isConverting) ? (
           <div className="space-y-4">
             <div className="flex items-center justify-center">
-              <FileText className="h-12 w-12 text-purple-400" />
+              {uploadState.stage === 'convert' ? (
+                <ImageIcon className="h-12 w-12 text-purple-400" />
+              ) : (
+                <FileText className="h-12 w-12 text-purple-400" />
+              )}
             </div>
             <div>
               <p className="text-white font-medium mb-2">
-                Uploading {uploadState.file?.name}...
+                {uploadState.stage === 'upload' && `Uploading ${uploadState.file?.name}...`}
+                {uploadState.stage === 'convert' && `Converting PDF to images...`}
+                {uploadState.stage === 'complete' && `Processing complete!`}
               </p>
               <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
                 <div 
@@ -214,14 +243,17 @@ export const PDFUpload: React.FC<PDFUploadProps> = ({ onUploadComplete, onError 
                   style={{ width: `${uploadState.progress}%` }}
                 />
               </div>
-              <p className="text-sm text-gray-400">{uploadState.progress}% complete</p>
+              <p className="text-sm text-gray-400">
+                {uploadState.progress}% complete
+                {uploadState.stage === 'convert' && ' • Converting pages to high-quality images'}
+              </p>
             </div>
             <button
               onClick={handleCancel}
               className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
             >
               <X className="h-4 w-4 mr-2" />
-              Cancel Upload
+              Cancel {uploadState.stage === 'convert' ? 'Conversion' : 'Upload'}
             </button>
           </div>
         ) : (
@@ -279,9 +311,12 @@ export const PDFUpload: React.FC<PDFUploadProps> = ({ onUploadComplete, onError 
           <li>• Roll20 character sheet PDFs</li>
           <li>• Official D&D 5e character sheets</li>
           <li>• Handwritten or filled PDF character sheets</li>
+          <li>• Scanned character sheets and images</li>
+          <li>• Complex layouts and visual formats</li>
         </ul>
         <p className="text-xs text-gray-400 mt-2">
-          Note: Scanned images or heavily formatted sheets may require manual review after upload.
+          Note: AI vision processing works best with clear, high-contrast images. You'll be able to review 
+          converted images before processing.
         </p>
       </div>
     </div>

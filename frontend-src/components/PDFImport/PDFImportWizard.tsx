@@ -17,7 +17,7 @@ import {
   CharacterParseResult, 
   ParsedCharacterData,
   UncertainField,
-  PDFStructureInfo
+  ImageData
 } from '../../types';
 
 interface WizardStep {
@@ -37,8 +37,7 @@ interface PDFImportWizardProps {
 
 interface ImportState {
   sessionId: string | null;
-  extractedText: string;
-  structureInfo: PDFStructureInfo | null;
+  images: ImageData[];
   parsedData: ParsedCharacterData | null;
   uncertainFields: UncertainField[];
   error: string | null;
@@ -54,8 +53,7 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [importState, setImportState] = useState<ImportState>({
     sessionId: null,
-    extractedText: '',
-    structureInfo: null,
+    images: [],
     parsedData: null,
     uncertainFields: [],
     error: null,
@@ -75,17 +73,17 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
     },
     {
       id: 'preview',
-      title: 'Review Content',
+      title: 'Review Images',
       icon: <Eye className="w-5 h-5" />,
-      description: 'Review and edit extracted text content',
+      description: 'Review converted PDF images',
       isComplete: false,
       isValid: false
     },
     {
       id: 'parse',
-      title: 'AI Parsing',
+      title: 'Vision Processing',
       icon: <FileText className="w-5 h-5" />,
-      description: 'AI processes your character data',
+      description: 'AI vision processes your character images',
       isComplete: false,
       isValid: false
     },
@@ -103,7 +101,7 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
   useEffect(() => {
     console.log('Import state or current step changed:', {
       hasSessionId: !!importState.sessionId,
-      hasExtractedText: !!importState.extractedText,
+      hasImages: importState.images.length > 0,
       hasParsedData: !!importState.parsedData,
       isLoading: importState.isLoading,
       currentStep
@@ -112,7 +110,7 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
     setSteps(prevSteps => {
       const newSteps = [...prevSteps];
       
-      newSteps[0].isComplete = !!importState.sessionId && !!importState.extractedText;
+      newSteps[0].isComplete = !!importState.sessionId && importState.images.length > 0;
       newSteps[0].isValid = newSteps[0].isComplete;
       
       newSteps[1].isComplete = newSteps[0].isComplete && currentStep > 1;
@@ -130,7 +128,7 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
     });
     
     // Auto-advance from upload step to preview step when upload is complete
-    if (currentStep === 0 && importState.sessionId && importState.extractedText && !importState.isLoading) {
+    if (currentStep === 0 && importState.sessionId && importState.images.length > 0 && !importState.isLoading) {
       console.log('Auto-advancing from upload step to preview step');
       setCurrentStep(1);
     }
@@ -195,27 +193,26 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
   }, []);
 
   // PDF Upload handlers
-  const handleUploadComplete = useCallback(async (sessionId: string, _extractedText: string) => {
+  const handleUploadComplete = useCallback(async (sessionId: string, imageCount: number) => {
     try {
-      console.log('Upload complete, sessionId:', sessionId);
+      console.log('Upload complete, sessionId:', sessionId, 'imageCount:', imageCount);
       
-      // Get extraction details and text from preview endpoint
+      // Get converted images from preview endpoint
       const response = await fetch(`/api/character/import-pdf/preview/${sessionId}`);
       if (!response.ok) {
-        throw new Error('Failed to get extraction details');
+        throw new Error('Failed to get converted images');
       }
 
       const previewData = await response.json();
       console.log('Preview data:', previewData);
       
-      const extractedText = previewData.extracted_text || '';
+      const images = previewData.images || [];
       
-      console.log('Setting import state with sessionId and extractedText');
+      console.log('Setting import state with sessionId and images');
       setImportState(prev => ({
         ...prev,
         sessionId,
-        extractedText,
-        structureInfo: null, // Will be set if available in the response
+        images,
         error: null
       }));
 
@@ -232,7 +229,7 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
   }, [handleError]);
 
   // PDF Content Preview handlers
-  const handlePreviewConfirm = useCallback(async (finalText: string) => {
+  const handlePreviewConfirm = useCallback(async (orderedImages: ImageData[]) => {
     // Prevent double-clicks by checking if already loading
     if (importState.isLoading) {
       console.log('Already processing, ignoring duplicate click');
@@ -248,12 +245,12 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
     setImportState(prev => ({
       ...prev,
       isLoading: true,
-      loadingMessage: 'AI is parsing your character data...',
-      extractedText: finalText,
+      loadingMessage: 'AI vision is processing your character images...',
+      images: orderedImages,
       error: null
     }));
 
-    // Move to the AI Processing step immediately
+    // Move to the Vision Processing step immediately
     setCurrentStep(2);
 
     try {
@@ -264,13 +261,13 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
         },
         body: JSON.stringify({
           session_id: importState.sessionId,
-          extracted_text: finalText
+          images: orderedImages.map(img => img.base64)
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: 'Parsing failed' }));
-        throw new Error(errorData.detail || 'Failed to parse character data');
+        const errorData = await response.json().catch(() => ({ detail: 'Vision processing failed' }));
+        throw new Error(errorData.detail || 'Failed to process character images');
       }
 
       const parseResult: CharacterParseResult = await response.json();
@@ -291,7 +288,7 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
       // Auto-advance to review step
       setCurrentStep(3);
     } catch (error) {
-      console.error('Parsing error:', error);
+      console.error('Vision processing error:', error);
       // Make sure to set isLoading to false on error
       setImportState(prev => ({
         ...prev,
@@ -300,7 +297,7 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
       }));
       // Go back to preview step on error
       setCurrentStep(1);
-      handleError(error instanceof Error ? error.message : 'Failed to parse character data', false);
+      handleError(error instanceof Error ? error.message : 'Failed to process character images', false);
     }
   }, [importState.sessionId, importState.isLoading, handleError]);
 
@@ -321,8 +318,7 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
       setImportState(prev => ({
         ...prev,
         sessionId: null,
-        extractedText: '',
-        structureInfo: null,
+        images: [],
         error: null
       }));
     }
@@ -393,13 +389,13 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
   }, [importState.sessionId, importState.parsedData, onComplete, handleError]);
 
   const handleReparse = useCallback(async () => {
-    if (!importState.sessionId || !importState.extractedText) {
-      handleError('No content to reparse');
+    if (!importState.sessionId || importState.images.length === 0) {
+      handleError('No images to reprocess');
       return;
     }
 
-    await handlePreviewConfirm(importState.extractedText);
-  }, [importState.sessionId, importState.extractedText, handlePreviewConfirm]);
+    await handlePreviewConfirm(importState.images);
+  }, [importState.sessionId, importState.images, handlePreviewConfirm]);
 
   // Cleanup session on unmount or cancel
   useEffect(() => {
@@ -438,10 +434,9 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
           />
         );
       case 1:
-        return importState.extractedText ? (
+        return importState.images.length > 0 ? (
           <PDFContentPreview
-            extractedText={importState.extractedText}
-            structureInfo={importState.structureInfo}
+            images={importState.images}
             onConfirm={handlePreviewConfirm}
             onReject={handlePreviewReject}
             isLoading={importState.isLoading}
@@ -455,9 +450,9 @@ export const PDFImportWizard: React.FC<PDFImportWizardProps> = ({
                 <Loader2 className="h-12 w-12 text-purple-400 animate-spin" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white mb-2">Processing Character Data</h2>
+                <h2 className="text-2xl font-bold text-white mb-2">Processing Character Images</h2>
                 <p className="text-gray-400 mb-4">
-                  Our AI is analyzing your character sheet and extracting the information...
+                  Our AI vision system is analyzing your character sheet images and extracting the information...
                 </p>
                 <p className="text-sm text-purple-300">
                   {importState.loadingMessage || 'This may take a few moments...'}

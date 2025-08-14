@@ -44,7 +44,7 @@
   - Create single-file processing method that sends all images with one focused prompt
   - Write tests for vision parsing with mock image responses
   - _Requirements: 2.1, 2.2, 2.3, 7.1, 7.2, 7.3, 7.4_
-
+  
 - [x] 4. Update PDF import session management for images
 
 
@@ -71,8 +71,14 @@
   - Write API integration tests for vision-based endpoints
   - _Requirements: 1.1, 1.3, 2.1, 2.4, 5.5_
 
-- [ ] 6. Update frontend PDF upload component for image preview
-  - Modify PDFUpload component to handle image conversion results
+- [x] 6. Update frontend PDF upload component for image preview
+
+
+
+
+
+
+  - Modify PDFUpload component to handle image conversion results instead of text extraction
   - Create ImagePreview component to display converted PDF pages as images
   - Add image reordering and selection capabilities for multi-page sheets
   - Update progress indicators for image conversion and vision processing
@@ -87,7 +93,9 @@
   - Write tests for enhanced review interface with image integration
   - _Requirements: 3.2, 3.3, 6.1, 6.2_
 
-- [ ] 8. Implement focused vision prompts for each JSON file type
+- [x] 8. Implement focused vision prompts for each JSON file type
+
+
   - Create character.json prompt focusing on basic stats, abilities, and core information
   - Build spell_list.json prompt for spells, cantrips, and spellcasting data only
   - Develop feats_and_traits.json prompt for class features, racial traits, and feats only
@@ -96,7 +104,19 @@
   - Develop character_background.json prompt for personality and backstory only
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 2.3_
 
-- [ ] 9. Add comprehensive error handling for vision processing
+- [x] 9. Complete legacy code cleanup
+
+
+
+
+
+  - Remove PyPDF2 and pdfplumber from requirements.txt (still present)
+  - Clean up any remaining text extraction references in codebase
+  - Update frontend components to remove text-based preview functionality
+  - Verify all legacy PDF processing code has been removed
+  - _Requirements: 4.1, 4.2, 4.3, 4.4_
+
+- [ ] 10. Add comprehensive error handling for vision processing
   - Implement retry logic for vision API failures with exponential backoff
   - Create fallback handling for poor image quality or unreadable content
   - Add user feedback for vision processing errors with suggested solutions
@@ -104,7 +124,7 @@
   - Write tests for error scenarios and recovery workflows
   - _Requirements: 5.4, 6.3, 6.4_
 
-- [ ] 10. Optimize image processing and API efficiency
+- [ ] 11. Optimize image processing and API efficiency
   - Implement parallel PDF page conversion for faster processing
   - Add image compression and format optimization for API transmission
   - Create intelligent image batching for multiple API calls
@@ -112,7 +132,7 @@
   - Write performance tests and optimize memory usage
   - _Requirements: 5.1, 5.2, 5.5_
 
-- [ ] 11. Update character context management for chat system
+- [ ] 12. Update character context management for chat system
   - Create CharacterContextManager for default character selection
   - Implement character selection UI component with multi-player toggle
   - Update chat system to load only default character data by default
@@ -120,7 +140,7 @@
   - Write tests for character context switching and chat integration
   - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
 
-- [ ] 12. Ensure schema compatibility and validation
+- [ ] 13. Ensure schema compatibility and validation
   - Validate that vision-parsed data matches existing JSON schemas exactly
   - Test compatibility with existing character editor and display components
   - Verify that vision-processed characters integrate seamlessly with manual characters
@@ -128,7 +148,7 @@
   - Write comprehensive compatibility tests across all character management features
   - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
 
-- [ ] 13. Create comprehensive testing suite for vision-based processing
+- [ ] 14. Create comprehensive testing suite for vision-based processing
   - Write E2E tests for various character sheet formats (D&D Beyond, Roll20, handwritten)
   - Test multi-page character sheet processing and data consolidation
   - Create tests for different image qualities and orientations
@@ -136,7 +156,7 @@
   - Write performance tests for large PDF files and multiple images
   - _Requirements: 6.1, 6.2, 6.3, 3.3, 3.4_
 
-- [ ] 14. Implement security and cleanup for image processing
+- [ ] 15. Implement security and cleanup for image processing
   - Add secure image validation and content scanning
   - Implement automatic cleanup of temporary images after processing
   - Create rate limiting for vision API calls to prevent abuse
@@ -144,7 +164,7 @@
   - Write security tests and validate proper resource cleanup
   - _Requirements: 5.3, 5.4, 5.5_
 
-- [ ] 15. Final integration and migration testing
+- [ ] 16. Final integration and migration testing
   - Test complete vision-based import workflow end-to-end
   - Validate that all legacy text extraction code has been removed
   - Verify seamless integration with existing character management features

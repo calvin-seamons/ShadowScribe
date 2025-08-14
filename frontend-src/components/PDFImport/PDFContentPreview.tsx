@@ -1,27 +1,30 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { 
-  FileText, 
-  Edit3, 
+  Image as ImageIcon, 
   Check, 
   X, 
   AlertTriangle, 
   CheckCircle, 
   Info,
   Eye,
-  EyeOff
+  EyeOff,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw
 } from 'lucide-react';
-import { PDFStructureInfo } from '../../types';
+import { ImageData } from '../../types';
 
 interface PDFContentPreviewProps {
-  extractedText: string;
-  structureInfo: PDFStructureInfo | null;
-  onConfirm: (finalText: string) => void;
+  images: ImageData[];
+  onConfirm: (orderedImages: ImageData[]) => void;
   onReject: () => void;
-  onEdit?: (text: string) => void;
+  onImageReorder?: (newOrder: ImageData[]) => void;
   isLoading?: boolean;
 }
 
-interface TextQualityIndicator {
+interface ImageQualityIndicator {
   level: 'high' | 'medium' | 'low';
   color: string;
   icon: React.ReactNode;
@@ -30,150 +33,131 @@ interface TextQualityIndicator {
 }
 
 export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
-  extractedText,
-  structureInfo,
+  images,
   onConfirm,
   onReject,
-  onEdit,
+  onImageReorder,
   isLoading = false
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedText, setEditedText] = useState(extractedText);
-  const [showRawText, setShowRawText] = useState(false);
+  const [orderedImages, setOrderedImages] = useState<ImageData[]>(images);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [zoom, setZoom] = useState(1);
+  const [showAllImages, setShowAllImages] = useState(false);
 
-  // Calculate text quality indicators
-  const qualityIndicator: TextQualityIndicator = useMemo(() => {
-    const indicators: Record<string, TextQualityIndicator> = {
+  // Calculate image quality indicators
+  const qualityIndicator: ImageQualityIndicator = useMemo(() => {
+    const indicators: Record<string, ImageQualityIndicator> = {
       high: {
         level: 'high',
         color: 'text-green-400',
         icon: <CheckCircle className="h-5 w-5" />,
-        message: 'Excellent text quality detected',
+        message: 'Excellent image quality detected',
         suggestions: [
-          'Text appears well-structured and readable',
-          'Should parse accurately with minimal corrections needed'
+          'Images are clear and high resolution',
+          'Should process accurately with vision AI'
         ]
       },
       medium: {
         level: 'medium',
         color: 'text-yellow-400',
         icon: <AlertTriangle className="h-5 w-5" />,
-        message: 'Good text quality with minor issues',
+        message: 'Good image quality with minor issues',
         suggestions: [
-          'Some formatting irregularities detected',
-          'Review extracted content for accuracy',
-          'Consider minor edits if needed'
+          'Images are readable but may have some clarity issues',
+          'Vision processing should work well'
         ]
       },
       low: {
         level: 'low',
         color: 'text-red-400',
         icon: <AlertTriangle className="h-5 w-5" />,
-        message: 'Poor text quality detected',
+        message: 'Poor image quality detected',
         suggestions: [
-          'Significant formatting issues found',
-          'Manual review and editing recommended',
+          'Images may be blurry or low resolution',
           'Consider using a higher quality PDF if available'
         ]
       }
     };
     
-    const quality = structureInfo?.text_quality || 'medium';
-    return indicators[quality] || indicators.medium;
-  }, [structureInfo]);
+    // Simple quality assessment based on image dimensions
+    const avgDimensions = orderedImages.reduce((sum, img) => sum + (img.dimensions.width * img.dimensions.height), 0) / orderedImages.length;
+    const quality = avgDimensions > 1000000 ? 'high' : avgDimensions > 500000 ? 'medium' : 'low';
+    return indicators[quality];
+  }, [orderedImages]);
 
-  // Format detection info
-  const formatInfo = useMemo(() => {
-    const formats: Record<string, { name: string; description: string; color: string }> = {
-      dnd_beyond: {
-        name: 'D&D Beyond Export',
-        description: 'Structured character sheet from D&D Beyond',
-        color: 'text-blue-400'
-      },
-      roll20: {
-        name: 'Roll20 Character Sheet',
-        description: 'Character sheet exported from Roll20',
-        color: 'text-purple-400'
-      },
-      handwritten: {
-        name: 'Handwritten/Filled Sheet',
-        description: 'Manually filled or handwritten character sheet',
-        color: 'text-orange-400'
-      },
-      unknown: {
-        name: 'Unknown Format',
-        description: 'Format not automatically recognized',
-        color: 'text-gray-400'
-      }
+  // Image statistics
+  const imageStats = useMemo(() => {
+    const totalSize = orderedImages.reduce((total, image) => {
+      const sizeBytes = (image.base64.length * 3) / 4;
+      return total + sizeBytes;
+    }, 0);
+    
+    return { 
+      count: orderedImages.length, 
+      totalSizeMB: totalSize / (1024 * 1024),
+      avgWidth: Math.round(orderedImages.reduce((sum, img) => sum + img.dimensions.width, 0) / orderedImages.length),
+      avgHeight: Math.round(orderedImages.reduce((sum, img) => sum + img.dimensions.height, 0) / orderedImages.length)
     };
-    
-    const format = structureInfo?.detected_format || 'unknown';
-    return formats[format] || formats.unknown;
-  }, [structureInfo]);
+  }, [orderedImages]);
 
-  // Text statistics
-  const textStats = useMemo(() => {
-    const lines = extractedText.split('\n').length;
-    const words = extractedText.trim().split(/\s+/).length;
-    const characters = extractedText.length;
-    
-    return { lines, words, characters };
-  }, [extractedText]);
 
-  const handleEditToggle = useCallback(() => {
-    if (isEditing) {
-      // Save changes
-      onEdit?.(editedText);
-    }
-    setIsEditing(!isEditing);
-  }, [isEditing, editedText, onEdit]);
-
-  const handleTextChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setEditedText(e.target.value);
-  }, []);
 
   const handleConfirm = useCallback(() => {
-    const finalText = isEditing ? editedText : extractedText;
-    onConfirm(finalText);
-  }, [isEditing, editedText, extractedText, onConfirm]);
+    onConfirm(orderedImages);
+  }, [orderedImages, onConfirm]);
 
-  const handleResetEdit = useCallback(() => {
-    setEditedText(extractedText);
-    setIsEditing(false);
-  }, [extractedText]);
+  const handleZoomIn = useCallback(() => {
+    setZoom(prev => Math.min(prev * 1.2, 3));
+  }, []);
 
-  const displayText = isEditing ? editedText : extractedText;
+  const handleZoomOut = useCallback(() => {
+    setZoom(prev => Math.max(prev / 1.2, 0.5));
+  }, []);
+
+  const handleResetZoom = useCallback(() => {
+    setZoom(1);
+  }, []);
+
+  const handlePreviousImage = useCallback(() => {
+    setSelectedImageIndex(prev => Math.max(0, prev - 1));
+  }, []);
+
+  const handleNextImage = useCallback(() => {
+    setSelectedImageIndex(prev => Math.min(orderedImages.length - 1, prev + 1));
+  }, [orderedImages.length]);
+
+  const currentImage = orderedImages[selectedImageIndex];
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
+    <div className="w-full max-w-6xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white mb-2">Review Extracted Content</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Review PDF Images</h2>
           <p className="text-gray-400">
-            Review the text extracted from your PDF and make any necessary corrections before proceeding.
+            Review the converted images from your PDF before proceeding to AI vision processing.
           </p>
         </div>
         <div className="flex items-center space-x-2">
           <button
-            onClick={() => setShowRawText(!showRawText)}
+            onClick={() => setShowAllImages(!showAllImages)}
             className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
           >
-            {showRawText ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-            {showRawText ? 'Hide Raw' : 'Show Raw'}
+            {showAllImages ? <Eye className="h-4 w-4 mr-2" /> : <EyeOff className="h-4 w-4 mr-2" />}
+            {showAllImages ? 'Single View' : 'Show All'}
           </button>
         </div>
       </div>
 
-      {/* Quality and Format Information */}
+      {/* Quality and Statistics Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Text Quality Indicator */}
+        {/* Image Quality Indicator */}
         <div className="bg-gray-800 rounded-lg p-4">
           <div className="flex items-center mb-3">
             <div className={qualityIndicator.color}>
               {qualityIndicator.icon}
             </div>
-            <h3 className="text-white font-medium ml-2">Text Quality</h3>
+            <h3 className="text-white font-medium ml-2">Image Quality</h3>
           </div>
           <p className={`text-sm mb-2 ${qualityIndicator.color}`}>
             {qualityIndicator.message}
@@ -185,115 +169,143 @@ export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
           </ul>
         </div>
 
-        {/* Format Detection */}
+        {/* Image Statistics */}
         <div className="bg-gray-800 rounded-lg p-4">
           <div className="flex items-center mb-3">
-            <FileText className={`h-5 w-5 ${formatInfo.color}`} />
-            <h3 className="text-white font-medium ml-2">Detected Format</h3>
+            <ImageIcon className="h-5 w-5 text-purple-400" />
+            <h3 className="text-white font-medium ml-2">Image Information</h3>
           </div>
-          <p className={`text-sm mb-2 ${formatInfo.color}`}>
-            {formatInfo.name}
-          </p>
-          <p className="text-xs text-gray-400">
-            {formatInfo.description}
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2 text-xs">
-            {structureInfo?.has_form_fields && (
-              <span className="px-2 py-1 bg-blue-900/30 text-blue-300 rounded">
-                Form Fields
-              </span>
-            )}
-            {structureInfo?.has_tables && (
-              <span className="px-2 py-1 bg-green-900/30 text-green-300 rounded">
-                Tables
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Text Statistics */}
-      <div className="bg-gray-800 rounded-lg p-4">
-        <div className="flex items-center mb-3">
-          <Info className="h-5 w-5 text-gray-400" />
-          <h3 className="text-white font-medium ml-2">Content Statistics</h3>
-        </div>
-        <div className="grid grid-cols-3 gap-4 text-sm">
-          <div>
-            <span className="text-gray-400">Lines:</span>
-            <span className="text-white ml-2">{textStats.lines}</span>
-          </div>
-          <div>
-            <span className="text-gray-400">Words:</span>
-            <span className="text-white ml-2">{textStats.words}</span>
-          </div>
-          <div>
-            <span className="text-gray-400">Characters:</span>
-            <span className="text-white ml-2">{textStats.characters}</span>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <span className="text-gray-400">Pages:</span>
+              <span className="text-white ml-2">{imageStats.count}</span>
+            </div>
+            <div>
+              <span className="text-gray-400">Total Size:</span>
+              <span className="text-white ml-2">{imageStats.totalSizeMB.toFixed(2)} MB</span>
+            </div>
+            <div>
+              <span className="text-gray-400">Avg Width:</span>
+              <span className="text-white ml-2">{imageStats.avgWidth}px</span>
+            </div>
+            <div>
+              <span className="text-gray-400">Avg Height:</span>
+              <span className="text-white ml-2">{imageStats.avgHeight}px</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Text Content */}
-      <div className="bg-gray-800 rounded-lg">
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <h3 className="text-white font-medium">Extracted Text Content</h3>
-          <div className="flex items-center space-x-2">
-            {isEditing && (
-              <button
-                onClick={handleResetEdit}
-                className="inline-flex items-center px-3 py-1 text-sm font-medium text-gray-400 hover:text-white transition-colors"
+      {/* Image Content */}
+      {showAllImages ? (
+        /* Grid View - Show All Images */
+        <div className="bg-gray-800 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-white font-medium">All Pages</h3>
+            <p className="text-sm text-gray-400">Click any image to view in detail</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {orderedImages.map((image, index) => (
+              <div
+                key={image.id}
+                className="relative group cursor-pointer border-2 rounded-lg overflow-hidden transition-all border-gray-600 hover:border-gray-500"
+                onClick={() => {
+                  setSelectedImageIndex(index);
+                  setShowAllImages(false);
+                }}
               >
-                Reset
-              </button>
-            )}
-            <button
-              onClick={handleEditToggle}
-              className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded transition-colors ${
-                isEditing 
-                  ? 'bg-green-600 hover:bg-green-700 text-white' 
-                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-              }`}
-            >
-              {isEditing ? (
-                <>
-                  <Check className="h-4 w-4 mr-2" />
-                  Save Changes
-                </>
-              ) : (
-                <>
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Edit Text
-                </>
-              )}
-            </button>
+                <img
+                  src={image.base64}
+                  alt={`Page ${image.pageNumber}`}
+                  className="w-full h-48 object-contain bg-white"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all">
+                  <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                    Page {image.pageNumber}
+                  </div>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white text-xs p-2">
+                  <div className="flex justify-between">
+                    <span>{image.dimensions.width} × {image.dimensions.height}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+      ) : (
+        /* Single Image View */
+        <div className="bg-gray-800 rounded-lg">
+          <div className="flex items-center justify-between p-4 border-b border-gray-700">
+            <div className="flex items-center space-x-4">
+              <h3 className="text-white font-medium">
+                Page {currentImage?.pageNumber} of {orderedImages.length}
+              </h3>
+              <div className="text-sm text-gray-400">
+                {currentImage?.dimensions.width} × {currentImage?.dimensions.height}
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handlePreviousImage}
+                disabled={selectedImageIndex === 0}
+                className="p-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="text-sm text-gray-400">
+                {selectedImageIndex + 1} / {orderedImages.length}
+              </span>
+              <button
+                onClick={handleNextImage}
+                disabled={selectedImageIndex === orderedImages.length - 1}
+                className="p-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+              <div className="border-l border-gray-600 pl-2 ml-2 flex items-center space-x-1">
+                <button
+                  onClick={handleZoomOut}
+                  className="p-2 text-gray-400 hover:text-white"
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </button>
+                <span className="text-sm text-gray-400 min-w-[3rem] text-center">
+                  {Math.round(zoom * 100)}%
+                </span>
+                <button
+                  onClick={handleZoomIn}
+                  className="p-2 text-gray-400 hover:text-white"
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={handleResetZoom}
+                  className="p-2 text-gray-400 hover:text-white"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
 
-        <div className="p-4">
-          {isEditing ? (
-            <textarea
-              value={editedText}
-              onChange={handleTextChange}
-              className="w-full h-96 bg-gray-900 text-gray-100 border border-gray-600 rounded p-3 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              placeholder="Edit the extracted text content..."
-            />
-          ) : (
-            <div className="relative">
-              <pre className={`w-full h-96 overflow-auto bg-gray-900 text-gray-100 border border-gray-600 rounded p-3 font-mono text-sm whitespace-pre-wrap ${
-                showRawText ? 'whitespace-pre' : 'whitespace-pre-wrap'
-              }`}>
-                {displayText}
-              </pre>
-              {displayText.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <p className="text-gray-500">No text content extracted</p>
-                </div>
+          <div className="p-4">
+            <div className="relative overflow-auto max-h-96 bg-gray-900 rounded border border-gray-600">
+              {currentImage && (
+                <img
+                  src={currentImage.base64}
+                  alt={`Page ${currentImage.pageNumber}`}
+                  className="max-w-none bg-white"
+                  style={{
+                    transform: `scale(${zoom})`,
+                    transformOrigin: 'top left'
+                  }}
+                />
               )}
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex items-center justify-between pt-4">
@@ -307,17 +319,15 @@ export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
 
         <div className="flex items-center space-x-3">
           <div className="text-sm text-gray-400">
-            {isEditing && editedText !== extractedText && (
-              <span className="text-yellow-400">• Unsaved changes</span>
-            )}
+            {orderedImages.length} image{orderedImages.length !== 1 ? 's' : ''} ready for vision processing
           </div>
           <button
             onClick={handleConfirm}
-            disabled={isLoading}
+            disabled={isLoading || orderedImages.length === 0}
             className="inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Check className="h-4 w-4 mr-2" />
-            Continue to Parsing
+            Continue to Vision Processing
           </button>
         </div>
       </div>
@@ -327,12 +337,12 @@ export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
         <div className="flex items-start">
           <Info className="h-5 w-5 text-blue-400 mt-0.5 mr-3 flex-shrink-0" />
           <div>
-            <p className="text-blue-300 font-medium mb-1">Review Tips</p>
+            <p className="text-blue-300 font-medium mb-1">Vision Processing Tips</p>
             <ul className="text-blue-200 text-sm space-y-1">
-              <li>• Check that character names, stats, and abilities are clearly visible</li>
-              <li>• Look for any garbled text or missing information</li>
-              <li>• Edit any obvious errors before proceeding to AI parsing</li>
-              <li>• The AI will work better with clean, well-formatted text</li>
+              <li>• Ensure all character sheet pages are clearly visible and readable</li>
+              <li>• Check that text and numbers are legible in the images</li>
+              <li>• The AI vision system works best with high-contrast, well-lit images</li>
+              <li>• All images will be sent to GPT-4.1 for intelligent character data extraction</li>
             </ul>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { PDFExtractionResult, CharacterParseResult, PDFImportSession } from '../types';
+import { PDFExtractionResult, CharacterParseResult, PDFImportSession, PDFImageResult, VisionParseResult, ImageData } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
 
@@ -10,9 +10,9 @@ export class PDFImportError extends Error {
 }
 
 /**
- * Upload PDF file and extract text content
+ * Upload PDF file and convert to images
  */
-export async function uploadPDF(file: File, signal?: AbortSignal): Promise<PDFExtractionResult> {
+export async function uploadPDF(file: File, signal?: AbortSignal): Promise<PDFImageResult> {
   const formData = new FormData();
   formData.append('file', file);
 
@@ -31,9 +31,30 @@ export async function uploadPDF(file: File, signal?: AbortSignal): Promise<PDFEx
 }
 
 /**
- * Get extracted PDF text for preview
+ * Legacy function for backward compatibility
  */
-export async function getPDFPreview(sessionId: string): Promise<{ extracted_text: string }> {
+export async function uploadPDFLegacy(file: File, signal?: AbortSignal): Promise<PDFExtractionResult> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/character/import-pdf/upload-legacy`, {
+    method: 'POST',
+    body: formData,
+    signal,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Upload failed' }));
+    throw new PDFImportError(errorData.detail || 'Failed to upload PDF', response.status);
+  }
+
+  return response.json();
+}
+
+/**
+ * Get converted PDF images for preview
+ */
+export async function getPDFPreview(sessionId: string): Promise<{ images: ImageData[] }> {
   const response = await fetch(`${API_BASE_URL}/character/import-pdf/preview/${sessionId}`);
 
   if (!response.ok) {
@@ -45,10 +66,47 @@ export async function getPDFPreview(sessionId: string): Promise<{ extracted_text
 }
 
 /**
- * Parse extracted text using LLM
+ * Legacy function for backward compatibility
  */
-export async function parsePDFContent(sessionId: string, extractedText?: string): Promise<CharacterParseResult> {
+export async function getPDFPreviewLegacy(sessionId: string): Promise<{ extracted_text: string }> {
+  const response = await fetch(`${API_BASE_URL}/character/import-pdf/preview-legacy/${sessionId}`);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Failed to get preview' }));
+    throw new PDFImportError(errorData.detail || 'Failed to get PDF preview', response.status);
+  }
+
+  return response.json();
+}
+
+/**
+ * Parse images using GPT-4.1 vision
+ */
+export async function parsePDFContent(sessionId: string, images?: ImageData[]): Promise<VisionParseResult> {
   const response = await fetch(`${API_BASE_URL}/character/import-pdf/parse`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      session_id: sessionId,
+      images: images,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: 'Parsing failed' }));
+    throw new PDFImportError(errorData.detail || 'Failed to parse PDF content', response.status);
+  }
+
+  return response.json();
+}
+
+/**
+ * Legacy function for backward compatibility
+ */
+export async function parsePDFContentLegacy(sessionId: string, extractedText?: string): Promise<CharacterParseResult> {
+  const response = await fetch(`${API_BASE_URL}/character/import-pdf/parse-legacy`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -71,8 +129,8 @@ export async function parsePDFContent(sessionId: string, extractedText?: string)
  * Generate character files from parsed data
  */
 export async function generateCharacterFiles(
-  sessionId: string, 
-  characterName: string, 
+  sessionId: string,
+  characterName: string,
   parsedData?: Record<string, any>
 ): Promise<{ character_name: string; files_created: string[]; status: string; message: string }> {
   const response = await fetch(`${API_BASE_URL}/character/import-pdf/generate/${sessionId}`, {

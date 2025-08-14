@@ -123,7 +123,63 @@ export interface CharacterCreationResponse {
   message: string;
 }
 
-// PDF Import Types
+// PDF Import Types - Updated for Vision Processing
+export interface PDFImageResult {
+  session_id: string;
+  images: string[]; // Base64 encoded images or file IDs
+  page_count: number;
+  image_format: string;
+  total_size_mb: number;
+}
+
+export interface ImageData {
+  id: string;
+  base64: string;
+  pageNumber: number;
+  dimensions: { width: number; height: number };
+}
+
+export interface VisionParseResult {
+  session_id: string;
+  character_files: Record<string, Record<string, any>>;
+  uncertain_fields: UncertainField[];
+  parsing_confidence: number;
+  validation_results: Record<string, ValidationResult>;
+  images_processed: number;
+}
+
+export interface UncertainField {
+  file_type: string;
+  field_path: string;
+  extracted_value: any;
+  confidence: number;
+  suggestions: string[];
+}
+
+export interface PDFImportSession {
+  session_id: string;
+  status: 'upload' | 'convert' | 'parse' | 'review' | 'finalize';
+  progress: number;
+  images?: ImageData[];
+  parsed_data?: ParsedCharacterData;
+}
+
+export interface ParsedCharacterData {
+  character_files: Record<string, Record<string, any>>;
+  uncertain_fields: UncertainField[];
+  parsing_confidence: number;
+  validation_results: Record<string, ValidationResult>;
+}
+
+export interface VisionParseSession {
+  sessionId: string;
+  status: 'upload' | 'convert' | 'parse' | 'review' | 'finalize';
+  progress: number;
+  images?: ImageData[];
+  parsedData?: ParsedCharacterData;
+}
+
+// Legacy types for backward compatibility
 export interface PDFExtractionResult {
   session_id: string;
   extracted_text: string;
@@ -141,29 +197,6 @@ export interface PDFStructureInfo {
 
 export interface CharacterParseResult {
   session_id: string;
-  character_files: Record<string, Record<string, any>>;
-  uncertain_fields: UncertainField[];
-  parsing_confidence: number;
-  validation_results: Record<string, ValidationResult>;
-}
-
-export interface UncertainField {
-  file_type: string;
-  field_path: string;
-  extracted_value: any;
-  confidence: number;
-  suggestions: string[];
-}
-
-export interface PDFImportSession {
-  session_id: string;
-  status: 'upload' | 'extract' | 'parse' | 'review' | 'finalize';
-  progress: number;
-  extracted_text?: string;
-  parsed_data?: ParsedCharacterData;
-}
-
-export interface ParsedCharacterData {
   character_files: Record<string, Record<string, any>>;
   uncertain_fields: UncertainField[];
   parsing_confidence: number;
