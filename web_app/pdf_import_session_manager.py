@@ -28,7 +28,7 @@ class PDFImportStatus(Enum):
     """PDF import session status states."""
     CREATED = "created"
     UPLOADED = "uploaded"
-    EXTRACTED = "extracted"
+    CONVERTED = "converted"  # Changed from EXTRACTED to CONVERTED for images
     PARSED = "parsed"
     REVIEWED = "reviewed"
     COMPLETED = "completed"
@@ -46,7 +46,11 @@ class PDFImportSession:
     status: PDFImportStatus
     pdf_filename: Optional[str] = None
     pdf_file_path: Optional[str] = None
-    extracted_text: Optional[str] = None
+    converted_images: Optional[List[str]] = None  # Changed from extracted_text to converted_images
+    image_count: Optional[int] = None  # Number of images converted
+    image_format: Optional[str] = None  # Format of converted images (PNG/JPEG)
+    total_image_size_mb: Optional[float] = None  # Total size of all images
+    temp_image_files: Optional[List[str]] = None  # Temporary image file paths for cleanup
     parsed_data: Optional[Dict[str, Dict]] = None
     uncertain_fields: Optional[List[Dict]] = None
     parsing_confidence: Optional[float] = None
@@ -240,26 +244,102 @@ class PDFImportSessionManager:
         logger.info(f"Stored PDF content for session {session_id}: {filename}")
         return str(file_path)
     
-    async def store_extracted_text(self, session_id: str, text: str):
+    async def store_converted_images(
+        self,
+        session_id: str,
+        images: List[str],
+        image_format: str = "PNG",
+        total_size_mb: float = 0.0
+    ):
         """
-        Store extracted PDF text content.
+        Store converted PDF images.
         
         Args:
             session_id: Session identifier
-            text: Extracted text content
+            images: List of base64 encoded images or file IDs
+            image_format: Format of the images (PNG/JPEG)
+            total_size_mb: Total size of all images in MB
         """
         session = await self.get_session(session_id)
         if not session:
             raise ValueError(f"Session not found: {session_id}")
         
-        session.extracted_text = text
-        session.status = PDFImportStatus.EXTRACTED
+        session.converted_images = images
+        session.image_count = len(images)
+        session.image_format = image_format
+        session.total_image_size_mb = total_size_mb
+        session.status = PDFImportStatus.CONVERTED
         session.progress = 30.0
         session.update_activity()
         
         await self._save_session(session_id)
         
-        logger.info(f"Stored extracted text for session {session_id}")
+        logger.info(f"Stored {len(images)} converted images for session {session_id}")
+    
+    async def get_converted_images(self, session_id: str) -> Optional[List[str]]:
+        """
+        Get converted images for a session.
+        
+        Args:
+            session_id: Session identifier
+            
+        Returns:
+            List of base64 encoded images or file IDs, None if not found
+        """
+        session = await self.get_session(session_id)
+        if not session:
+            return None
+        
+        return session.converted_images
+    
+    async def store_image_files(self, session_id: str, image_files: List[str]):
+        """
+        Store temporary image file paths for cleanup.
+        
+        Args:
+            session_id: Session identifier
+            image_files: List of temporary image file paths
+        """
+        session = await self.get_session(session_id)
+        if not session:
+            raise ValueError(f"Session not found: {session_id}")
+        
+        # Store image file paths in session for cleanup
+        if session.temp_image_files is None:
+            session.temp_image_files = []
+        
+        session.temp_image_files.extend(image_files)
+        session.update_activity()
+        
+        await self._save_session(session_id)
+        
+        logger.info(f"Stored {len(image_files)} temporary image file paths for session {session_id}")
+    
+    async def cleanup_image_files(self, session_id: str):
+        """
+        Clean up temporary image files for a session.
+        
+        Args:
+            session_id: Session identifier
+        """
+        # Get session directly from memory to avoid recursion
+        session = self.sessions.get(session_id)
+        if not session:
+            return
+        
+        # Clean up temporary image files if they exist
+        if session.temp_image_files:
+            for image_file in session.temp_image_files:
+                if os.path.exists(image_file):
+                    try:
+                        os.remove(image_file)
+                        logger.debug(f"Removed temporary image file: {image_file}")
+                    except Exception as e:
+                        logger.error(f"Error removing image file {image_file}: {e}")
+            
+            # Clear the list after cleanup
+            session.temp_image_files = []
+            await self._save_session(session_id)
     
     async def store_parsed_data(
         self,
@@ -367,6 +447,9 @@ class PDFImportSessionManager:
         session = self.sessions.get(session_id)
         if not session:
             return
+        
+        # Clean up temporary image files first
+        await self.cleanup_image_files(session_id)
         
         # Remove PDF file if exists
         if session.pdf_file_path and os.path.exists(session.pdf_file_path):

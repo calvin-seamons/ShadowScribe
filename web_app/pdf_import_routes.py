@@ -22,7 +22,7 @@ from models import (
     PDFImportSessionData,
     CharacterCreationResponse
 )
-from pdf_processing import PDFTextExtractor
+
 from llm_character_parser import LLMCharacterParser
 from pdf_import_session_manager import get_session_manager, PDFImportStatus
 from knowledge_base_service import KnowledgeBaseFileManager
@@ -32,28 +32,19 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # Global dependencies - will be set by main.py
-_pdf_extractor: Optional[PDFTextExtractor] = None
 _llm_parser: Optional[LLMCharacterParser] = None
 _file_manager: Optional[KnowledgeBaseFileManager] = None
 
 
 def set_pdf_import_dependencies(
-    pdf_extractor: PDFTextExtractor,
     llm_parser: LLMCharacterParser,
     file_manager: KnowledgeBaseFileManager
 ):
     """Set the PDF import service dependencies."""
-    global _pdf_extractor, _llm_parser, _file_manager
-    _pdf_extractor = pdf_extractor
+    global _llm_parser, _file_manager
     _llm_parser = llm_parser
     _file_manager = file_manager
 
-
-def get_pdf_extractor() -> PDFTextExtractor:
-    """Dependency to get the PDF extractor instance."""
-    if _pdf_extractor is None:
-        raise HTTPException(status_code=500, detail="PDF extractor not initialized")
-    return _pdf_extractor
 
 
 def get_llm_parser() -> LLMCharacterParser:
@@ -73,8 +64,7 @@ def get_file_manager() -> KnowledgeBaseFileManager:
 @router.post("/upload", response_model=PDFUploadResponse)
 async def upload_pdf(
     file: UploadFile = File(...),
-    user_id: str = Form("default_user"),
-    extractor: PDFTextExtractor = Depends(get_pdf_extractor)
+    user_id: str = Form("default_user")
 ) -> PDFUploadResponse:
     """
     Upload PDF file and extract text content.
@@ -112,54 +102,24 @@ async def upload_pdf(
             session_id, PDFImportStatus.UPLOADED, progress=20.0
         )
         
-        # Extract text from PDF
-        try:
-            extraction_result = await extractor.extract_text(pdf_file_path)
+        # TODO: Replace with vision-based PDF processing (Task 2)
+        # Legacy text extraction has been removed
+        # This will be replaced with PDF to image conversion in the next task
+        
+        # For now, mark as uploaded and ready for future vision processing
+        await session_manager.update_session_status(
+            session_id, PDFImportStatus.UPLOADED, progress=100.0
+        )
+        
+        logger.info(f"PDF uploaded successfully for session {session_id} - awaiting vision processing implementation")
+        
+        return PDFUploadResponse(
+            session_id=session_id,
+            status="success",
+            message="PDF uploaded successfully. Vision-based processing will be implemented in the next phase."
+        )
             
-            if not extraction_result.success:
-                await session_manager.update_session_status(
-                    session_id, PDFImportStatus.FAILED, 
-                    error_message=extraction_result.error_message
-                )
-                await session_manager.cleanup_session(session_id)
-                raise HTTPException(
-                    status_code=422,
-                    detail=f"PDF text extraction failed: {extraction_result.error_message}"
-                )
-            
-            # Store extracted text
-            await session_manager.store_extracted_text(session_id, extraction_result.extracted_text)
-            
-            # Update progress
-            await session_manager.update_session_status(
-                session_id, PDFImportStatus.EXTRACTED, progress=40.0
-            )
-            
-            logger.info(f"Successfully extracted text from PDF for session {session_id}")
-            
-            return PDFUploadResponse(
-                session_id=session_id,
-                status="success",
-                message=f"PDF uploaded and text extracted successfully. Confidence: {extraction_result.confidence_score:.2f}"
-            )
-            
-        except HTTPException as e:
-            await session_manager.update_session_status(
-                session_id, PDFImportStatus.FAILED,
-                error_message=f"Text extraction error: {str(e.detail)}"
-            )
-            logger.error(f"Text extraction failed for session {session_id}: {e}")
-            raise e
-        except Exception as e:
-            await session_manager.update_session_status(
-                session_id, PDFImportStatus.FAILED,
-                error_message=f"Text extraction error: {str(e)}"
-            )
-            logger.error(f"Text extraction failed for session {session_id}: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Text extraction failed: {str(e)}"
-            )
+
     
     except HTTPException:
         raise
@@ -501,7 +461,6 @@ async def pdf_import_health_check() -> Dict[str, Any]:
     """
     try:
         health_status = {
-            "pdf_extractor": _pdf_extractor is not None,
             "llm_parser": _llm_parser is not None,
             "file_manager": _file_manager is not None,
             "session_manager": True  # Always available as it's a singleton

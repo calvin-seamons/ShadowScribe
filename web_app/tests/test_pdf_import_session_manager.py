@@ -235,18 +235,94 @@ class TestPDFImportSessionManager:
         await session_manager.shutdown()
     
     @pytest.mark.asyncio
-    async def test_store_extracted_text(self, session_manager):
-        """Test storing extracted text."""
+    async def test_store_converted_images(self, session_manager):
+        """Test storing converted images."""
         user_id = "test-user-123"
-        extracted_text = "Character Name: Test Fighter\nClass: Fighter\nLevel: 5"
+        converted_images = [
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAGA4849a6wAAAABJRU5ErkJggg=="
+        ]
+        image_format = "PNG"
+        total_size_mb = 0.5
         
         session_id = await session_manager.create_session(user_id)
-        await session_manager.store_extracted_text(session_id, extracted_text)
+        await session_manager.store_converted_images(
+            session_id, converted_images, image_format, total_size_mb
+        )
         
         session = await session_manager.get_session(session_id)
-        assert session.extracted_text == extracted_text
-        assert session.status == PDFImportStatus.EXTRACTED
+        assert session.converted_images == converted_images
+        assert session.image_count == 2
+        assert session.image_format == image_format
+        assert session.total_image_size_mb == total_size_mb
+        assert session.status == PDFImportStatus.CONVERTED
         assert session.progress == 30.0
+        
+        await session_manager.shutdown()
+    
+    @pytest.mark.asyncio
+    async def test_get_converted_images(self, session_manager):
+        """Test retrieving converted images."""
+        user_id = "test-user-123"
+        converted_images = [
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        ]
+        
+        session_id = await session_manager.create_session(user_id)
+        await session_manager.store_converted_images(session_id, converted_images)
+        
+        # Test retrieving images
+        retrieved_images = await session_manager.get_converted_images(session_id)
+        assert retrieved_images == converted_images
+        
+        # Test non-existent session
+        non_existent_images = await session_manager.get_converted_images("non-existent")
+        assert non_existent_images is None
+        
+        await session_manager.shutdown()
+    
+    @pytest.mark.asyncio
+    async def test_store_and_cleanup_image_files(self, session_manager, temp_dir):
+        """Test storing and cleaning up temporary image files."""
+        import tempfile
+        
+        user_id = "test-user-123"
+        
+        # Create temporary image files
+        temp_files = []
+        for i in range(2):
+            temp_file = tempfile.NamedTemporaryFile(
+                suffix=f"_page_{i}.png", 
+                dir=temp_dir, 
+                delete=False
+            )
+            temp_file.write(b"fake image data")
+            temp_file.close()
+            temp_files.append(temp_file.name)
+        
+        session_id = await session_manager.create_session(user_id)
+        
+        # Store image file paths
+        await session_manager.store_image_files(session_id, temp_files)
+        
+        # Verify files exist
+        for temp_file in temp_files:
+            assert os.path.exists(temp_file)
+        
+        # Verify session has the file paths
+        session = await session_manager.get_session(session_id)
+        assert session.temp_image_files == temp_files
+        
+        # Clean up image files
+        await session_manager.cleanup_image_files(session_id)
+        
+        # Verify files are removed
+        for temp_file in temp_files:
+            assert not os.path.exists(temp_file)
+        
+        # Verify session list is cleared
+        session = await session_manager.get_session(session_id)
+        assert session.temp_image_files == []
         
         await session_manager.shutdown()
     
@@ -342,6 +418,51 @@ class TestPDFImportSessionManager:
         assert session_data['session_id'] == session_id
         assert session_data['user_id'] == user_id
         assert session_data['status'] == "created"
+        
+        await session_manager.shutdown()
+    
+    @pytest.mark.asyncio
+    async def test_cleanup_session_with_images(self, session_manager, sample_pdf_content, temp_dir):
+        """Test cleaning up a session with both PDF and image files."""
+        import tempfile
+        
+        user_id = "test-user-123"
+        filename = "test_character.pdf"
+        
+        # Create temporary image files
+        temp_files = []
+        for i in range(2):
+            temp_file = tempfile.NamedTemporaryFile(
+                suffix=f"_page_{i}.png", 
+                dir=temp_dir, 
+                delete=False
+            )
+            temp_file.write(b"fake image data")
+            temp_file.close()
+            temp_files.append(temp_file.name)
+        
+        session_id = await session_manager.create_session(user_id)
+        
+        # Store PDF and image files
+        pdf_path = await session_manager.store_pdf_content(
+            session_id, sample_pdf_content, filename
+        )
+        await session_manager.store_image_files(session_id, temp_files)
+        
+        # Verify all files exist
+        assert os.path.exists(pdf_path)
+        for temp_file in temp_files:
+            assert os.path.exists(temp_file)
+        assert session_id in session_manager.sessions
+        
+        # Clean up session
+        await session_manager.cleanup_session(session_id)
+        
+        # Verify all cleanup
+        assert not os.path.exists(pdf_path)
+        for temp_file in temp_files:
+            assert not os.path.exists(temp_file)
+        assert session_id not in session_manager.sessions
         
         await session_manager.shutdown()
     
@@ -471,11 +592,12 @@ class TestPDFImportSessionManager:
     async def test_session_persistence(self, temp_dir):
         """Test that sessions persist across manager restarts."""
         user_id = "test-user-123"
+        converted_images = ["data:image/png;base64,test_image_data"]
         
         # Create first manager and session
         manager1 = PDFImportSessionManager(temp_storage_path=temp_dir)
         session_id = await manager1.create_session(user_id)
-        await manager1.store_extracted_text(session_id, "Test content")
+        await manager1.store_converted_images(session_id, converted_images, "PNG", 0.1)
         await manager1.shutdown()
         
         # Create second manager (should load existing sessions)
@@ -485,8 +607,11 @@ class TestPDFImportSessionManager:
         session = await manager2.get_session(session_id)
         assert session is not None
         assert session.user_id == user_id
-        assert session.extracted_text == "Test content"
-        assert session.status == PDFImportStatus.EXTRACTED
+        assert session.converted_images == converted_images
+        assert session.image_count == 1
+        assert session.image_format == "PNG"
+        assert session.total_image_size_mb == 0.1
+        assert session.status == PDFImportStatus.CONVERTED
         
         await manager2.shutdown()
 
@@ -525,6 +650,143 @@ class TestGlobalSessionManager:
         await manager.shutdown()
 
 
+class TestImageBasedFunctionality:
+    """Test image-specific functionality."""
+    
+    @pytest.mark.asyncio
+    async def test_complete_image_workflow(self, session_manager, sample_pdf_content, temp_dir):
+        """Test complete workflow from PDF upload to image conversion and cleanup."""
+        import tempfile
+        
+        user_id = "test-user-123"
+        filename = "test_character.pdf"
+        
+        # Step 1: Create session and upload PDF
+        session_id = await session_manager.create_session(user_id)
+        pdf_path = await session_manager.store_pdf_content(
+            session_id, sample_pdf_content, filename
+        )
+        
+        # Step 2: Store converted images
+        converted_images = [
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAGA4849a6wAAAABJRU5ErkJggg=="
+        ]
+        await session_manager.store_converted_images(
+            session_id, converted_images, "PNG", 0.5
+        )
+        
+        # Step 3: Store temporary image files
+        temp_files = []
+        for i in range(2):
+            temp_file = tempfile.NamedTemporaryFile(
+                suffix=f"_page_{i}.png", 
+                dir=temp_dir, 
+                delete=False
+            )
+            temp_file.write(b"fake image data")
+            temp_file.close()
+            temp_files.append(temp_file.name)
+        
+        await session_manager.store_image_files(session_id, temp_files)
+        
+        # Step 4: Verify session state
+        session = await session_manager.get_session(session_id)
+        assert session.status == PDFImportStatus.CONVERTED
+        assert session.converted_images == converted_images
+        assert session.image_count == 2
+        assert session.image_format == "PNG"
+        assert session.total_image_size_mb == 0.5
+        assert session.temp_image_files == temp_files
+        
+        # Step 5: Retrieve images
+        retrieved_images = await session_manager.get_converted_images(session_id)
+        assert retrieved_images == converted_images
+        
+        # Step 6: Complete cleanup
+        await session_manager.cleanup_session(session_id)
+        
+        # Verify everything is cleaned up
+        assert not os.path.exists(pdf_path)
+        for temp_file in temp_files:
+            assert not os.path.exists(temp_file)
+        assert session_id not in session_manager.sessions
+        
+        await session_manager.shutdown()
+    
+    @pytest.mark.asyncio
+    async def test_empty_image_list_handling(self, session_manager):
+        """Test handling of empty image lists."""
+        user_id = "test-user-123"
+        
+        session_id = await session_manager.create_session(user_id)
+        
+        # Store empty image list
+        await session_manager.store_converted_images(session_id, [], "PNG", 0.0)
+        
+        session = await session_manager.get_session(session_id)
+        assert session.converted_images == []
+        assert session.image_count == 0
+        assert session.image_format == "PNG"
+        assert session.total_image_size_mb == 0.0
+        
+        # Retrieve empty images
+        retrieved_images = await session_manager.get_converted_images(session_id)
+        assert retrieved_images == []
+        
+        await session_manager.shutdown()
+    
+    @pytest.mark.asyncio
+    async def test_large_image_list_handling(self, session_manager):
+        """Test handling of large image lists."""
+        user_id = "test-user-123"
+        
+        session_id = await session_manager.create_session(user_id)
+        
+        # Create a large list of images (simulate multi-page PDF)
+        large_image_list = [
+            f"data:image/png;base64,page_{i}_data" for i in range(50)
+        ]
+        
+        await session_manager.store_converted_images(
+            session_id, large_image_list, "PNG", 25.0
+        )
+        
+        session = await session_manager.get_session(session_id)
+        assert session.converted_images == large_image_list
+        assert session.image_count == 50
+        assert session.total_image_size_mb == 25.0
+        
+        await session_manager.shutdown()
+    
+    @pytest.mark.asyncio
+    async def test_mixed_image_formats(self, session_manager):
+        """Test handling of different image formats."""
+        user_id = "test-user-123"
+        
+        # Test PNG format
+        session_id_png = await session_manager.create_session(user_id)
+        png_images = ["data:image/png;base64,png_data"]
+        await session_manager.store_converted_images(
+            session_id_png, png_images, "PNG", 1.0
+        )
+        
+        session_png = await session_manager.get_session(session_id_png)
+        assert session_png.image_format == "PNG"
+        
+        # Test JPEG format
+        session_id_jpeg = await session_manager.create_session(user_id)
+        jpeg_images = ["data:image/jpeg;base64,jpeg_data"]
+        await session_manager.store_converted_images(
+            session_id_jpeg, jpeg_images, "JPEG", 0.8
+        )
+        
+        session_jpeg = await session_manager.get_session(session_id_jpeg)
+        assert session_jpeg.image_format == "JPEG"
+        
+        await session_manager.shutdown()
+
+
 class TestErrorHandling:
     """Test error handling scenarios."""
     
@@ -540,8 +802,8 @@ class TestErrorHandling:
             )
         
         with pytest.raises(ValueError, match="Session not found"):
-            await session_manager.store_extracted_text(
-                invalid_session_id, "text"
+            await session_manager.store_converted_images(
+                invalid_session_id, ["image_data"]
             )
         
         with pytest.raises(ValueError, match="Session not found"):

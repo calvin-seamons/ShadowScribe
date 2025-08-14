@@ -16,7 +16,6 @@ from fastapi import FastAPI
 import io
 
 from pdf_import_routes import router, set_pdf_import_dependencies
-from pdf_processing import PDFTextExtractor, PDFExtractionResult, PDFStructureInfo, PDFStructureType, TextQuality
 from llm_character_parser import LLMCharacterParser, CharacterParseResult, UncertainField
 from knowledge_base_service import KnowledgeBaseFileManager
 from pdf_import_session_manager import PDFImportSessionManager, PDFImportStatus
@@ -36,32 +35,7 @@ def client(app):
     return TestClient(app)
 
 
-@pytest.fixture
-def mock_pdf_extractor():
-    """Mock PDF text extractor."""
-    extractor = Mock(spec=PDFTextExtractor)
-    
-    # Mock successful extraction
-    structure_info = PDFStructureInfo(
-        has_form_fields=True,
-        has_tables=False,
-        detected_format=PDFStructureType.DND_BEYOND,
-        text_quality=TextQuality.HIGH,
-        page_count=2,
-        has_images=False
-    )
-    
-    extraction_result = PDFExtractionResult(
-        success=True,
-        extracted_text="Character Name: Test Character\nClass: Fighter\nLevel: 5\nRace: Human",
-        structure_info=structure_info,
-        confidence_score=0.85
-    )
-    
-    extractor.extract_text = AsyncMock(return_value=extraction_result)
-    extractor.validate_pdf = AsyncMock(return_value=True)
-    
-    return extractor
+# PDF extractor removed - vision-based processing will be implemented in future tasks
 
 
 @pytest.fixture
@@ -162,9 +136,9 @@ def mock_session_manager():
 
 
 @pytest.fixture
-def setup_dependencies(mock_pdf_extractor, mock_llm_parser, mock_file_manager):
+def setup_dependencies(mock_llm_parser, mock_file_manager):
     """Setup PDF import dependencies."""
-    set_pdf_import_dependencies(mock_pdf_extractor, mock_llm_parser, mock_file_manager)
+    set_pdf_import_dependencies(mock_llm_parser, mock_file_manager)
 
 
 class TestPDFUpload:
@@ -204,26 +178,17 @@ class TestPDFUpload:
         
         assert response.status_code == 422  # Validation error
     
-    def test_upload_extraction_failure(self, client, setup_dependencies, mock_session_manager, mock_pdf_extractor):
-        """Test upload with PDF extraction failure."""
-        # Mock extraction failure
-        failed_result = PDFExtractionResult(
-            success=False,
-            extracted_text="",
-            structure_info=Mock(),
-            confidence_score=0.0,
-            error_message="Could not extract text from PDF"
-        )
-        mock_pdf_extractor.extract_text.return_value = failed_result
-        
+    def test_upload_extraction_failure(self, client, setup_dependencies, mock_session_manager):
+        """Test upload with PDF extraction failure - legacy test, will be updated for vision processing."""
+        # This test will be updated when vision-based processing is implemented
         pdf_content = b"%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n>>\nendobj\nxref\n0 1\n0000000000 65535 f \ntrailer\n<<\n/Size 1\n/Root 1 0 R\n>>\nstartxref\n9\n%%EOF"
         files = {"file": ("test_character.pdf", io.BytesIO(pdf_content), "application/pdf")}
         data = {"user_id": "test-user"}
         
         response = client.post("/api/character/import-pdf/upload", files=files, data=data)
         
-        assert response.status_code == 422
-        assert "PDF text extraction failed" in response.json()["detail"]
+        # Currently returns success as text extraction has been removed
+        assert response.status_code == 200
 
 
 class TestPDFPreview:
@@ -465,21 +430,20 @@ class TestHealthCheck:
         result = response.json()
         assert result["status"] == "healthy"
         assert "services" in result
-        assert result["services"]["pdf_extractor"] is True
         assert result["services"]["llm_parser"] is True
         assert result["services"]["file_manager"] is True
     
     def test_health_check_degraded(self, client, mock_session_manager):
         """Test health check when some services are missing."""
         # Reset dependencies to simulate missing services
-        set_pdf_import_dependencies(None, None, None)
+        set_pdf_import_dependencies(None, None)
         
         response = client.get("/api/character/import-pdf/health")
         
         assert response.status_code == 200
         result = response.json()
         assert result["status"] == "degraded"
-        assert result["services"]["pdf_extractor"] is False
+        assert result["services"]["llm_parser"] is False
 
 
 class TestEndToEndWorkflow:
@@ -549,27 +513,17 @@ class TestEndToEndWorkflow:
         cleanup_response = client.delete(f"/api/character/import-pdf/cleanup/{session_id}")
         assert cleanup_response.status_code == 200
     
-    def test_workflow_with_errors(self, client, setup_dependencies, mock_session_manager, mock_pdf_extractor):
-        """Test workflow handling when errors occur."""
+    def test_workflow_with_errors(self, client, setup_dependencies, mock_session_manager):
+        """Test workflow handling when errors occur - legacy test, will be updated for vision processing."""
         
-        # Mock extraction failure
-        failed_result = PDFExtractionResult(
-            success=False,
-            extracted_text="",
-            structure_info=Mock(),
-            confidence_score=0.0,
-            error_message="Extraction failed"
-        )
-        mock_pdf_extractor.extract_text.return_value = failed_result
-        
-        # Upload should fail at extraction step
+        # This test will be updated when vision-based processing is implemented
         pdf_content = b"%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n>>\nendobj\nxref\n0 1\n0000000000 65535 f \ntrailer\n<<\n/Size 1\n/Root 1 0 R\n>>\nstartxref\n9\n%%EOF"
         files = {"file": ("test_character.pdf", io.BytesIO(pdf_content), "application/pdf")}
         data = {"user_id": "test-user"}
         
         upload_response = client.post("/api/character/import-pdf/upload", files=files, data=data)
-        assert upload_response.status_code == 422
-        assert "PDF text extraction failed" in upload_response.json()["detail"]
+        # Currently returns success as text extraction has been removed
+        assert upload_response.status_code == 200
 
 
 if __name__ == "__main__":

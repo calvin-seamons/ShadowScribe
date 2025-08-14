@@ -260,6 +260,15 @@ class CharacterParseResult(BaseModel):
     validation_results: Dict[str, ValidationResult]
 
 
+class PDFImageResult(BaseModel):
+    """Result of PDF to image conversion."""
+    session_id: str
+    images: List[str]  # Base64 encoded images or file IDs
+    page_count: int
+    image_format: str
+    total_size_mb: float
+
+
 class PDFImportSessionData(BaseModel):
     """PDF import session data for API responses."""
     session_id: str
@@ -268,7 +277,10 @@ class PDFImportSessionData(BaseModel):
     last_activity: str
     status: str
     pdf_filename: Optional[str] = None
-    extracted_text: Optional[str] = None
+    converted_images: Optional[List[str]] = None  # Changed from extracted_text
+    image_count: Optional[int] = None
+    image_format: Optional[str] = None
+    total_image_size_mb: Optional[float] = None
     parsed_data: Optional[Dict[str, Dict]] = None
     uncertain_fields: Optional[List[UncertainField]] = None
     parsing_confidence: Optional[float] = None
