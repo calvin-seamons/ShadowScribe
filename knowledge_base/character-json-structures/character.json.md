@@ -9,7 +9,6 @@
       "class_name": 0
     },
     "total_level": 0,
-    "experience_points": 0,
     "alignment": "",
     "background": "",
     "lifestyle": ""
@@ -35,12 +34,9 @@
   },
   "combat_stats": {
     "max_hp": 0,
-    "current_hp": 0,
-    "temp_hp": 0,
     "armor_class": 0,
     "initiative_bonus": 0,
     "speed": 0,
-    "inspiration": false,
     "hit_dice": {
       // Dynamic for multiclass
       "class_name": "XdY"
@@ -49,15 +45,13 @@
   "proficiencies": [
     {
       "type": "", // "armor", "weapon", "tool", "language", "skill"
-      "name": "",
-      "source": "" // Optional: where it came from
+      "name": ""
     }
   ],
   "damage_modifiers": [
     {
       "damage_type": "",
-      "modifier_type": "", // "resistance", "immunity", "vulnerability"
-      "source": ""
+      "modifier_type": "" // "resistance", "immunity", "vulnerability"
     }
   ],
   "passive_scores": {

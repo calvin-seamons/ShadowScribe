@@ -498,14 +498,16 @@ LOOK FOR in the character sheet images:
 - Race and class information (often in header sections)
 - Character level (total level, may be sum of multiclass levels)
 - Ability scores (STR, DEX, CON, INT, WIS, CHA) - typically 6 numbers between 8-20
-- Combat stats: HP (max/current), AC, initiative, speed
+- Combat stats: HP (max only), AC, initiative, speed
 - Alignment (Lawful Good, Chaotic Evil, etc.)
 - Background information
 - Physical characteristics (age, height, weight, etc.)
 
+EXCLUDE: Do not extract experience points, current HP, temporary HP, or inspiration.
+
 VISUAL CUES to watch for:
 - Ability score boxes or circles with numbers
-- HP tracking areas (often with current/max)
+- HP tracking areas (focus only on max HP)
 - AC values (usually prominent)
 - Character level indicators
 - Class/race selection areas
@@ -570,7 +572,6 @@ For each spell found, extract as much detail as possible:
 - Concentration: Whether spell requires concentration (look for 'C' or 'Concentration')
 - Ritual: Whether spell can be cast as ritual (look for 'R' or 'Ritual')
 - Description: Brief description of what the spell does (if visible)
-- Source: Source book (PHB, XGE, etc.) if indicated
 
 AI SPELL KNOWLEDGE:
 If spell details are not fully visible on the character sheet, use your knowledge of D&D 5e spells to fill in standard details for common spells like:
@@ -588,6 +589,8 @@ VISUAL CUES to watch for:
 - V/S/M component indicators next to spell names
 - Concentration markers (C) or duration text
 - Ritual markers (R) next to applicable spells
+
+EXCLUDE: Do not extract current spell slots, only maximum spell slots for each level.
 """,
             
             "feats_and_traits": """
@@ -598,6 +601,8 @@ LOOK FOR in the character sheet images:
 - Passive abilities and resistances
 - Subclass/archetype features
 - Special abilities from background or other sources
+
+EXCLUDE: Do not extract source books or references (like "PHB-2024" or page numbers).
 
 VISUAL CUES to watch for:
 - Feature descriptions and mechanics text
@@ -631,7 +636,6 @@ LOOK FOR in the character sheet images:
 - Equipment lists and inventory sections
 - Currency amounts (GP, SP, CP, etc.)
 - Magic items and their properties
-- Weight calculations and carrying capacity
 - General items, tools, and gear
 - Equipment organization (worn, carried, stored)
 - Weapon attack bonuses, damage, and properties
@@ -639,6 +643,8 @@ LOOK FOR in the character sheet images:
 - Item descriptions and magical effects
 - Attunement indicators (often marked with asterisks or special symbols)
 - Proficiency indicators for weapons and tools
+
+EXCLUDE: Do not extract carrying capacity calculations or weight limits.
 
 ITEM EXTRACTION STRATEGY:
 For WEAPONS & ARMOR (always detailed objects):

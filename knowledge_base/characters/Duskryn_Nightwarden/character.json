@@ -7,7 +7,6 @@
     "warlock_level": 5,
     "paladin_level": 8,
     "total_level": 13,
-    "experience_points": 0,
     "alignment": "Lawful Neutral",
     "background": "Unknown",
     "lifestyle": "Aristocrat",
@@ -37,12 +36,9 @@
   },
   "combat_stats": {
     "max_hp": 129,
-    "current_hp": 129,
-    "temp_hp": 0,
     "armor_class": 20,
     "initiative_bonus": 1,
-    "speed": 25,
-    "inspiration": true
+    "speed": 25
   },
   "proficiencies": [
     {
@@ -105,8 +101,7 @@
   "damage_modifiers": [
     {
       "damage_type": "poison",
-      "modifier_type": "resistance",
-      "source": "racial"
+      "modifier_type": "resistance"
     }
   ],
   "passive_scores": {

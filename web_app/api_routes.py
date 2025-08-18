@@ -93,7 +93,6 @@ async def get_character_summary(engine=Depends(get_engine)):
             class_info=f"{character_data.get('class', 'Unknown')} {character_data.get('level', '?')}",
             race=character_data.get("race", "Unknown"),
             hit_points={
-                "current": character_data.get("current_hp", 0),
                 "max": character_data.get("max_hp", 0)
             },
             armor_class=character_data.get("armor_class", 0),

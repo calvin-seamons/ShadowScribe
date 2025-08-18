@@ -12,16 +12,16 @@
       "spells_known": 0,
       "spells_prepared": 0,
       "spell_slots": {
-        "1st": { "current": 0, "maximum": 0 },
-        "2nd": { "current": 0, "maximum": 0 },
-        "3rd": { "current": 0, "maximum": 0 },
-        "4th": { "current": 0, "maximum": 0 },
-        "5th": { "current": 0, "maximum": 0 },
-        "6th": { "current": 0, "maximum": 0 },
-        "7th": { "current": 0, "maximum": 0 },
-        "8th": { "current": 0, "maximum": 0 },
-        "9th": { "current": 0, "maximum": 0 },
-        "pact": { "level": 0, "current": 0, "maximum": 0 }
+        "1st": { "maximum": 0 },
+        "2nd": { "maximum": 0 },
+        "3rd": { "maximum": 0 },
+        "4th": { "maximum": 0 },
+        "5th": { "maximum": 0 },
+        "6th": { "maximum": 0 },
+        "7th": { "maximum": 0 },
+        "8th": { "maximum": 0 },
+        "9th": { "maximum": 0 },
+        "pact": { "level": 0, "maximum": 0 }
       },
       "spells": {
         "cantrips": [
@@ -40,7 +40,6 @@
             "concentration": false,
             "ritual": false,
             "description": "",
-            "source": "",
             "tags": []
           }
         ],
@@ -58,14 +57,8 @@
   },
   "innate_spellcasting": {
     // For racial or feat-based spells
-    "source": "",
     "ability": "",
     "spell_save_dc": 0,
     "spells": []
-  },
-  "metadata": {
-    "version": "",
-    "last_updated": "",
-    "notes": []
   }
 }

@@ -35,10 +35,5 @@
         "notes": ""
       }
     }
-  },
-  "metadata": {
-    "version": "",
-    "last_updated": "",
-    "notes": []
   }
 }

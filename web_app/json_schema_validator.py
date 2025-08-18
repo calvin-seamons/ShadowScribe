@@ -72,7 +72,6 @@ class JSONSchemaValidator:
                             "subrace": {"type": "string"},
                             "class": {"type": "string", "minLength": 1},
                             "total_level": {"type": "integer", "minimum": 1, "maximum": 20},
-                            "experience_points": {"type": "integer", "minimum": 0},
                             "alignment": {"type": "string"},
                             "background": {"type": "string"},
                             "lifestyle": {"type": "string"},
@@ -107,15 +106,12 @@ class JSONSchemaValidator:
                     },
                     "combat_stats": {
                         "type": "object",
-                        "required": ["max_hp", "current_hp", "armor_class"],
+                        "required": ["max_hp", "armor_class"],
                         "properties": {
                             "max_hp": {"type": "integer", "minimum": 1},
-                            "current_hp": {"type": "integer"},
-                            "temp_hp": {"type": "integer", "minimum": 0},
                             "armor_class": {"type": "integer", "minimum": 1},
                             "initiative_bonus": {"type": "integer"},
-                            "speed": {"type": "integer", "minimum": 0},
-                            "inspiration": {"type": "boolean"}
+                            "speed": {"type": "integer", "minimum": 0}
                         }
                     },
                     "proficiencies": {
@@ -136,8 +132,7 @@ class JSONSchemaValidator:
                             "required": ["damage_type", "modifier_type"],
                             "properties": {
                                 "damage_type": {"type": "string"},
-                                "modifier_type": {"type": "string", "enum": ["resistance", "immunity", "vulnerability"]},
-                                "source": {"type": "string"}
+                                "modifier_type": {"type": "string", "enum": ["resistance", "immunity", "vulnerability"]}
                             }
                         }
                     },
@@ -412,7 +407,6 @@ class JSONSchemaValidator:
                     "subrace": "",
                     "class": "",
                     "total_level": 1,
-                    "experience_points": 0,
                     "alignment": "",
                     "background": "",
                     "lifestyle": "",
@@ -439,12 +433,9 @@ class JSONSchemaValidator:
                 },
                 "combat_stats": {
                     "max_hp": 1,
-                    "current_hp": 1,
-                    "temp_hp": 0,
                     "armor_class": 10,
                     "initiative_bonus": 0,
-                    "speed": 30,
-                    "inspiration": False
+                    "speed": 30
                 },
                 "proficiencies": [],
                 "damage_modifiers": [],
@@ -681,17 +672,6 @@ class JSONSchemaValidator:
                         f"ability_scores.{ability}",
                         f"Ability score {score} is outside valid range (1-30)",
                         "format"
-                    ))
-        
-        # Validate HP consistency
-        if "combat_stats" in content:
-            stats = content["combat_stats"]
-            if "current_hp" in stats and "max_hp" in stats:
-                if stats["current_hp"] > stats["max_hp"]:
-                    errors.append(ValidationError(
-                        "combat_stats.current_hp",
-                        "Current HP cannot exceed maximum HP",
-                        "custom"
                     ))
         
         return errors

@@ -73,16 +73,14 @@ class CharacterHandler:
             "charisma": ["ability_scores.charisma"],
             
             # Combat stats aliases
-            "hp": ["combat_stats.current_hp", "combat_stats.max_hp"],
-            "health": ["combat_stats.current_hp", "combat_stats.max_hp"],
-            "hit_points": ["combat_stats.current_hp", "combat_stats.max_hp"],
+            "hp": ["combat_stats.max_hp"],
+            "health": ["combat_stats.max_hp"],
+            "hit_points": ["combat_stats.max_hp"],
             "max_hp": ["combat_stats.max_hp"],
-            "current_hp": ["combat_stats.current_hp"],
             "ac": ["combat_stats.armor_class"],
             "armor_class": ["combat_stats.armor_class"],
             "speed": ["combat_stats.speed"],
             "initiative": ["combat_stats.initiative_bonus"],
-            "temp_hp": ["combat_stats.temp_hp"],
             "temporary_hp": ["combat_stats.temp_hp"],
             "inspiration": ["combat_stats.inspiration"],
             

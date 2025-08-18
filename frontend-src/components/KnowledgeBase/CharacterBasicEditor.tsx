@@ -5,7 +5,6 @@ import {
   Zap,
   Eye,
   Calculator,
-  Info,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
@@ -26,7 +25,6 @@ interface CharacterData {
     warlock_level?: number;
     paladin_level?: number;
     total_level: number;
-    experience_points: number;
     alignment: string;
     background: string;
     lifestyle: string;
@@ -53,12 +51,9 @@ interface CharacterData {
   };
   combat_stats: {
     max_hp: number;
-    current_hp: number;
-    temp_hp: number;
     armor_class: number;
     initiative_bonus: number;
     speed: number;
-    inspiration: boolean;
   };
   proficiencies: Array<{
     type: 'armor' | 'weapon' | 'tool' | 'language';
@@ -67,7 +62,6 @@ interface CharacterData {
   damage_modifiers?: Array<{
     damage_type: string;
     modifier_type: 'resistance' | 'immunity' | 'vulnerability';
-    source: string;
   }>;
   passive_scores: {
     perception: number;
@@ -215,33 +209,33 @@ export const CharacterBasicEditor: React.FC<CharacterBasicEditorProps> = ({
     );
   };
 
-  const renderCheckbox = (
-    fieldPath: string,
-    label: string,
-    description?: string
-  ) => {
-    const value = fieldPath.split('.').reduce((obj: any, key) => obj?.[key], data);
+  // const renderCheckbox = (
+  //   fieldPath: string,
+  //   label: string,
+  //   description?: string
+  // ) => {
+  //   const value = fieldPath.split('.').reduce((obj: any, key) => obj?.[key], data);
 
-    return (
-      <div className="space-y-2">
-        <label className="flex items-center space-x-3">
-          <input
-            type="checkbox"
-            checked={Boolean(value)}
-            onChange={(e) => updateField(fieldPath, e.target.checked)}
-            className="rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500"
-          />
-          <span className="text-sm font-medium text-white">{label}</span>
-        </label>
-        {description && (
-          <div className="flex items-start space-x-2 text-sm text-gray-400 ml-6">
-            <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <p>{description}</p>
-          </div>
-        )}
-      </div>
-    );
-  };
+  //   return (
+  //     <div className="space-y-2">
+  //       <label className="flex items-center space-x-3">
+  //         <input
+  //           type="checkbox"
+  //           checked={Boolean(value)}
+  //           onChange={(e) => updateField(fieldPath, e.target.checked)}
+  //           className="rounded border-gray-600 bg-gray-700 text-purple-600 focus:ring-purple-500"
+  //         />
+  //         <span className="text-sm font-medium text-white">{label}</span>
+  //       </label>
+  //       {description && (
+  //         <div className="flex items-start space-x-2 text-sm text-gray-400 ml-6">
+  //           <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+  //           <p>{description}</p>
+  //         </div>
+  //       )}
+  //     </div>
+  //   );
+  // };
 
   return (
     <ValidationProvider filename={filename}>
@@ -309,14 +303,6 @@ export const CharacterBasicEditor: React.FC<CharacterBasicEditorProps> = ({
                   required
                   min={1}
                   max={20}
-                />
-                <ValidatedInput
-                  fieldPath="character_base.experience_points"
-                  label="Experience Points"
-                  type="number"
-                  value={data.character_base.experience_points}
-                  onChange={(value) => updateField('character_base.experience_points', value)}
-                  min={0}
                 />
                 <ValidatedSelect
                   fieldPath="character_base.alignment"
@@ -464,23 +450,6 @@ export const CharacterBasicEditor: React.FC<CharacterBasicEditorProps> = ({
                   min={1}
                 />
                 <ValidatedInput
-                  fieldPath="combat_stats.current_hp"
-                  label="Current HP"
-                  type="number"
-                  value={data.combat_stats.current_hp}
-                  onChange={(value) => updateField('combat_stats.current_hp', value)}
-                  required
-                  min={0}
-                />
-                <ValidatedInput
-                  fieldPath="combat_stats.temp_hp"
-                  label="Temporary HP"
-                  type="number"
-                  value={data.combat_stats.temp_hp}
-                  onChange={(value) => updateField('combat_stats.temp_hp', value)}
-                  min={0}
-                />
-                <ValidatedInput
                   fieldPath="combat_stats.armor_class"
                   label="Armor Class"
                   type="number"
@@ -509,7 +478,6 @@ export const CharacterBasicEditor: React.FC<CharacterBasicEditorProps> = ({
                   onChange={(value) => updateField('combat_stats.speed', value)}
                   min={0}
                 />
-                {renderCheckbox('combat_stats.inspiration', 'Has Inspiration', 'Whether the character currently has inspiration')}
               </div>
             )}
 

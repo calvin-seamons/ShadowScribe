@@ -79,10 +79,5 @@
     "player_notes": "",
     "dm_notes": "",
     "campaign_specific": {}
-  },
-  "metadata": {
-    "version": "",
-    "last_updated": "",
-    "notes": []
   }
 }

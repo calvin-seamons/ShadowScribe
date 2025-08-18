@@ -9,7 +9,6 @@
         "features": [
           {
             "name": "",
-            "source": "",
             "level_gained": 0,
             "description": "",
             "action_type": "", // "action", "bonus_action", "reaction", "no_action", "passive"
@@ -38,7 +37,6 @@
       "traits": [
         {
           "name": "",
-          "source": "",
           "description": "",
           "effect": "",
           "passive": false,
@@ -49,7 +47,6 @@
     "feats": [
       {
         "name": "",
-        "source": "",
         "prerequisite": "",
         "description": "",
         "ability_increase": {
@@ -70,10 +67,5 @@
         "effects": []
       }
     ]
-  },
-  "metadata": {
-    "version": "",
-    "last_updated": "",
-    "notes": []
   }
 }

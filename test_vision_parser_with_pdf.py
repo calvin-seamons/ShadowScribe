@@ -175,7 +175,7 @@ async def test_vision_parser_with_pdf():
             
             if "combat_stats" in char_data:
                 combat = char_data["combat_stats"]
-                print(f"  HP: {combat.get('current_hp', '?')}/{combat.get('max_hp', '?')}")
+                print(f"  HP: {combat.get('max_hp', '?')}")
                 print(f"  AC: {combat.get('armor_class', '?')}")
             print()
         

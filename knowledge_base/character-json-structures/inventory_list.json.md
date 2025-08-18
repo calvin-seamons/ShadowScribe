@@ -3,12 +3,6 @@
   "inventory": {
     "total_weight": 0,
     "weight_unit": "lb",
-    "carrying_capacity": {
-      "normal": 0,
-      "encumbered": 0,
-      "heavily_encumbered": 0,
-      "maximum": 0
-    },
     "currency": {
       "cp": 0,
       "sp": 0,
@@ -147,10 +141,5 @@
       }
     ],
     "stored_items": {} // For items in specific containers
-  },
-  "metadata": {
-    "version": "",
-    "last_updated": "",
-    "notes": []
   }
 }

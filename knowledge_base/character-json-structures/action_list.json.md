@@ -51,10 +51,5 @@
       "critical_range": 20,
       "special_conditions": []
     }
-  },
-  "metadata": {
-    "version": "",
-    "last_updated": "",
-    "notes": []
   }
 }
