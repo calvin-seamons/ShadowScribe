@@ -12,9 +12,9 @@ from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass
 from datetime import datetime
 
-from .json_schema_loader import JSONSchemaLoader
-from .json_schema_validator import JSONSchemaValidator, ValidationResult
-from .intelligent_data_mapper import IntelligentDataMapper
+from json_schema_loader import JSONSchemaLoader
+from json_schema_validator import JSONSchemaValidator, ValidationResult
+from intelligent_data_mapper import IntelligentDataMapper
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +94,14 @@ class VisionCharacterParser:
         # Load schemas and templates for the file types we process
         self.schemas = {}
         self.templates = {}
+        
+        # Track fallback usage for monitoring
+        self.repair_stats = {
+            "automatic_repairs": 0,
+            "llm_repairs": 0, 
+            "partial_extractions": 0,
+            "total_failures": 0
+        }
         
         for file_type in self.file_types:
             try:
@@ -301,7 +309,7 @@ class VisionCharacterParser:
             print(f"[PDF Import] Received vision response for {file_type}")
             
             # Parse the vision response
-            parsed_data, uncertainties = self._parse_vision_response(response_content, file_type)
+            parsed_data, uncertainties = await self._parse_vision_response(response_content, file_type)
             
             return parsed_data, uncertainties
             
@@ -351,9 +359,14 @@ class VisionCharacterParser:
         # Use higher token limit for inventory_list due to detailed item structures
         max_tokens = 4000 if "inventory" in prompt.lower() else 2000
         
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            messages=[
+        # Get appropriate parameters for the model
+        token_params = self._get_token_params_for_model(self.model, max_tokens)
+        temperature_params = self._get_temperature_params_for_model(self.model, 0.1)
+        
+        # Combine parameters
+        api_params = {
+            "model": self.model,
+            "messages": [
                 {
                     "role": "system",
                     "content": "You are an expert D&D character sheet vision parser. Analyze character sheet images accurately and indicate uncertainty when information is unclear or missing."
@@ -363,9 +376,11 @@ class VisionCharacterParser:
                     "content": content
                 }
             ],
-            temperature=0.1,
-            max_tokens=max_tokens
-        )
+            **token_params,
+            **temperature_params
+        }
+        
+        response = await self.client.chat.completions.create(**api_params)
         
         return response.choices[0].message.content.strip()
     
@@ -671,7 +686,7 @@ VISUAL CUES to identify:
         
         return instructions.get(file_type, f"Extract relevant {file_type.replace('_', ' ')} data from the character sheet images.")
     
-    def _parse_vision_response(self, content: str, file_type: str) -> Tuple[Dict[str, Any], List[UncertainField]]:
+    async def _parse_vision_response(self, content: str, file_type: str) -> Tuple[Dict[str, Any], List[UncertainField]]:
         """
         Parse the vision API response into structured data and uncertainties.
         
@@ -703,12 +718,21 @@ VISUAL CUES to identify:
             uncertain_fields = []
             for unc in uncertainty_list:
                 if isinstance(unc, dict):
+                    # Clean and validate suggestions to ensure they're all strings
+                    raw_suggestions = unc.get("suggestions", [])
+                    clean_suggestions = []
+                    
+                    if isinstance(raw_suggestions, list):
+                        for suggestion in raw_suggestions:
+                            if suggestion is not None:
+                                clean_suggestions.append(str(suggestion))
+                    
                     uncertain_field = UncertainField(
                         file_type=file_type,
                         field_path=unc.get("field_path", ""),
                         extracted_value=unc.get("extracted_value"),
                         confidence=float(unc.get("confidence", 0.0)),
-                        suggestions=unc.get("suggestions", []),
+                        suggestions=clean_suggestions,
                         reasoning=unc.get("reasoning", "")
                     )
                     uncertain_fields.append(uncertain_field)
@@ -718,6 +742,66 @@ VISUAL CUES to identify:
         except json.JSONDecodeError as e:
             logger.error(f"JSON decode error for vision response {file_type}: {e}")
             logger.error(f"Raw response content: {content[:500]}...")  # Log first 500 chars
+            
+            # Try LLM-assisted JSON repair as fallback
+            if json_content:
+                logger.info("Attempting LLM-assisted JSON repair...")
+                repaired_json = await self._repair_json_with_llm(json_content, file_type)
+                
+                if repaired_json:
+                    try:
+                        response_data = json.loads(repaired_json)
+                        logger.info(f"Successfully parsed LLM-repaired JSON for {file_type}")
+                        
+                        # Extract data and uncertainties from repaired JSON
+                        parsed_data = response_data.get("data", {})
+                        uncertainty_list = response_data.get("uncertainties", [])
+                        
+                        # Convert uncertainty list to UncertainField objects
+                        uncertain_fields = []
+                        for unc in uncertainty_list:
+                            if isinstance(unc, dict):
+                                # Clean and validate suggestions to ensure they're all strings
+                                raw_suggestions = unc.get("suggestions", [])
+                                clean_suggestions = []
+                                
+                                if isinstance(raw_suggestions, list):
+                                    for suggestion in raw_suggestions:
+                                        if suggestion is not None:
+                                            clean_suggestions.append(str(suggestion))
+                                
+                                uncertain_field = UncertainField(
+                                    file_type=file_type,
+                                    field_path=unc.get("field_path", ""),
+                                    extracted_value=unc.get("extracted_value"),
+                                    confidence=float(unc.get("confidence", 0.0)),
+                                    suggestions=clean_suggestions,
+                                    reasoning=unc.get("reasoning", "")
+                                )
+                                uncertain_fields.append(uncertain_field)
+                        
+                        # Add a flag to indicate this was repaired
+                        if isinstance(parsed_data, dict):
+                            parsed_data["_llm_repaired"] = True
+                        
+                        return parsed_data, uncertain_fields
+                        
+                    except json.JSONDecodeError as repair_error:
+                        logger.error(f"LLM repair failed for {file_type}: {repair_error}")
+            
+            # As a last resort, try to extract partial data
+            logger.info("Attempting partial JSON extraction as final fallback...")
+            partial_data = self._extract_partial_json(content)
+            if partial_data:
+                logger.info(f"Extracted partial data for {file_type}: {len(partial_data)} fields")
+                # Wrap in expected structure
+                wrapped_data = {"data": partial_data}
+                if isinstance(partial_data, dict):
+                    partial_data["_partial_extraction"] = True
+                return partial_data, []
+            
+            logger.warning(f"All JSON repair attempts failed for {file_type}")
+            self.repair_stats["total_failures"] += 1
             return {}, []
         except Exception as e:
             logger.error(f"Error parsing vision response for {file_type}: {e}")
@@ -756,11 +840,240 @@ VISUAL CUES to identify:
         
         if brace_count != 0:
             logger.warning(f"Unmatched braces in JSON. Brace count: {brace_count}")
-            return None
+            # Instead of returning None, try to repair the JSON
+            logger.info("Attempting JSON repair for unmatched braces...")
+            
+            # Get the partial JSON (everything from start to end of content)
+            partial_json = content[start_idx:]
+            
+            # Try automatic repair first
+            repaired_json = self._repair_json_automatically(partial_json)
+            if repaired_json:
+                return repaired_json
+            
+            logger.warning("Automatic JSON repair failed, will attempt LLM repair later")
+            # Return the partial JSON for LLM repair in the calling method
+            return partial_json
         
         extracted_json = content[start_idx:end_idx]
         logger.info(f"Extracted JSON length: {len(extracted_json)} characters")
         return extracted_json  
+
+    def _repair_json_automatically(self, json_str: str) -> Optional[str]:
+        """
+        Attempt to automatically repair common JSON formatting issues.
+        
+        Args:
+            json_str: Malformed JSON string
+            
+        Returns:
+            Repaired JSON string or None if repair failed
+        """
+        try:
+            original = json_str.strip()
+            repaired = original
+            
+            logger.info("Attempting automatic JSON repair...")
+            
+            # 1. Remove trailing commas
+            repaired = re.sub(r',(\s*[}\]])', r'\1', repaired)
+            
+            # 2. Fix unmatched braces by counting and adding missing closing braces
+            open_braces = repaired.count('{')
+            close_braces = repaired.count('}')
+            open_brackets = repaired.count('[')
+            close_brackets = repaired.count(']')
+            
+            # Add missing closing braces
+            if open_braces > close_braces:
+                missing_braces = open_braces - close_braces
+                repaired += '}' * missing_braces
+                logger.info(f"Added {missing_braces} missing closing braces")
+            
+            # Add missing closing brackets
+            if open_brackets > close_brackets:
+                missing_brackets = open_brackets - close_brackets
+                repaired += ']' * missing_brackets
+                logger.info(f"Added {missing_brackets} missing closing brackets")
+            
+            # 3. Fix common quote issues
+            repaired = re.sub(r'([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:', r'\1"\2":', repaired)
+            
+            # 4. Fix truncated strings at the end
+            if repaired.endswith('"'):
+                # If it ends with a quote but is incomplete, try to close the structure
+                if repaired.count('"') % 2 == 1:
+                    repaired = repaired[:-1]  # Remove the hanging quote
+            
+            # 5. Try to parse the repaired JSON
+            json.loads(repaired)
+            logger.info("Automatic JSON repair successful")
+            self.repair_stats["automatic_repairs"] += 1
+            return repaired
+            
+        except json.JSONDecodeError as e:
+            logger.warning(f"Automatic JSON repair failed: {e}")
+            return None
+        except Exception as e:
+            logger.warning(f"Error during automatic JSON repair: {e}")
+            return None
+
+    async def _repair_json_with_llm(self, broken_json: str, file_type: str) -> Optional[str]:
+        """
+        Use GPT-5-mini to repair malformed JSON.
+        
+        Args:
+            broken_json: The malformed JSON string
+            file_type: Type of file being parsed for context
+            
+        Returns:
+            Repaired JSON string or None if repair failed
+        """
+        try:
+            logger.info("Attempting LLM-assisted JSON repair with gpt-5-mini...")
+            
+            repair_prompt = f"""You are a JSON repair specialist. The following JSON is malformed and needs to be fixed. 
+
+BROKEN JSON:
+```
+{broken_json}
+```
+
+Your task:
+1. Fix any syntax errors (missing braces, brackets, quotes, commas)
+2. Complete any truncated structures
+3. Ensure the JSON is valid and parseable
+4. Preserve all existing data - do not add new fields or change values
+5. Return ONLY the repaired JSON, no explanations
+
+The JSON should represent a D&D character {file_type} structure.
+
+REPAIRED JSON:"""
+
+            # Use gpt-5-mini for repair (cheaper and faster for this simple task)
+            from openai import AsyncOpenAI
+            client = AsyncOpenAI()
+            
+            # Get appropriate parameters for the model
+            repair_model = "gpt-5-mini"
+            token_params = self._get_token_params_for_model(repair_model, 4000)
+            temperature_params = self._get_temperature_params_for_model(repair_model, 0.1)
+            
+            # Combine parameters
+            api_params = {
+                "model": repair_model,
+                "messages": [
+                    {
+                        "role": "system", 
+                        "content": "You are a precise JSON repair tool. Return only valid, repaired JSON with no additional text."
+                    },
+                    {"role": "user", "content": repair_prompt}
+                ],
+                **token_params,
+                **temperature_params
+            }
+            
+            response = await client.chat.completions.create(**api_params)
+            
+            repaired_json = response.choices[0].message.content.strip()
+            
+            # Remove any markdown formatting
+            if "```json" in repaired_json:
+                repaired_json = repaired_json.split("```json")[1].split("```")[0].strip()
+            elif "```" in repaired_json:
+                repaired_json = repaired_json.split("```")[1].split("```")[0].strip()
+            
+            # Validate the repaired JSON
+            json.loads(repaired_json)
+            logger.info("LLM-assisted JSON repair successful")
+            self.repair_stats["llm_repairs"] += 1
+            return repaired_json
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"LLM-repaired JSON is still invalid: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Error during LLM-assisted JSON repair: {e}")
+            return None
+
+    def _extract_partial_json(self, content: str) -> Optional[Dict[str, Any]]:
+        """
+        Extract valid JSON objects from partially malformed content.
+        
+        Args:
+            content: Content that may contain partial JSON
+            
+        Returns:
+            Dictionary with extracted valid JSON portions
+        """
+        try:
+            logger.info("Attempting to extract partial JSON data...")
+            partial_data = {}
+            
+            # Look for complete JSON objects within the content
+            # Pattern: "field_name": { ... }
+            pattern = r'"([^"]+)":\s*(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})'
+            matches = re.findall(pattern, content)
+            
+            for field_name, json_obj in matches:
+                try:
+                    parsed_obj = json.loads(json_obj)
+                    partial_data[field_name] = parsed_obj
+                    logger.info(f"Extracted partial JSON for field: {field_name}")
+                except json.JSONDecodeError:
+                    continue
+            
+            # Also try to extract simple key-value pairs
+            # Pattern: "key": "value" or "key": number
+            simple_pattern = r'"([^"]+)":\s*("([^"]*)"|(-?\d+(?:\.\d+)?)|true|false|null)'
+            simple_matches = re.findall(simple_pattern, content)
+            
+            for match in simple_matches:
+                field_name = match[0]
+                if match[1].startswith('"'):  # String value
+                    partial_data[field_name] = match[2]
+                elif match[1] in ['true', 'false']:  # Boolean
+                    partial_data[field_name] = match[1] == 'true'
+                elif match[1] == 'null':  # Null
+                    partial_data[field_name] = None
+                else:  # Number
+                    try:
+                        partial_data[field_name] = float(match[3]) if '.' in match[3] else int(match[3])
+                    except ValueError:
+                        continue
+            
+            if partial_data:
+                logger.info(f"Extracted {len(partial_data)} partial data fields")
+                self.repair_stats["partial_extractions"] += 1
+                return partial_data
+            
+            return None
+            
+        except Exception as e:
+            logger.warning(f"Error extracting partial JSON: {e}")
+            return None
+
+    def _get_token_params_for_model(self, model: str, max_tokens: int) -> Dict[str, int]:
+        """Get the appropriate token parameter name and value based on model."""
+        # GPT-5 models use max_completion_tokens
+        if (model.startswith("gpt-5") or 
+            model.startswith("o1") or 
+            model.startswith("o3")):
+            return {"max_completion_tokens": max_tokens}
+        else:
+            # Older models (GPT-4, GPT-4o, etc.) use max_tokens
+            return {"max_tokens": max_tokens}
+
+    def _get_temperature_params_for_model(self, model: str, desired_temperature: float = 0.1) -> Dict[str, float]:
+        """Get the appropriate temperature parameter based on model support."""
+        # GPT-5, o1, and o3 models have a fixed temperature, so we don't send the parameter
+        if (model.startswith("gpt-5") or
+            model.startswith("o1") or
+            model.startswith("o3")):
+            return {}
+        
+        # All other models support a custom temperature
+        return {"temperature": desired_temperature}
   
     async def _apply_schema_corrections(self, data: Dict[str, Any], file_type: str, 
                                       validation_result: ValidationResult) -> Dict[str, Any]:
@@ -959,3 +1272,30 @@ VISUAL CUES to identify:
         final_confidence = max(0.0, base_confidence - validation_penalty - uncertainty_penalty)
         
         return min(1.0, final_confidence)
+
+    def get_repair_statistics(self) -> Dict[str, int]:
+        """
+        Get statistics about JSON repair operations.
+        
+        Returns:
+            Dictionary with repair statistics
+        """
+        total_attempts = sum(self.repair_stats.values())
+        stats = self.repair_stats.copy()
+        stats["total_repair_attempts"] = total_attempts
+        
+        if total_attempts > 0:
+            stats["success_rate"] = (total_attempts - stats["total_failures"]) / total_attempts
+        else:
+            stats["success_rate"] = 1.0
+            
+        return stats
+
+    def reset_repair_statistics(self):
+        """Reset repair statistics counters."""
+        self.repair_stats = {
+            "automatic_repairs": 0,
+            "llm_repairs": 0, 
+            "partial_extractions": 0,
+            "total_failures": 0
+        }

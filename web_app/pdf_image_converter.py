@@ -66,18 +66,22 @@ class PDFImageConverter:
         """
         try:
             # Validate PDF file
+            logger.info(f"Validating PDF file: {file_path}")
             if not await self.validate_pdf(file_path):
                 raise ValueError("Invalid PDF file")
             
             logger.info(f"Converting PDF to images: {file_path}")
             
             # Convert PDF pages to PIL Images
+            logger.info(f"Starting pdf2image conversion with DPI={self.dpi}")
             pil_images = pdf2image.convert_from_path(
                 file_path,
                 dpi=self.dpi,
                 fmt='RGB',
                 thread_count=1  # Conservative threading for stability
             )
+            
+            logger.info(f"pdf2image returned {len(pil_images) if pil_images else 0} images")
             
             if not pil_images:
                 raise ValueError("PDF contains no convertible pages")

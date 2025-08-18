@@ -14,7 +14,7 @@ export const ChatContainer: React.FC = () => {
   const responseReceivedRef = useRef(false);
 
   const { sessionId } = useSessionStore();
-  const { sendMessage, messageQueue, lastMessage, messageCount, connectionStatus } = useWebSocket(sessionId);
+  const { sendMessage, messageQueue, connectionStatus } = useWebSocket(sessionId);
   const { currentProgress, setCurrentProgress, setActiveSources, setLastUsedSources } = useProgress();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastProcessedIdRef = useRef(0);

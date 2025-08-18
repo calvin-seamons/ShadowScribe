@@ -20,12 +20,11 @@ interface PDFContentPreviewProps {
   images: ImageData[];
   onConfirm: (orderedImages: ImageData[]) => void;
   onReject: () => void;
-  onImageReorder?: (newOrder: ImageData[]) => void;
   isLoading?: boolean;
 }
 
 interface ImageQualityIndicator {
-  level: 'high' | 'medium' | 'low';
+  level: 'high' | 'medium' | 'low' | 'none';
   color: string;
   icon: React.ReactNode;
   message: string;
@@ -36,10 +35,9 @@ export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
   images,
   onConfirm,
   onReject,
-  onImageReorder,
   isLoading = false
 }) => {
-  const [orderedImages, setOrderedImages] = useState<ImageData[]>(images);
+  const [orderedImages] = useState<ImageData[]>(images);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [zoom, setZoom] = useState(1);
   const [showAllImages, setShowAllImages] = useState(false);
@@ -76,18 +74,61 @@ export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
           'Images may be blurry or low resolution',
           'Consider using a higher quality PDF if available'
         ]
+      },
+      none: {
+        level: 'none',
+        color: 'text-red-400',
+        icon: <AlertTriangle className="h-5 w-5" />,
+        message: 'No images were generated from the PDF',
+        suggestions: [
+          'The PDF may be corrupted or empty',
+          'Try uploading a different PDF file',
+          'Ensure the PDF contains readable content'
+        ]
       }
     };
     
+    // Handle case where no images were generated
+    if (orderedImages.length === 0) {
+      return indicators['none'];
+    }
+    
     // Simple quality assessment based on image dimensions
-    const avgDimensions = orderedImages.reduce((sum, img) => sum + (img.dimensions.width * img.dimensions.height), 0) / orderedImages.length;
+    // Add safety check for malformed image objects
+    const validImages = orderedImages.filter(img => img && img.dimensions && img.dimensions.width && img.dimensions.height);
+    if (validImages.length === 0) {
+      return indicators['none'];
+    }
+    
+    const avgDimensions = validImages.reduce((sum, img) => sum + (img.dimensions.width * img.dimensions.height), 0) / validImages.length;
     const quality = avgDimensions > 1000000 ? 'high' : avgDimensions > 500000 ? 'medium' : 'low';
     return indicators[quality];
   }, [orderedImages]);
 
   // Image statistics
   const imageStats = useMemo(() => {
-    const totalSize = orderedImages.reduce((total, image) => {
+    if (orderedImages.length === 0) {
+      return { 
+        count: 0, 
+        totalSizeMB: 0,
+        avgWidth: 0,
+        avgHeight: 0
+      };
+    }
+    
+    // Filter out malformed images for safe calculations
+    const validImages = orderedImages.filter(img => img && img.dimensions && img.dimensions.width && img.dimensions.height && img.base64);
+    
+    if (validImages.length === 0) {
+      return { 
+        count: orderedImages.length, 
+        totalSizeMB: 0,
+        avgWidth: 0,
+        avgHeight: 0
+      };
+    }
+    
+    const totalSize = validImages.reduce((total, image) => {
       const sizeBytes = (image.base64.length * 3) / 4;
       return total + sizeBytes;
     }, 0);
@@ -95,8 +136,8 @@ export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
     return { 
       count: orderedImages.length, 
       totalSizeMB: totalSize / (1024 * 1024),
-      avgWidth: Math.round(orderedImages.reduce((sum, img) => sum + img.dimensions.width, 0) / orderedImages.length),
-      avgHeight: Math.round(orderedImages.reduce((sum, img) => sum + img.dimensions.height, 0) / orderedImages.length)
+      avgWidth: Math.round(validImages.reduce((sum, img) => sum + img.dimensions.width, 0) / validImages.length),
+      avgHeight: Math.round(validImages.reduce((sum, img) => sum + img.dimensions.height, 0) / validImages.length)
     };
   }, [orderedImages]);
 
@@ -197,7 +238,41 @@ export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
       </div>
 
       {/* Image Content */}
-      {showAllImages ? (
+      {orderedImages.length === 0 ? (
+        /* No Images Message */
+        <div className="bg-gray-800 rounded-lg p-8 text-center">
+          <div className="flex flex-col items-center space-y-4">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center">
+              <AlertTriangle className="h-8 w-8 text-red-400" />
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold text-white mb-2">No Images Generated</h3>
+              <p className="text-gray-400 mb-4">
+                The PDF could not be converted to images. This might happen if:
+              </p>
+              <ul className="text-gray-400 text-left space-y-2 max-w-md">
+                <li>• The PDF file is corrupted or empty</li>
+                <li>• The PDF contains only text without readable content</li>
+                <li>• There was an error during the conversion process</li>
+              </ul>
+            </div>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => window.history.back()}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : showAllImages ? (
         /* Grid View - Show All Images */
         <div className="bg-gray-800 rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
@@ -226,7 +301,7 @@ export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white text-xs p-2">
                   <div className="flex justify-between">
-                    <span>{image.dimensions.width} × {image.dimensions.height}</span>
+                    <span>{image.dimensions?.width || 0} × {image.dimensions?.height || 0}</span>
                   </div>
                 </div>
               </div>
@@ -242,7 +317,7 @@ export const PDFContentPreview: React.FC<PDFContentPreviewProps> = ({
                 Page {currentImage?.pageNumber} of {orderedImages.length}
               </h3>
               <div className="text-sm text-gray-400">
-                {currentImage?.dimensions.width} × {currentImage?.dimensions.height}
+                {currentImage?.dimensions?.width || 0} × {currentImage?.dimensions?.height || 0}
               </div>
             </div>
             <div className="flex items-center space-x-2">

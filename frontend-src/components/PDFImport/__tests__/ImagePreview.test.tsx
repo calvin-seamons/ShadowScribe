@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ImagePreview } from '../ImagePreview';
 import { ImageData } from '../../../types';
@@ -202,7 +202,6 @@ describe('ImagePreview', () => {
     });
 
     it('allows selecting different pages from page order controls', async () => {
-      const user = userEvent.setup();
       renderComponent();
       
       // Find page thumbnails in the page order section

@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 
-from .models import (
+from models import (
     PDFUploadResponse,
     PDFImageResult,
     PDFParseRequest,
@@ -23,10 +23,10 @@ from .models import (
     CharacterCreationResponse
 )
 
-from .vision_character_parser import VisionCharacterParser
-from .pdf_image_converter import PDFImageConverter
-from .pdf_import_session_manager import get_session_manager, PDFImportStatus
-from .knowledge_base_service import KnowledgeBaseFileManager
+from vision_character_parser import VisionCharacterParser
+from pdf_image_converter import PDFImageConverter
+from pdf_import_session_manager import get_session_manager, PDFImportStatus
+from knowledge_base_service import KnowledgeBaseFileManager
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +117,9 @@ async def upload_pdf(
         
         # Convert PDF to images
         try:
+            logger.info(f"Starting PDF to image conversion for session {session_id}")
             conversion_result = await converter.convert_pdf_to_images(pdf_file_path, session_id)
+            logger.info(f"Conversion result: page_count={conversion_result.page_count}, images_count={len(conversion_result.images)}, format={conversion_result.image_format}, size={conversion_result.total_size_mb}MB")
             
             # Store converted images in session
             await session_manager.store_converted_images(
@@ -185,9 +187,51 @@ async def get_pdf_preview(session_id: str) -> Dict[str, Any]:
         if not session.converted_images:
             raise HTTPException(status_code=404, detail="No converted images available")
         
+        # Transform base64 strings into ImageData objects for frontend
+        image_objects = []
+        for i, base64_image in enumerate(session.converted_images):
+            try:
+                # Decode base64 to get image dimensions
+                import base64
+                from PIL import Image
+                import io
+                
+                # Remove data URL prefix if present
+                if base64_image.startswith('data:image'):
+                    base64_data = base64_image.split(',')[1]
+                else:
+                    base64_data = base64_image
+                
+                # Decode and get dimensions
+                image_bytes = base64.b64decode(base64_data)
+                pil_image = Image.open(io.BytesIO(image_bytes))
+                width, height = pil_image.size
+                
+                image_objects.append({
+                    "id": f"{session_id}_page_{i+1}",
+                    "base64": f"data:image/{session.image_format.lower()};base64,{base64_data}",
+                    "pageNumber": i + 1,
+                    "dimensions": {
+                        "width": width,
+                        "height": height
+                    }
+                })
+            except Exception as e:
+                logger.warning(f"Failed to process image {i+1}: {e}")
+                # Fallback with default dimensions
+                image_objects.append({
+                    "id": f"{session_id}_page_{i+1}",
+                    "base64": base64_image if base64_image.startswith('data:') else f"data:image/{session.image_format.lower()};base64,{base64_image}",
+                    "pageNumber": i + 1,
+                    "dimensions": {
+                        "width": 0,
+                        "height": 0
+                    }
+                })
+        
         return {
             "session_id": session_id,
-            "images": session.converted_images,
+            "images": image_objects,
             "image_count": session.image_count,
             "image_format": session.image_format,
             "total_size_mb": session.total_image_size_mb,
