@@ -42,22 +42,7 @@ export interface BackupInfo {
   size: number;
 }
 
-export interface CharacterCreationRequest {
-  character_name: string;
-  race: string;
-  character_class: string;
-  level?: number;
-  background?: string;
-  alignment?: string;
-  ability_scores?: Record<string, number>;
-}
 
-export interface CharacterCreationResponse {
-  character_name: string;
-  files_created: string[];
-  status: string;
-  message: string;
-}
 
 // API Response wrappers
 export interface ApiResponse<T> {
@@ -219,13 +204,7 @@ export async function getSupportedFileTypes(): Promise<Record<string, string>> {
   return response.supported_types;
 }
 
-// Character Creation Functions (Batch Operations)
-export async function createNewCharacter(request: CharacterCreationRequest): Promise<CharacterCreationResponse> {
-  return apiRequest<CharacterCreationResponse>('/character/new', {
-    method: 'POST',
-    body: JSON.stringify(request),
-  });
-}
+
 
 // Backup Management Functions
 export async function listBackups(filename?: string): Promise<BackupInfo[]> {

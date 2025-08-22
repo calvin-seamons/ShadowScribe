@@ -19,13 +19,10 @@ describe('NavigationMenu', () => {
     mockUseNavigationStore.mockReturnValue({
       currentView: 'chat',
       isKnowledgeBaseEditorOpen: false,
-      isPDFImportOpen: false,
       setCurrentView: mockSetCurrentView,
       openKnowledgeBaseEditor: vi.fn(),
       closeKnowledgeBaseEditor: vi.fn(),
       toggleKnowledgeBaseEditor: vi.fn(),
-      openPDFImport: vi.fn(),
-      closePDFImport: vi.fn(),
     });
   });
 
@@ -39,7 +36,6 @@ describe('NavigationMenu', () => {
       
       expect(screen.getByText('Chat')).toBeInTheDocument();
       expect(screen.getByText('Knowledge Base')).toBeInTheDocument();
-      expect(screen.getByText('PDF Import')).toBeInTheDocument();
     });
 
     it('should render navigation section heading', () => {
@@ -53,11 +49,9 @@ describe('NavigationMenu', () => {
       
       const chatButton = screen.getByRole('button', { name: /chat/i });
       const knowledgeBaseButton = screen.getByRole('button', { name: /knowledge base/i });
-      const pdfImportButton = screen.getByRole('button', { name: /pdf import/i });
       
       expect(chatButton).toHaveAttribute('title', 'Chat with ShadowScribe AI');
       expect(knowledgeBaseButton).toHaveAttribute('title', 'Edit character data and files');
-      expect(pdfImportButton).toHaveAttribute('title', 'Import character from PDF');
     });
 
     it('should render proper icons for each navigation item', () => {
@@ -88,13 +82,10 @@ describe('NavigationMenu', () => {
       mockUseNavigationStore.mockReturnValue({
         currentView: 'knowledge-base',
         isKnowledgeBaseEditorOpen: true,
-        isPDFImportOpen: false,
         setCurrentView: mockSetCurrentView,
         openKnowledgeBaseEditor: vi.fn(),
         closeKnowledgeBaseEditor: vi.fn(),
         toggleKnowledgeBaseEditor: vi.fn(),
-        openPDFImport: vi.fn(),
-        closePDFImport: vi.fn(),
       });
 
       renderNavigationMenu();
@@ -107,41 +98,15 @@ describe('NavigationMenu', () => {
       expect(activeIndicator).toBeInTheDocument();
     });
 
-    it('should highlight PDF import when active', () => {
-      mockUseNavigationStore.mockReturnValue({
-        currentView: 'pdf-import',
-        isKnowledgeBaseEditorOpen: false,
-        isPDFImportOpen: true,
-        setCurrentView: mockSetCurrentView,
-        openKnowledgeBaseEditor: vi.fn(),
-        closeKnowledgeBaseEditor: vi.fn(),
-        toggleKnowledgeBaseEditor: vi.fn(),
-        openPDFImport: vi.fn(),
-        closePDFImport: vi.fn(),
-      });
-
-      renderNavigationMenu();
-      
-      const pdfImportButton = screen.getByRole('button', { name: /pdf import/i });
-      expect(pdfImportButton).toHaveClass('bg-purple-600', 'text-white');
-      
-      // Should show active indicator
-      const activeIndicator = pdfImportButton.querySelector('.bg-white.rounded-full');
-      expect(activeIndicator).toBeInTheDocument();
-    });
-
     it('should apply inactive styles to non-active items', () => {
       renderNavigationMenu();
       
       const knowledgeBaseButton = screen.getByRole('button', { name: /knowledge base/i });
-      const pdfImportButton = screen.getByRole('button', { name: /pdf import/i });
       
       expect(knowledgeBaseButton).toHaveClass('text-gray-300', 'hover:bg-gray-700');
-      expect(pdfImportButton).toHaveClass('text-gray-300', 'hover:bg-gray-700');
       
       // Should not show active indicators
       expect(knowledgeBaseButton.querySelector('.bg-white.rounded-full')).not.toBeInTheDocument();
-      expect(pdfImportButton.querySelector('.bg-white.rounded-full')).not.toBeInTheDocument();
     });
   });
 
@@ -150,13 +115,10 @@ describe('NavigationMenu', () => {
       mockUseNavigationStore.mockReturnValue({
         currentView: 'knowledge-base',
         isKnowledgeBaseEditorOpen: true,
-        isPDFImportOpen: false,
         setCurrentView: mockSetCurrentView,
         openKnowledgeBaseEditor: vi.fn(),
         closeKnowledgeBaseEditor: vi.fn(),
         toggleKnowledgeBaseEditor: vi.fn(),
-        openPDFImport: vi.fn(),
-        closePDFImport: vi.fn(),
       });
 
       renderNavigationMenu();
@@ -176,75 +138,29 @@ describe('NavigationMenu', () => {
       expect(mockSetCurrentView).toHaveBeenCalledWith('knowledge-base');
     });
 
-    it('should call setCurrentView when PDF import is clicked', () => {
-      renderNavigationMenu();
-      
-      const pdfImportButton = screen.getByRole('button', { name: /pdf import/i });
-      fireEvent.click(pdfImportButton);
-      
-      expect(mockSetCurrentView).toHaveBeenCalledWith('pdf-import');
-    });
-
     it('should handle multiple rapid clicks gracefully', () => {
       renderNavigationMenu();
       
-      const pdfImportButton = screen.getByRole('button', { name: /pdf import/i });
+      const knowledgeBaseButton = screen.getByRole('button', { name: /knowledge base/i });
       
       // Simulate rapid clicking
-      fireEvent.click(pdfImportButton);
-      fireEvent.click(pdfImportButton);
-      fireEvent.click(pdfImportButton);
+      fireEvent.click(knowledgeBaseButton);
+      fireEvent.click(knowledgeBaseButton);
+      fireEvent.click(knowledgeBaseButton);
       
       expect(mockSetCurrentView).toHaveBeenCalledTimes(3);
-      expect(mockSetCurrentView).toHaveBeenCalledWith('pdf-import');
+      expect(mockSetCurrentView).toHaveBeenCalledWith('knowledge-base');
     });
   });
 
-  describe('PDF Import Integration', () => {
-    it('should include PDF import in navigation items', () => {
-      renderNavigationMenu();
-      
-      const pdfImportButton = screen.getByRole('button', { name: /pdf import/i });
-      expect(pdfImportButton).toBeInTheDocument();
-      expect(pdfImportButton).toHaveTextContent('PDF Import');
-    });
 
-    it('should have correct PDF import description', () => {
-      renderNavigationMenu();
-      
-      const pdfImportButton = screen.getByRole('button', { name: /pdf import/i });
-      expect(pdfImportButton).toHaveAttribute('title', 'Import character from PDF');
-    });
-
-    it('should use Upload icon for PDF import', () => {
-      renderNavigationMenu();
-      
-      const pdfImportButton = screen.getByRole('button', { name: /pdf import/i });
-      const icon = pdfImportButton.querySelector('svg');
-      
-      // The Upload icon should be present (we can't easily test the specific icon type, but we can verify an icon exists)
-      expect(icon).toBeInTheDocument();
-      expect(icon).toHaveClass('w-4', 'h-4');
-    });
-
-    it('should maintain consistent styling with other navigation items', () => {
-      renderNavigationMenu();
-      
-      const buttons = screen.getAllByRole('button');
-      
-      // All buttons should have consistent base classes
-      buttons.forEach(button => {
-        expect(button).toHaveClass('w-full', 'flex', 'items-center', 'px-3', 'py-2', 'text-sm', 'font-medium', 'rounded-md', 'transition-colors');
-      });
-    });
-  });
 
   describe('Accessibility', () => {
     it('should have proper button roles', () => {
       renderNavigationMenu();
       
       const buttons = screen.getAllByRole('button');
-      expect(buttons).toHaveLength(3); // Chat, Knowledge Base, PDF Import
+      expect(buttons).toHaveLength(2); // Chat, Knowledge Base
     });
 
     it('should have descriptive button text', () => {
@@ -252,7 +168,6 @@ describe('NavigationMenu', () => {
       
       expect(screen.getByRole('button', { name: /chat/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /knowledge base/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /pdf import/i })).toBeInTheDocument();
     });
 
     it('should support keyboard navigation', () => {

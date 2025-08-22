@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, FileText, Save, AlertCircle, Settings, History } from 'lucide-react';
 import { FileBrowser } from './FileBrowser';
 import { DynamicForm } from './DynamicForm';
-import { CharacterCreationWizard } from './CharacterCreationWizard';
+
 import { CharacterSelector } from './CharacterSelector';
 import { FileManager } from './FileManager';
 import { BackupManager } from './BackupManager';
@@ -35,7 +35,7 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [showWizard, setShowWizard] = useState(false);
+
   const [activeTab, setActiveTab] = useState<'editor' | 'manager' | 'backups'>('editor');
 
   // Load files when character selection changes
@@ -165,41 +165,11 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
   };
 
   const handleCreateNew = () => {
-    if (hasUnsavedChanges) {
-      const confirmDiscard = window.confirm(
-        'You have unsaved changes. Are you sure you want to create a new character? Your changes will be lost.'
-      );
-      if (!confirmDiscard) return;
-    }
-    setShowWizard(true);
+    // Character creation functionality has been removed
+    alert('Character creation functionality is no longer available. Please create character files manually.');
   };
 
-  const handleWizardComplete = async (characterName: string, filesCreated: string[]) => {
-    setShowWizard(false);
-    setError(null);
-    
-    // Switch to the newly created character
-    setSelectedCharacter(characterName);
-    
-    // The useEffect will trigger loadFiles() when selectedCharacter changes
-    // Then we can select the main character file
-    setTimeout(async () => {
-      const mainCharacterFile = filesCreated.find(filename => 
-        filename.includes('character.json') && !filename.includes('background')
-      );
-      
-      if (mainCharacterFile) {
-        const file = files.find(f => f.filename === mainCharacterFile);
-        if (file) {
-          await handleFileSelect(file);
-        }
-      }
-    }, 100); // Small delay to ensure files are loaded
-  };
 
-  const handleWizardCancel = () => {
-    setShowWizard(false);
-  };
 
   const handleClose = () => {
     if (hasUnsavedChanges) {
@@ -403,13 +373,7 @@ export const KnowledgeBaseEditor: React.FC<KnowledgeBaseEditorProps> = ({ onClos
         </div>
       </div>
 
-      {/* Character Creation Wizard */}
-      {showWizard && (
-        <CharacterCreationWizard
-          onComplete={handleWizardComplete}
-          onCancel={handleWizardCancel}
-        />
-      )}
+
     </>
   );
 };

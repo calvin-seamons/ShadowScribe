@@ -14,7 +14,7 @@ import {
   getFileSchema,
   getFileTemplate,
   getSupportedFileTypes,
-  createNewCharacter,
+
   listBackups,
   restoreBackup,
   executeBatchFileOperations,
@@ -258,39 +258,7 @@ describe('Knowledge Base API Service', () => {
     });
   });
 
-  describe('Character Creation', () => {
-    it('should create new character', async () => {
-      const request = {
-        character_name: 'Aragorn',
-        race: 'Human',
-        character_class: 'Ranger',
-        level: 1
-      };
 
-      const mockResponse = {
-        character_name: 'Aragorn',
-        files_created: ['character.json', 'character_background.json'],
-        status: 'success',
-        message: 'Character created successfully'
-      };
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
-
-      const result = await createNewCharacter(request);
-      
-      expect(result).toEqual(mockResponse);
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/knowledge-base/character/new'),
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify(request),
-        })
-      );
-    });
-  });
 
   describe('Backup Management', () => {
     it('should list backups', async () => {

@@ -81,19 +81,11 @@ from knowledge_base_routes import router as knowledge_base_router, set_file_mana
 knowledge_base_file_manager = KnowledgeBaseFileManager(knowledge_base_path)
 set_file_manager(knowledge_base_file_manager)
 
-# Initialize PDF import services and set dependencies
-from vision_character_parser import VisionCharacterParser
-from pdf_image_converter import PDFImageConverter
-from pdf_import_routes import router as pdf_import_router, set_pdf_import_dependencies
 
-vision_parser = VisionCharacterParser()
-pdf_converter = PDFImageConverter()
-set_pdf_import_dependencies(vision_parser, pdf_converter, knowledge_base_file_manager)
 
 # Include API routes
 app.include_router(api_router, prefix="/api")
 app.include_router(knowledge_base_router, prefix="/api")
-app.include_router(pdf_import_router, prefix="/api/character/import-pdf")
 
 # Serve static files in production
 if os.path.exists("../frontend/build"):

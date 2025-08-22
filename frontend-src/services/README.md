@@ -11,7 +11,7 @@ This module provides a comprehensive TypeScript API service layer for managing D
 - **Templates & Schemas**: Access to file templates and JSON schemas for all file types
 - **Batch Operations**: Support for batch file operations during character creation
 - **Backup Management**: List and restore file backups
-- **Character Management**: List characters and create new characters with all associated files
+- **Character Management**: List existing characters
 
 ## Usage
 
@@ -51,28 +51,10 @@ await deleteFile('characters/old-character/character.json');
 ### Character Management
 
 ```typescript
-import { listCharacters, createNewCharacter } from './services/knowledgeBaseApi';
+import { listCharacters } from './services/knowledgeBaseApi';
 
 // List all available characters
 const { characters, count } = await listCharacters();
-
-// Create a new character with all associated files
-const result = await createNewCharacter({
-  character_name: 'Gandalf',
-  race: 'Maiar',
-  character_class: 'Wizard',
-  level: 20,
-  background: 'Sage',
-  alignment: 'Neutral Good',
-  ability_scores: {
-    strength: 13,
-    dexterity: 16,
-    constitution: 16,
-    intelligence: 20,
-    wisdom: 18,
-    charisma: 17
-  }
-});
 ```
 
 ### Validation
@@ -208,26 +190,7 @@ interface ValidationResult {
 }
 ```
 
-### Character Creation
 
-```typescript
-interface CharacterCreationRequest {
-  character_name: string;
-  race: string;
-  character_class: string;
-  level?: number;
-  background?: string;
-  alignment?: string;
-  ability_scores?: Record<string, number>;
-}
-
-interface CharacterCreationResponse {
-  character_name: string;
-  files_created: string[];
-  status: string;
-  message: string;
-}
-```
 
 ## Error Types
 
@@ -288,7 +251,7 @@ This implementation satisfies the following requirements:
 
 - **5.5**: Backend provides secure API endpoints for knowledge base operations
 - **7.4**: Real-time validation and error handling with clear messaging
-- **8.3**: Character creation workflow with all associated files
+
 
 ## Integration
 

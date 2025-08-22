@@ -9,7 +9,7 @@ export { FeatsTraitsEditor } from './FeatsTraitsEditor';
 export { ActionListEditor } from './ActionListEditor';
 export { InventoryEditor } from './InventoryEditor';
 export { ObjectivesEditor } from './ObjectivesEditor';
-export { CharacterCreationWizard } from './CharacterCreationWizard';
+
 export { SpellListEditor } from './SpellListEditor';
 export { FileManager } from './FileManager';
 export { BackupManager } from './BackupManager';

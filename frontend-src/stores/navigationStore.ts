@@ -1,34 +1,28 @@
 import { create } from 'zustand';
 
-export type AppView = 'chat' | 'knowledge-base' | 'pdf-import';
+export type AppView = 'chat' | 'knowledge-base';
 
 interface NavigationStore {
   currentView: AppView;
   isKnowledgeBaseEditorOpen: boolean;
-  isPDFImportOpen: boolean;
   setCurrentView: (view: AppView) => void;
   openKnowledgeBaseEditor: () => void;
   closeKnowledgeBaseEditor: () => void;
   toggleKnowledgeBaseEditor: () => void;
-  openPDFImport: () => void;
-  closePDFImport: () => void;
 }
 
 export const useNavigationStore = create<NavigationStore>((set, get) => ({
   currentView: 'chat',
   isKnowledgeBaseEditorOpen: false,
-  isPDFImportOpen: false,
   
   setCurrentView: (view) => set({ 
     currentView: view,
-    isKnowledgeBaseEditorOpen: view === 'knowledge-base',
-    isPDFImportOpen: view === 'pdf-import'
+    isKnowledgeBaseEditorOpen: view === 'knowledge-base'
   }),
   
   openKnowledgeBaseEditor: () => set({ 
     currentView: 'knowledge-base',
-    isKnowledgeBaseEditorOpen: true,
-    isPDFImportOpen: false
+    isKnowledgeBaseEditorOpen: true
   }),
   
   closeKnowledgeBaseEditor: () => set({ 
@@ -41,18 +35,7 @@ export const useNavigationStore = create<NavigationStore>((set, get) => ({
     if (isKnowledgeBaseEditorOpen) {
       set({ currentView: 'chat', isKnowledgeBaseEditorOpen: false });
     } else {
-      set({ currentView: 'knowledge-base', isKnowledgeBaseEditorOpen: true, isPDFImportOpen: false });
+      set({ currentView: 'knowledge-base', isKnowledgeBaseEditorOpen: true });
     }
   },
-
-  openPDFImport: () => set({
-    currentView: 'pdf-import',
-    isPDFImportOpen: true,
-    isKnowledgeBaseEditorOpen: false
-  }),
-
-  closePDFImport: () => set({
-    currentView: 'chat',
-    isPDFImportOpen: false
-  }),
 }));

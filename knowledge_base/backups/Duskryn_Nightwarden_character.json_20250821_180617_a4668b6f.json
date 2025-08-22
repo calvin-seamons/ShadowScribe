@@ -1,0 +1,121 @@
+{
+  "backup_id": "Duskryn_Nightwarden_character.json_20250821_180617_a4668b6f",
+  "original_filename": "Duskryn_Nightwarden/character.json",
+  "created_at": "2025-08-21T18:06:17.483546",
+  "content": {
+    "character_base": {
+      "name": "Duskryn Nightwarden",
+      "race": "Dwarf",
+      "subrace": "Hill Dwarf",
+      "class": "Warlock/Paladin",
+      "warlock_level": 5,
+      "paladin_level": 8,
+      "total_level": 13,
+      "alignment": "Lawful Neutral",
+      "background": "Unknown",
+      "lifestyle": "Aristocrat",
+      "hit_dice": {
+        "warlock": "5d8",
+        "paladin": "8d10"
+      }
+    },
+    "characteristics": {
+      "alignment": "Lawful Neutral",
+      "gender": "Male",
+      "eyes": "Gold",
+      "size": "Medium",
+      "height": "5'2\" ft",
+      "hair": "Long white hair, with beard",
+      "skin": "Light blue skin",
+      "age": 105,
+      "weight": "180 lb"
+    },
+    "ability_scores": {
+      "strength": 14,
+      "dexterity": 12,
+      "constitution": 16,
+      "intelligence": 14,
+      "wisdom": 20,
+      "charisma": 24
+    },
+    "combat_stats": {
+      "max_hp": 129,
+      "armor_class": 20,
+      "initiative_bonus": 1,
+      "speed": 25
+    },
+    "proficiencies": [
+      {
+        "type": "armor",
+        "name": "Light Armor"
+      },
+      {
+        "type": "armor",
+        "name": "Medium Armor"
+      },
+      {
+        "type": "armor",
+        "name": "Shields"
+      },
+      {
+        "type": "armor",
+        "name": "Plate"
+      },
+      {
+        "type": "weapon",
+        "name": "Simple Weapons"
+      },
+      {
+        "type": "weapon",
+        "name": "Martial Weapons"
+      },
+      {
+        "type": "tool",
+        "name": "Herbalism Kit"
+      },
+      {
+        "type": "tool",
+        "name": "Poisoner's Kit"
+      },
+      {
+        "type": "tool",
+        "name": "Smith's Tools"
+      },
+      {
+        "type": "tool",
+        "name": "Tinker's Tools"
+      },
+      {
+        "type": "language",
+        "name": "Celestial"
+      },
+      {
+        "type": "language",
+        "name": "Common"
+      },
+      {
+        "type": "language",
+        "name": "Dwarvish"
+      },
+      {
+        "type": "language",
+        "name": "Elvish"
+      }
+    ],
+    "damage_modifiers": [
+      {
+        "damage_type": "poison",
+        "modifier_type": "resistance"
+      }
+    ],
+    "passive_scores": {
+      "perception": 15,
+      "investigation": 17,
+      "insight": 20
+    },
+    "senses": {
+      "darkvision": 60
+    },
+    "_test_edit": "This is a test edit to verify editing functionality"
+  }
+}

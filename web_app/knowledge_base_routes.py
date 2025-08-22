@@ -2,7 +2,7 @@
 Knowledge Base API Routes
 
 This module provides REST API endpoints for managing D&D character data files
-including CRUD operations, validation, templates, and character creation.
+including CRUD operations, validation, and templates.
 """
 
 from fastapi import APIRouter, HTTPException, Depends, status
@@ -22,8 +22,6 @@ from models import (
     BackupListResponse,
     SchemaResponse,
     TemplateResponse,
-    CharacterCreationRequest,
-    CharacterCreationResponse,
     ConflictInfo,
     ConflictCheckResponse,
     ExportResponse,
@@ -378,59 +376,6 @@ async def get_file_template(file_type: str, file_manager=Depends(get_file_manage
         logger.error(f"Error getting template for {file_type}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.post("/character/new", response_model=CharacterCreationResponse)
-async def create_new_character(request: CharacterCreationRequest, file_manager=Depends(get_file_manager)):
-    """
-    Create a new character with all associated files in their own folder.
-    
-    This endpoint generates all seven core files for a D&D character in a character-specific folder:
-    - characters/{character_name}/character.json
-    - characters/{character_name}/character_background.json
-    - characters/{character_name}/feats_and_traits.json
-    - characters/{character_name}/action_list.json
-    - characters/{character_name}/inventory_list.json
-    - characters/{character_name}/objectives_and_contracts.json
-    - characters/{character_name}/spell_list.json
-    
-    Args:
-        request: Character creation request with basic character info
-        
-    Returns:
-        CharacterCreationResponse: List of created files and status
-    """
-    try:
-        character_data = {
-            'race': request.race,
-            'character_class': request.character_class,
-            'level': request.level,
-            'background': request.background,
-            'alignment': request.alignment,
-            'ability_scores': request.ability_scores
-        }
-        
-        files_created = await file_manager.create_character(request.character_name, character_data)
-        
-        logger.info(f"Successfully created new character '{request.character_name}' with {len(files_created)} files")
-        return CharacterCreationResponse(
-            character_name=request.character_name,
-            files_created=files_created,
-            status="success",
-            message=f"Character '{request.character_name}' created successfully with all associated files in their own folder"
-        )
-        
-    except FileExistsError as e:
-        logger.warning(f"Character creation failed - character already exists: {e}")
-        raise HTTPException(
-            status_code=409, 
-            detail=f"Character '{request.character_name}' already exists. Please choose a different character name."
-        )
-    except ValueError as e:
-        logger.error(f"Validation error during character creation: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Error creating character '{request.character_name}': {e}")
-        raise HTTPException(status_code=500, detail=f"Character creation failed: {str(e)}")
 
 
 @router.get("/backups", response_model=BackupListResponse)

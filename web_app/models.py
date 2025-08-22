@@ -91,25 +91,6 @@ class TemplateResponse(BaseModel):
     status: str
 
 
-# Character Creation Models
-class CharacterCreationRequest(BaseModel):
-    """Request for creating a new character with all files."""
-    character_name: str
-    race: str
-    character_class: str
-    level: int = 1
-    background: str = ""
-    alignment: str = ""
-    ability_scores: Optional[Dict[str, int]] = None
-
-
-class CharacterCreationResponse(BaseModel):
-    """Response for character creation."""
-    character_name: str
-    files_created: List[str]
-    status: str
-    message: str
-
 
 # File Management Models
 class ConflictInfo(BaseModel):
@@ -224,80 +205,4 @@ class ModelResponse(BaseModel):
     status: str
 
 
-# PDF Import Models
-class UncertainField(BaseModel):
-    """Field with uncertain parsing results."""
-    file_type: str
-    field_path: str
-    extracted_value: Any
-    confidence: float
-    suggestions: List[str]
 
-
-class PDFImageResult(BaseModel):
-    """Result of PDF to image conversion."""
-    session_id: str
-    images: List[str]  # Base64 encoded images or file IDs
-    page_count: int
-    image_format: str
-    total_size_mb: float
-
-
-class PDFImportSessionData(BaseModel):
-    """PDF import session data for API responses."""
-    session_id: str
-    user_id: str
-    created_at: str
-    last_activity: str
-    status: str
-    pdf_filename: Optional[str] = None
-    converted_images: Optional[List[str]] = None
-    image_count: Optional[int] = None
-    image_format: Optional[str] = None
-    total_image_size_mb: Optional[float] = None
-    parsed_data: Optional[Dict[str, Dict]] = None
-    uncertain_fields: Optional[List[UncertainField]] = None
-    parsing_confidence: Optional[float] = None
-    validation_results: Optional[Dict[str, Any]] = None
-    error_message: Optional[str] = None
-    progress: float = 0.0
-
-
-
-
-
-class PDFUploadResponse(BaseModel):
-    """Response for PDF upload."""
-    session_id: str
-    upload_url: Optional[str] = None
-    status: str
-    message: str
-
-
-class PDFParseRequest(BaseModel):
-    """Request for PDF vision parsing."""
-    session_id: str
-    images: Optional[List[str]] = None  # Optional override images for parsing
-
-
-class PDFParseResponse(BaseModel):
-    """Response for PDF parsing."""
-    session_id: str
-    character_files: Dict[str, Dict[str, Any]]
-    uncertain_fields: List[UncertainField]
-    parsing_confidence: float
-    status: str
-
-
-class PDFImportStatusResponse(BaseModel):
-    """Response for PDF import status."""
-    session_data: PDFImportSessionData
-    status: str
-
-
-class PDFImportCleanupResponse(BaseModel):
-    """Response for PDF import cleanup."""
-    session_id: str
-    cleaned_up: bool
-    status: str
-    message: str

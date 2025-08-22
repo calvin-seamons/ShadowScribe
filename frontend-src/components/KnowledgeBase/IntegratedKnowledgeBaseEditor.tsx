@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Plus, Save, AlertCircle, Settings, History, X, BookOpen } from 'lucide-react';
 import { FileBrowser } from './FileBrowser';
 import { DynamicForm } from './DynamicForm';
-import { CharacterCreationWizard } from './CharacterCreationWizard';
-import { CharacterCreationSelection } from './CharacterCreationSelection';
-import { PDFImportWizard } from '../PDFImport/PDFImportWizard';
+
 import { CharacterSelector } from './CharacterSelector';
 import { FileManager } from './FileManager';
 import { BackupManager } from './BackupManager';
@@ -263,9 +261,7 @@ export const IntegratedKnowledgeBaseEditor: React.FC = () => {
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
   const [schema, setSchema] = useState<Record<string, any> | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
-  const [showWizard, setShowWizard] = useState(false);
-  const [showPDFImport, setShowPDFImport] = useState(false);
-  const [showCreationSelection, setShowCreationSelection] = useState(false);
+
   const [activeTab, setActiveTab] = useState<'editor' | 'manager' | 'backups'>('editor');
 
   // Load files when character selection changes
@@ -447,75 +443,7 @@ export const IntegratedKnowledgeBaseEditor: React.FC = () => {
     closeKnowledgeBaseEditor();
   };
 
-  const handleWizardComplete = async (characterName: string) => {
-    setShowWizard(false);
-    setShowPDFImport(false);
-    setShowCreationSelection(false);
-    
-    // Switch to the newly created character
-    setSelectedCharacter(characterName);
-    
-    // The useEffect will trigger loadFiles() when selectedCharacter changes
-  };
 
-  const handleCreationCancel = () => {
-    setShowWizard(false);
-    setShowPDFImport(false);
-    setShowCreationSelection(false);
-  };
-
-  // Show character creation selection screen
-  if (showCreationSelection) {
-    return (
-      <CharacterCreationSelection
-        onSelectPDFImport={() => {
-          setShowCreationSelection(false);
-          setShowPDFImport(true);
-        }}
-        onSelectManualWizard={() => {
-          setShowCreationSelection(false);
-          setShowWizard(true);
-        }}
-        onCancel={handleCreationCancel}
-      />
-    );
-  }
-
-  // Show PDF import wizard
-  if (showPDFImport) {
-    return (
-      <ValidationProvider>
-        <div className="h-full flex flex-col bg-gray-900">
-          <div className="flex-1 overflow-hidden">
-            <PDFImportWizard
-              onComplete={handleWizardComplete}
-              onCancel={handleCreationCancel}
-              onFallbackToManual={() => {
-                setShowPDFImport(false);
-                setShowWizard(true);
-              }}
-            />
-          </div>
-        </div>
-      </ValidationProvider>
-    );
-  }
-
-  // Show manual creation wizard
-  if (showWizard) {
-    return (
-      <ValidationProvider>
-        <div className="h-full flex flex-col bg-gray-900">
-          <div className="flex-1 overflow-hidden">
-            <CharacterCreationWizard
-              onComplete={handleWizardComplete}
-              onCancel={handleCreationCancel}
-            />
-          </div>
-        </div>
-      </ValidationProvider>
-    );
-  }
 
   return (
     <ValidationProvider>
@@ -534,7 +462,7 @@ export const IntegratedKnowledgeBaseEditor: React.FC = () => {
         onSave={handleSave}
         onClose={handleClose}
         onTabChange={setActiveTab}
-        onCreateNew={() => setShowCreationSelection(true)}
+        onCreateNew={() => alert('Character creation functionality is no longer available. Please create character files manually.')}
         onCharacterSelect={handleCharacterSelect}
         onFileSelect={handleFileSelect}
         onContentChange={handleContentChange}
