@@ -1,0 +1,719 @@
+{
+  "timestamp": "20251129_160816",
+  "model": "qwen2.5:3b",
+  "total_tests": 37,
+  "passed": 28,
+  "failed": 9,
+  "pass_rate": "75.7%",
+  "total_time_s": 85.00327491760254,
+  "avg_inference_ms": 288.2656986648972,
+  "results": [
+    {
+      "test_id": "pronoun_001",
+      "category": "pronoun_resolution",
+      "difficulty": "easy",
+      "q1": "What is Fireball?",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "What's its damage?",
+      "rewritten_q2": "What is Fireball's damage?",
+      "expected_keywords": "Fireball damage",
+      "keywords_found": [
+        "fireball",
+        "damage"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 238.78788948059082,
+      "notes": "Basic 'its' resolution to spell name"
+    },
+    {
+      "test_id": "pronoun_002",
+      "category": "pronoun_resolution",
+      "difficulty": "easy",
+      "q1": "Tell me about my armor",
+      "a1": "I don't have any information about your armor at this time.",
+      "q2": "How much AC does it give me?",
+      "rewritten_q2": "What is the Armor Class (AC) my armor gives me?",
+      "expected_keywords": "armor AC",
+      "keywords_found": [
+        "armor",
+        "ac"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 319.56005096435547,
+      "notes": "'it' refers to armor"
+    },
+    {
+      "test_id": "pronoun_003",
+      "category": "pronoun_resolution",
+      "difficulty": "medium",
+      "q1": "What spells do I know?",
+      "a1": "I don't have that information. No character data has been loaded for me to reference your known spells.",
+      "q2": "Which of them require concentration?",
+      "rewritten_q2": "What spells do I know that require concentration?",
+      "expected_keywords": "spells concentration",
+      "keywords_found": [
+        "spells",
+        "concentration"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 277.9059410095215,
+      "notes": "'them' refers to the list of spells from Q1"
+    },
+    {
+      "test_id": "pronoun_004",
+      "category": "pronoun_resolution",
+      "difficulty": "medium",
+      "q1": "Tell me about the grappling rules",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "Can I do that while holding a weapon?",
+      "rewritten_q2": "What are the rules for grappling while holding a weapon?",
+      "expected_keywords": "grapple holding weapon",
+      "keywords_found": [
+        "holding",
+        "weapon"
+      ],
+      "keywords_missing": [
+        "grapple"
+      ],
+      "success": false,
+      "inference_time_ms": 293.6840057373047,
+      "notes": "'that' refers to grappling action"
+    },
+    {
+      "test_id": "pronoun_005",
+      "category": "pronoun_resolution",
+      "difficulty": "hard",
+      "q1": "What's the difference between a long rest and a short rest?",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "How long does each take?",
+      "rewritten_q2": "What are the durations of each type of rest in this campaign?",
+      "expected_keywords": "rest duration",
+      "keywords_found": [
+        "rest",
+        "duration"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 322.4329948425293,
+      "notes": "'each' refers to both rest types - 'rest' with duration/time context is sufficient"
+    },
+    {
+      "test_id": "pronoun_006",
+      "category": "pronoun_resolution",
+      "difficulty": "hard",
+      "q1": "Compare my longsword to my dagger",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "Which one deals more damage on a critical hit?",
+      "rewritten_q2": "What is the damage dealt by my longsword and my dagger on a critical hit?",
+      "expected_keywords": "longsword dagger critical hit damage",
+      "keywords_found": [
+        "longsword",
+        "dagger",
+        "critical",
+        "hit",
+        "damage"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 376.1401176452637,
+      "notes": "'which one' requires resolving both items from comparison"
+    },
+    {
+      "test_id": "entity_001",
+      "category": "entity_continuation",
+      "difficulty": "easy",
+      "q1": "Who is Elara?",
+      "a1": "I don't have any information about Elara in the available data.",
+      "q2": "When did I first meet her?",
+      "rewritten_q2": "What are my character's first meeting with Elara?",
+      "expected_keywords": "Elara first meet",
+      "keywords_found": [
+        "elara",
+        "first",
+        "meet"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 290.6208038330078,
+      "notes": "'her' refers to Elara"
+    },
+    {
+      "test_id": "entity_002",
+      "category": "entity_continuation",
+      "difficulty": "easy",
+      "q1": "Tell me about Shadowfell",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "What creatures live there?",
+      "rewritten_q2": "What creatures live in Shadowfell?",
+      "expected_keywords": "Shadowfell creatures",
+      "keywords_found": [
+        "shadowfell",
+        "creatures"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 242.63405799865723,
+      "notes": "'there' refers to Shadowfell location"
+    },
+    {
+      "test_id": "entity_003",
+      "category": "entity_continuation",
+      "difficulty": "medium",
+      "q1": "What's special about Eldaryth of Regret?",
+      "a1": "I don't have that information. There's nothing in my records about Eldaryth of Regret.",
+      "q2": "How did I get the weapon?",
+      "rewritten_q2": "What weapon do I possess?",
+      "expected_keywords": "Eldaryth of Regret get",
+      "keywords_found": [],
+      "keywords_missing": [
+        "eldaryth",
+        "of",
+        "regret",
+        "get"
+      ],
+      "success": false,
+      "inference_time_ms": 234.1480255126953,
+      "notes": "'the weapon' refers to named item, must carry full name"
+    },
+    {
+      "test_id": "entity_004",
+      "category": "entity_continuation",
+      "difficulty": "medium",
+      "q1": "Who is Lord Blackwood and what does he want?",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "Has he betrayed us before?",
+      "rewritten_q2": "What are my character's betrayals?",
+      "expected_keywords": "Lord Blackwood betray",
+      "keywords_found": [
+        "betray"
+      ],
+      "keywords_missing": [
+        "lord",
+        "blackwood"
+      ],
+      "success": false,
+      "inference_time_ms": 261.3999843597412,
+      "notes": "'he' refers to Lord Blackwood from compound question"
+    },
+    {
+      "test_id": "entity_005",
+      "category": "entity_continuation",
+      "difficulty": "hard",
+      "q1": "Tell me about the Dragon's Hoard tavern in Neverwinter",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "Who did we meet there and what did they want?",
+      "rewritten_q2": "What characters did we meet at the Dragon's Hoard tavern, and what were their intentions?",
+      "expected_keywords": "Dragon's Hoard meet",
+      "keywords_found": [
+        "dragon's",
+        "hoard",
+        "meet"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 394.489049911499,
+      "notes": "'there' refers to compound location - Dragon's Hoard is sufficient for RAG lookup"
+    },
+    {
+      "test_id": "entity_006",
+      "category": "entity_continuation",
+      "difficulty": "hard",
+      "q1": "Compare the Cloak of Elvenkind and the Ring of Invisibility",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "Which one should I attune to first given my build?",
+      "rewritten_q2": "What should I attune to first given my character's build?",
+      "expected_keywords": "Cloak of Elvenkind Ring of Invisibility attune",
+      "keywords_found": [
+        "attune"
+      ],
+      "keywords_missing": [
+        "cloak",
+        "of",
+        "elvenkind",
+        "ring",
+        "of",
+        "invisibility"
+      ],
+      "success": false,
+      "inference_time_ms": 320.90306282043457,
+      "notes": "'which one' references two magic items, must include both"
+    },
+    {
+      "test_id": "topic_001",
+      "category": "topic_switch",
+      "difficulty": "medium",
+      "q1": "What are my class features as a Warlock?",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "Now tell me about my spell slots",
+      "rewritten_q2": "What are my class's spell slots?",
+      "expected_keywords": "Warlock spell slots",
+      "keywords_found": [
+        "spell",
+        "slots"
+      ],
+      "keywords_missing": [
+        "warlock"
+      ],
+      "success": false,
+      "inference_time_ms": 259.95397567749023,
+      "notes": "Topic switch from features to slots, but 'my' implies Warlock context"
+    },
+    {
+      "test_id": "topic_002",
+      "category": "topic_switch",
+      "difficulty": "medium",
+      "q1": "How does the Shield spell work?",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "What about Counterspell?",
+      "rewritten_q2": "What are my character's counterspell abilities?",
+      "expected_keywords": "Counterspell",
+      "keywords_found": [
+        "counterspell"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 267.87304878234863,
+      "notes": "'What about' implies comparison/relation but new spell is independent"
+    },
+    {
+      "test_id": "topic_003",
+      "category": "topic_switch",
+      "difficulty": "hard",
+      "q1": "Tell me about the combat in session 5 where we fought the vampire",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "Speaking of vampires, what are their weaknesses according to the rules?",
+      "rewritten_q2": "What are the weaknesses of vampires according to the rules?",
+      "expected_keywords": "vampire weaknesses rules",
+      "keywords_found": [
+        "vampire",
+        "weaknesses",
+        "rules"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 295.26782035827637,
+      "notes": "Topic switch from session notes to rulebook, entity carries over"
+    },
+    {
+      "test_id": "topic_004",
+      "category": "topic_switch",
+      "difficulty": "hard",
+      "q1": "What happened in our last session?",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "Based on that, what should I prepare for next time?",
+      "rewritten_q2": "What items or preparations should my character make next time?",
+      "expected_keywords": "prepare next",
+      "keywords_found": [
+        "next"
+      ],
+      "keywords_missing": [
+        "prepare"
+      ],
+      "success": false,
+      "inference_time_ms": 295.5126762390137,
+      "notes": "Tricky: 'that' is vague - this is borderline an advice question that may pass through unchanged"
+    },
+    {
+      "test_id": "multi_001",
+      "category": "multi_turn",
+      "difficulty": "hard",
+      "q1": "What's my character's backstory?",
+      "a1": "Your character Duskryn grew up in the small village of Thornhaven with his parents. He left home at age 16 to train as a paladin after the village was attacked by shadow creatures.",
+      "q2": "Tell me more about the village",
+      "rewritten_q2": "What are my character's enemies?",
+      "expected_keywords": "village Thornhaven",
+      "keywords_found": [],
+      "keywords_missing": [
+        "village",
+        "thornhaven"
+      ],
+      "success": false,
+      "inference_time_ms": 230.59487342834473,
+      "notes": "'the village' requires understanding backstory context - should resolve to Thornhaven"
+    },
+    {
+      "test_id": "multi_002",
+      "category": "multi_turn",
+      "difficulty": "hard",
+      "q1": "List all the NPCs we've encountered",
+      "a1": "You've encountered several NPCs: **Elara** the elven ranger who guided you through Mistwood, **Grimshaw** the traveling merchant who sold you healing potions, **Lord Vance** the noble who hired you, and **Sister Mariel** the priestess at the temple.",
+      "q2": "What did the merchant sell us?",
+      "rewritten_q2": "Tell me about the goods Grimshaw sold us?",
+      "expected_keywords": "Grimshaw",
+      "keywords_found": [
+        "grimshaw"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 267.8990364074707,
+      "notes": "'the merchant' requires picking out specific NPC from list - resolving to Grimshaw is ideal"
+    },
+    {
+      "test_id": "multi_003",
+      "category": "multi_turn",
+      "difficulty": "hard",
+      "q1": "What quests are we currently working on?",
+      "a1": "You have two active quests: 1) **Retrieve the Stolen Artifact** - The Moonstone Amulet was stolen from the temple and last seen being carried into the Shadowfell. 2) **Clear the Goblin Cave** - The village elder asked you to deal with goblins raiding nearby farms.",
+      "q2": "Where was the artifact last seen?",
+      "rewritten_q2": "What is the last known location of the Stolen Artifact?",
+      "expected_keywords": "artifact last",
+      "keywords_found": [
+        "artifact",
+        "last"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 291.98598861694336,
+      "notes": "'the artifact' needs quest context - should resolve to Moonstone Amulet or include 'artifact'"
+    },
+    {
+      "test_id": "implicit_001",
+      "category": "implicit_context",
+      "difficulty": "hard",
+      "q1": "How do I calculate my spell attack bonus?",
+      "a1": "Your spell attack bonus is calculated by adding your proficiency bonus and your spellcasting ability modifier together.\n\nThe formula is: **Proficiency Bonus + Spellcasting Ability Modifier = Spell Attack Bonus**\n\nYour spellcasting ability depends on your class (Intelligence for Wizards, Wisdom for Clerics, Charisma for Sorcerers, etc.).",
+      "q2": "And the save DC?",
+      "rewritten_q2": "What is my spell save DC?",
+      "expected_keywords": "save DC",
+      "keywords_found": [
+        "save",
+        "dc"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 308.3939552307129,
+      "notes": "'the' implies spell save DC from spell attack context - 'spell' is implicit in 'save DC'"
+    },
+    {
+      "test_id": "implicit_002",
+      "category": "implicit_context",
+      "difficulty": "hard",
+      "q1": "What's my proficiency bonus at level 5?",
+      "a1": "At level 5, your proficiency bonus is +3.",
+      "q2": "When does it increase?",
+      "rewritten_q2": "What is the level at which my proficiency bonus increases?",
+      "expected_keywords": "proficiency bonus increase level",
+      "keywords_found": [
+        "proficiency",
+        "bonus",
+        "increase",
+        "level"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 294.37971115112305,
+      "notes": "'it' is proficiency bonus, needs to maintain that context"
+    },
+    {
+      "test_id": "implicit_003",
+      "category": "implicit_context",
+      "difficulty": "hard",
+      "q1": "Tell me about my Hexblade patron",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "What abilities do I get from the pact?",
+      "rewritten_q2": "What abilities do I get from the Hexblade patron pact?",
+      "expected_keywords": "Hexblade patron pact abilities",
+      "keywords_found": [
+        "hexblade",
+        "patron",
+        "pact",
+        "abilities"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 306.0460090637207,
+      "notes": "'the pact' implies Hexblade Warlock pact"
+    },
+    {
+      "test_id": "implicit_004",
+      "category": "implicit_context",
+      "difficulty": "hard",
+      "q1": "What languages does my character speak?",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "Can I learn more?",
+      "rewritten_q2": "What additional languages can my character learn?",
+      "expected_keywords": "character learn new languages",
+      "keywords_found": [
+        "character",
+        "learn",
+        "languages"
+      ],
+      "keywords_missing": [
+        "new"
+      ],
+      "success": true,
+      "inference_time_ms": 261.5201473236084,
+      "notes": "'more' implies more languages, context is implicit"
+    },
+    {
+      "test_id": "negation_001",
+      "category": "negation_contrast",
+      "difficulty": "medium",
+      "q1": "What damage types is my character resistant to?",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "What about vulnerabilities?",
+      "rewritten_q2": "What are my character's vulnerabilities?",
+      "expected_keywords": "character vulnerabilities",
+      "keywords_found": [
+        "character",
+        "vulnerabilities"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 243.31903457641602,
+      "notes": "Contrast to resistances, same domain - 'damage' is implicit in vulnerabilities context"
+    },
+    {
+      "test_id": "negation_002",
+      "category": "negation_contrast",
+      "difficulty": "hard",
+      "q1": "What spells can I cast at 3rd level?",
+      "a1": "I don't have information about your character's class, spell list, or available spells. To tell you what spells you can cast at 3rd level, I'd need to know:\n\n- Your character's class\n- Your current spell slots\n- Which spells you have prepared or know\n\nCould you provide those details?",
+      "q2": "Which of those can't be upcasted?",
+      "rewritten_q2": "What spells in my spell list can't be upcasted?",
+      "expected_keywords": "spells upcast",
+      "keywords_found": [
+        "spells",
+        "upcast"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 378.40890884399414,
+      "notes": "Negation 'can't' + reference to prior spell list - key is preserving spell context and upcast concept"
+    },
+    {
+      "test_id": "negation_003",
+      "category": "negation_contrast",
+      "difficulty": "hard",
+      "q1": "Tell me about the friendly NPCs in the campaign",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "Now the hostile ones",
+      "rewritten_q2": "Tell me about the hostile NPCs in the campaign",
+      "expected_keywords": "hostile NPCs",
+      "keywords_found": [
+        "hostile",
+        "npcs"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 273.2059955596924,
+      "notes": "Contrast switch from friendly to hostile - must expand fragment to full question"
+    },
+    {
+      "test_id": "quant_001",
+      "category": "quantifiers",
+      "difficulty": "medium",
+      "q1": "What sessions have we played?",
+      "a1": "I don't have any information about your campaign sessions. No session data has been provided to me yet.",
+      "q2": "Tell me about the first one",
+      "rewritten_q2": "What are the details of the first session?",
+      "expected_keywords": "first session",
+      "keywords_found": [
+        "first",
+        "session"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 271.1319923400879,
+      "notes": "'the first one' needs session context"
+    },
+    {
+      "test_id": "quant_002",
+      "category": "quantifiers",
+      "difficulty": "medium",
+      "q1": "List my known cantrips",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "Which is the strongest for combat?",
+      "rewritten_q2": "What are the strongest cantrips for combat?",
+      "expected_keywords": "strongest combat",
+      "keywords_found": [
+        "strongest",
+        "combat"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 271.4419364929199,
+      "notes": "Superlative 'strongest' applied to prior list - naming specific cantrips is also valid"
+    },
+    {
+      "test_id": "quant_003",
+      "category": "quantifiers",
+      "difficulty": "hard",
+      "q1": "What magic items do I have?",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "Do any of them require attunement?",
+      "rewritten_q2": "What magic items do I have? Do any of them require attunement?",
+      "expected_keywords": "magic items attunement require",
+      "keywords_found": [
+        "magic",
+        "items",
+        "attunement",
+        "require"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 356.6620349884033,
+      "notes": "'any of them' references full magic item list"
+    },
+    {
+      "test_id": "quant_004",
+      "category": "quantifiers",
+      "difficulty": "hard",
+      "q1": "Tell me about the major battles we've had",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "The last one almost killed me, what happened?",
+      "rewritten_q2": "What were the details of the last battle that almost killed my character?",
+      "expected_keywords": "last battle",
+      "keywords_found": [
+        "last",
+        "battle"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 328.7169933319092,
+      "notes": "'the last one' requires temporal ordering of battles"
+    },
+    {
+      "test_id": "standalone_001",
+      "category": "already_standalone",
+      "difficulty": "easy",
+      "q1": "What's my character's name?",
+      "a1": "I don't have that information. No character data has been provided to me yet.",
+      "q2": "How does flanking work in 5e?",
+      "rewritten_q2": "What is flanking working mechanics in 5e?",
+      "expected_keywords": "flanking 5e",
+      "keywords_found": [
+        "flanking",
+        "5e"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 300.5859851837158,
+      "notes": "Q2 is completely independent, should pass through mostly unchanged"
+    },
+    {
+      "test_id": "standalone_002",
+      "category": "already_standalone",
+      "difficulty": "easy",
+      "q1": "Who is the party's healer?",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "What are the rules for death saving throws?",
+      "rewritten_q2": "What are my character's death saving throw rules?",
+      "expected_keywords": "death saving throws rules",
+      "keywords_found": [
+        "death",
+        "saving",
+        "rules"
+      ],
+      "keywords_missing": [
+        "throws"
+      ],
+      "success": true,
+      "inference_time_ms": 281.18395805358887,
+      "notes": "Q2 is independent rule question"
+    },
+    {
+      "test_id": "standalone_003",
+      "category": "already_standalone",
+      "difficulty": "medium",
+      "q1": "Tell me about session 3",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "What is the casting time for Wish?",
+      "rewritten_q2": "What is the casting time for Wish?",
+      "expected_keywords": "Wish casting time",
+      "keywords_found": [
+        "wish",
+        "casting",
+        "time"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 256.21795654296875,
+      "notes": "Complete topic change, Q2 is standalone"
+    },
+    {
+      "test_id": "ambig_001",
+      "category": "ambiguous",
+      "difficulty": "hard",
+      "q1": "Compare my Intelligence and Wisdom scores",
+      "a1": "I don't have that information. Your character's ability scores aren't available to me right now.",
+      "q2": "Which one affects my spell attacks?",
+      "rewritten_q2": "What is my spell attack bonus?",
+      "expected_keywords": "Intelligence Wisdom spell attacks",
+      "keywords_found": [
+        "spell"
+      ],
+      "keywords_missing": [
+        "intelligence",
+        "wisdom",
+        "attacks"
+      ],
+      "success": false,
+      "inference_time_ms": 250.29587745666504,
+      "notes": "Model needs to understand D&D mechanics to not drop context"
+    },
+    {
+      "test_id": "ambig_002",
+      "category": "ambiguous",
+      "difficulty": "hard",
+      "q1": "What did Lord Vance tell us about the curse?",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "Is he lying?",
+      "rewritten_q2": "What did Lord Vance tell us about the curse?",
+      "expected_keywords": "Lord Vance lying curse",
+      "keywords_found": [
+        "lord",
+        "vance",
+        "curse"
+      ],
+      "keywords_missing": [
+        "lying"
+      ],
+      "success": true,
+      "inference_time_ms": 283.66804122924805,
+      "notes": "'he' is Lord Vance, but question is about trustworthiness"
+    },
+    {
+      "test_id": "ambig_003",
+      "category": "ambiguous",
+      "difficulty": "hard",
+      "q1": "Tell me about my character's relationship with their family",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "What about enemies?",
+      "rewritten_q2": "What are my character's enemies?",
+      "expected_keywords": "character enemies",
+      "keywords_found": [
+        "character",
+        "enemies"
+      ],
+      "keywords_missing": [],
+      "success": true,
+      "inference_time_ms": 243.25203895568848,
+      "notes": "'What about' could mean family enemies OR character's own enemies - must expand to full question"
+    },
+    {
+      "test_id": "ambig_004",
+      "category": "ambiguous",
+      "difficulty": "hard",
+      "q1": "Explain how bonus actions work",
+      "a1": "Error: 'NoneType' object has no attribute 'inventory'",
+      "q2": "Can I use one with Healing Word?",
+      "rewritten_q2": "What are the rules for using Healing Word?",
+      "expected_keywords": "Healing Word bonus action",
+      "keywords_found": [
+        "healing",
+        "word"
+      ],
+      "keywords_missing": [
+        "bonus",
+        "action"
+      ],
+      "success": false,
+      "inference_time_ms": 275.6068706512451,
+      "notes": "'one' refers to bonus action, domain-specific knowledge"
+    }
+  ]
+}
