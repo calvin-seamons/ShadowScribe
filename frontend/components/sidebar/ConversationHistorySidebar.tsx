@@ -4,6 +4,7 @@
 'use client';
 
 import { MessageSquare, Plus, Wand2, Trash2, Trash, ScrollText, User } from 'lucide-react';
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { getConversations, deleteConversation, createConversation, saveConversation, clearAllConversations } from '@/lib/services/localStorage';
 import { Conversation } from '@/lib/types/conversation';
@@ -98,14 +99,13 @@ export function ConversationHistorySidebar({ characterName, onConversationSelect
           New Conversation
         </button>
 
-        <button
+        <Link
+          href="/characters/create"
           className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-border/50 text-muted-foreground hover:text-foreground hover:border-border transition-all"
-          disabled
         >
           <Wand2 className="w-4 h-4" />
           <span>Character Wizard</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary ml-auto">Soon</span>
-        </button>
+        </Link>
       </div>
 
       {/* Conversations list */}

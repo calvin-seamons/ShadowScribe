@@ -32,10 +32,47 @@ export default function ChatContainer({ characterName, conversationId, onConvers
     onConversationCreatedRef.current = onConversationCreated
   }, [onConversationCreated])
 
+  // Track previous conversationId to detect when it becomes null (new conversation requested)
+  const prevConversationIdRef = useRef<string | null | undefined>(undefined)
+
   // Load or create conversation when component mounts or conversationId changes
   useEffect(() => {
     const characterId = characterName.toLowerCase().replace(/\s+/g, '-')
     const chatStore = useChatStore.getState()
+
+    // Detect if user clicked "New Conversation" (conversationId went from a value to null)
+    const isNewConversationRequest = prevConversationIdRef.current !== undefined && 
+                                      prevConversationIdRef.current !== null && 
+                                      conversationId === null
+    prevConversationIdRef.current = conversationId
+
+    if (isNewConversationRequest) {
+      // Clear backend and frontend state, create new conversation
+      const triggerNewConversation = async () => {
+        try {
+          // Clear backend conversation history if connected
+          if (websocketService.isConnected()) {
+            await websocketService.clearHistory(characterName)
+          }
+          
+          // Clear frontend state
+          chatStore.clearHistory()
+          clearCurrentMetadata()
+          
+          // Create new conversation
+          const conversation = createConversation(characterId, characterName)
+          saveConversation(conversation)
+          conversationIdRef.current = conversation.id
+          
+          // Notify parent about new conversation
+          onConversationCreatedRef.current?.(conversation.id)
+        } catch (error) {
+          console.error('Error creating new conversation:', error)
+        }
+      }
+      triggerNewConversation()
+      return
+    }
 
     if (conversationId) {
       // Load existing conversation by ID
@@ -50,7 +87,7 @@ export default function ChatContainer({ characterName, conversationId, onConvers
       }
     }
 
-    // Only create new conversation if we don't already have one
+    // Only create new conversation if we don't already have one (initial mount)
     if (!conversationIdRef.current) {
       const conversation = createConversation(characterId, characterName)
       saveConversation(conversation)
@@ -58,7 +95,7 @@ export default function ChatContainer({ characterName, conversationId, onConvers
       chatStore.clearMessages()
       onConversationCreatedRef.current?.(conversation.id)
     }
-  }, [conversationId, characterName])
+  }, [conversationId, characterName, clearCurrentMetadata])
 
   useEffect(() => {
     // Connect WebSocket
@@ -276,21 +313,11 @@ export default function ChatContainer({ characterName, conversationId, onConvers
     <div className="h-full flex flex-col min-h-0 bg-gradient-to-b from-background to-background/95">
       {/* Chat header bar */}
       <div className="flex-shrink-0 border-b border-border/50 bg-card/50 backdrop-blur-sm px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-sm text-muted-foreground">
-              Conversing with <span className="text-foreground font-medium">{characterName}</span>
-            </span>
-          </div>
-          <button
-            onClick={clearConversation}
-            className="btn-ghost text-sm flex items-center gap-2"
-            disabled={isConnecting || messages.length === 0}
-          >
-            <Sparkles className="w-4 h-4" />
-            New Conversation
-          </button>
+        <div className="flex items-center gap-3">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-sm text-muted-foreground">
+            Conversing with <span className="text-foreground font-medium">{characterName}</span>
+          </span>
         </div>
       </div>
 

@@ -996,23 +996,39 @@ class CentralEngine:
         Returns:
             dict with character_fields, rulebook_sections, session_notes keys
         """
+        # DEBUG: Log raw_results structure
+        print(f"🔍 DEBUG _extract_context_sources: raw_results keys = {list(raw_results.keys())}")
+        for key, value in raw_results.items():
+            print(f"🔍 DEBUG: raw_results['{key}'] type = {type(value).__name__}")
+            if hasattr(value, '__dict__'):
+                print(f"🔍 DEBUG: raw_results['{key}'] attrs = {list(vars(value).keys()) if hasattr(value, '__dict__') else 'N/A'}")
+        
         context_sources = {
             'character_fields': [],
             'rulebook_sections': [],
             'session_notes': []
         }
         
-        # Extract character data fields
-        if 'character_data' in raw_results:
-            char_result = raw_results['character_data']
-            if hasattr(char_result, 'metadata') and 'required_fields' in char_result.metadata:
-                context_sources['character_fields'] = char_result.metadata['required_fields']
+        # Extract character data fields - check both 'character' and 'character_data' keys
+        char_result = raw_results.get('character') or raw_results.get('character_data')
+        if char_result:
+            print(f"🔍 DEBUG: char_result type = {type(char_result).__name__}")
+            if hasattr(char_result, 'metadata'):
+                print(f"🔍 DEBUG: char_result.metadata = {char_result.metadata}")
+                if 'required_fields' in char_result.metadata:
+                    context_sources['character_fields'] = char_result.metadata['required_fields']
+            elif isinstance(char_result, dict) and 'metadata' in char_result:
+                print(f"🔍 DEBUG: char_result['metadata'] = {char_result['metadata']}")
+                if 'required_fields' in char_result['metadata']:
+                    context_sources['character_fields'] = char_result['metadata']['required_fields']
         
         # Extract rulebook sections
         if 'rulebook' in raw_results:
             rulebook_results = raw_results['rulebook']
+            print(f"🔍 DEBUG: rulebook_results type = {type(rulebook_results).__name__}")
             if isinstance(rulebook_results, list):
-                for result in rulebook_results:
+                for i, result in enumerate(rulebook_results):
+                    print(f"🔍 DEBUG: rulebook_results[{i}] type = {type(result).__name__}, has section = {hasattr(result, 'section')}")
                     if hasattr(result, 'section'):
                         context_sources['rulebook_sections'].append({
                             'title': result.section.title,
@@ -1023,13 +1039,23 @@ class CentralEngine:
         # Extract session notes
         if 'session_notes' in raw_results:
             session_result = raw_results['session_notes']
+            print(f"🔍 DEBUG: session_result type = {type(session_result).__name__}")
             if hasattr(session_result, 'contexts'):
+                print(f"🔍 DEBUG: session_result.contexts = {len(session_result.contexts)} items")
                 for ctx in session_result.contexts:
                     context_sources['session_notes'].append({
                         'session_number': ctx.session_number,
                         'relevance_score': getattr(ctx, 'relevance_score', 0)
                     })
+            elif isinstance(session_result, dict) and 'contexts' in session_result:
+                print(f"🔍 DEBUG: session_result['contexts'] = {len(session_result['contexts'])} items")
+                for ctx in session_result['contexts']:
+                    context_sources['session_notes'].append({
+                        'session_number': ctx.get('session_number'),
+                        'relevance_score': ctx.get('relevance_score', 0)
+                    })
         
+        print(f"🔍 DEBUG: Final context_sources = {context_sources}")
         return context_sources
     
     async def _execute_rag_queries(
