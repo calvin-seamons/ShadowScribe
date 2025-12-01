@@ -38,7 +38,8 @@ RUN pip install --no-cache-dir \
     cryptography \
     pymysql \
     httpx==0.25.2 \
-    dacite==1.8.1
+    dacite==1.8.1 \
+    rank_bm25==0.2.2
 
 # Copy application code
 COPY . .

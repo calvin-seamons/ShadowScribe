@@ -62,18 +62,31 @@ class CharacterManager:
         
         data = db_character.data
         
+        # Helper to recursively convert datetime ISO strings to datetime objects
+        def convert_datetimes(obj):
+            if isinstance(obj, dict):
+                return {k: convert_datetimes(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_datetimes(item) for item in obj]
+            elif isinstance(obj, str):
+                # Try to parse ISO datetime strings
+                if len(obj) >= 19 and 'T' in obj:
+                    try:
+                        return datetime.fromisoformat(obj.replace('Z', '+00:00'))
+                    except ValueError:
+                        return obj
+                return obj
+            elif isinstance(obj, datetime):
+                # Already a datetime, keep as-is
+                return obj
+            return obj
+        
+        data = convert_datetimes(data)
+        
         # Use dacite for proper nested dataclass reconstruction
-        # This handles all nested dataclasses (BackstorySection, FamilyBackstory, etc.)
         config = dacite.Config(
             check_types=False,  # Allow flexible type matching
-            cast=[datetime],    # Cast datetime strings to datetime objects
         )
-        
-        # Handle datetime fields that may be stored as ISO strings
-        if data.get('created_date') and isinstance(data['created_date'], str):
-            data['created_date'] = datetime.fromisoformat(data['created_date'])
-        if data.get('last_updated') and isinstance(data['last_updated'], str):
-            data['last_updated'] = datetime.fromisoformat(data['last_updated'])
         
         try:
             character = dacite.from_dict(

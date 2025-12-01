@@ -1,8 +1,9 @@
 {
   "metadata": {
-    "description": "24 test questions for rulebook retrieval evaluation",
-    "source": "docs/rulebook-testqs.md",
-    "version": "1.0"
+    "description": "Expanded test questions for rulebook retrieval evaluation",
+    "source": "docs/rulebook-testqs.md + comprehensive expansion",
+    "version": "2.0",
+    "notes": "Updated section IDs to match actual rulebook_storage.pkl content. Expanded from 24 to 80 questions."
   },
   "questions": [
     {
@@ -41,6 +42,41 @@
       "notes": "Core mechanic"
     },
     {
+      "id": "rule_006",
+      "question": "What is a critical hit?",
+      "category": "RULE_MECHANICS",
+      "relevant_sections": ["attack-rolls", "damage-rolls"],
+      "notes": "Combat mechanic - critical hits double damage dice"
+    },
+    {
+      "id": "rule_007",
+      "question": "How does initiative work?",
+      "category": "RULE_MECHANICS",
+      "relevant_sections": ["initiative", "section-the-order-of-combat"],
+      "notes": "Combat order mechanic"
+    },
+    {
+      "id": "rule_008",
+      "question": "What are reactions and when can I use them?",
+      "category": "RULE_MECHANICS",
+      "relevant_sections": ["reactions", "opportunity-attacks"],
+      "notes": "Action economy mechanic"
+    },
+    {
+      "id": "rule_009",
+      "question": "How does cover affect attacks?",
+      "category": "RULE_MECHANICS",
+      "relevant_sections": ["section-cover"],
+      "notes": "Combat positioning mechanic"
+    },
+    {
+      "id": "rule_010",
+      "question": "What is difficult terrain?",
+      "category": "RULE_MECHANICS",
+      "relevant_sections": ["difficult-terrain", "section-movement-and-position"],
+      "notes": "Movement mechanic"
+    },
+    {
       "id": "entity_001",
       "question": "What are the traits of a dwarf?",
       "category": "DESCRIBE_ENTITY",
@@ -72,8 +108,78 @@
       "id": "entity_005",
       "question": "Explain what a longsword is",
       "category": "DESCRIBE_ENTITY",
-      "relevant_sections": ["longsword"],
-      "notes": "Equipment description"
+      "relevant_sections": ["section-weapons", "martial-melee-weapons"],
+      "notes": "Equipment description - longsword is in weapons section"
+    },
+    {
+      "id": "entity_006",
+      "question": "What is the magic missile spell?",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["magic-missile"],
+      "notes": "Classic spell"
+    },
+    {
+      "id": "entity_007",
+      "question": "Describe the rogue class",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["section-rogue"],
+      "notes": "Class description"
+    },
+    {
+      "id": "entity_008",
+      "question": "What is the frightened condition?",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["frightened", "section-conditions"],
+      "notes": "Condition description"
+    },
+    {
+      "id": "entity_009",
+      "question": "Describe half-elves",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["section-half-elf", "half-elf-traits"],
+      "notes": "Race description"
+    },
+    {
+      "id": "entity_010",
+      "question": "What is the cure wounds spell?",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["cure-wounds"],
+      "notes": "Basic healing spell"
+    },
+    {
+      "id": "entity_011",
+      "question": "What is the exhaustion condition?",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["exhaustion", "section-conditions"],
+      "notes": "Multi-level condition"
+    },
+    {
+      "id": "entity_012",
+      "question": "Describe the paladin class",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["section-paladin"],
+      "notes": "Class description"
+    },
+    {
+      "id": "entity_013",
+      "question": "What is the counterspell spell?",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["counterspell"],
+      "notes": "Defensive spell"
+    },
+    {
+      "id": "entity_014",
+      "question": "Tell me about tieflings",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["section-tiefling", "tiefling-traits"],
+      "notes": "Race description"
+    },
+    {
+      "id": "entity_015",
+      "question": "What is the grappled condition?",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["grappled", "section-conditions"],
+      "notes": "Condition description"
     },
     {
       "id": "compare_001",
@@ -111,18 +217,53 @@
       "notes": "Rest mechanic comparison"
     },
     {
+      "id": "compare_006",
+      "question": "Compare the cleric and paladin classes",
+      "category": "COMPARE_ENTITIES",
+      "relevant_sections": ["section-cleric", "section-paladin"],
+      "notes": "Divine caster comparison"
+    },
+    {
+      "id": "compare_007",
+      "question": "What's the difference between light armor and heavy armor?",
+      "category": "COMPARE_ENTITIES",
+      "relevant_sections": ["light-armor", "heavy-armor", "section-armor"],
+      "notes": "Equipment comparison"
+    },
+    {
+      "id": "compare_008",
+      "question": "Compare the monk and rogue classes",
+      "category": "COMPARE_ENTITIES",
+      "relevant_sections": ["section-monk", "section-rogue"],
+      "notes": "DEX-based class comparison"
+    },
+    {
+      "id": "compare_009",
+      "question": "What's the difference between the stunned and incapacitated conditions?",
+      "category": "COMPARE_ENTITIES",
+      "relevant_sections": ["stunned", "incapacitated", "section-conditions"],
+      "notes": "Condition comparison"
+    },
+    {
+      "id": "compare_010",
+      "question": "Compare the warlock and wizard spellcasting",
+      "category": "COMPARE_ENTITIES",
+      "relevant_sections": ["section-warlock", "section-wizard"],
+      "notes": "Spellcasting comparison"
+    },
+    {
       "id": "calc_001",
       "question": "How do I calculate my attack bonus?",
       "category": "CALCULATE_VALUES",
-      "relevant_sections": ["section-making-an-attack", "attack-rolls-and-damage"],
+      "relevant_sections": ["section-making-an-attack", "attack-rolls-and-damage", "attack-rolls"],
       "notes": "Attack calculation"
     },
     {
       "id": "calc_002",
       "question": "What's my AC with chain mail and a shield?",
       "category": "CALCULATE_VALUES",
-      "relevant_sections": ["armor-class", "heavy-armor", "shield"],
-      "notes": "AC calculation"
+      "relevant_sections": ["armor-class", "heavy-armor", "section-armor"],
+      "notes": "AC calculation - shield info is in armor section"
     },
     {
       "id": "calc_003",
@@ -135,7 +276,7 @@
       "id": "calc_004",
       "question": "What's the damage for a longsword with 16 Strength?",
       "category": "CALCULATE_VALUES",
-      "relevant_sections": ["longsword", "attack-rolls-and-damage", "section-damage-and-healing"],
+      "relevant_sections": ["section-weapons", "attack-rolls-and-damage", "section-damage-and-healing"],
       "notes": "Damage calculation"
     },
     {
@@ -144,6 +285,41 @@
       "category": "CALCULATE_VALUES",
       "relevant_sections": ["hit-points", "hit-points-and-hit-dice", "section-fighter"],
       "notes": "HP calculation"
+    },
+    {
+      "id": "calc_006",
+      "question": "How do I calculate my passive perception?",
+      "category": "CALCULATE_VALUES",
+      "relevant_sections": ["passive-checks", "wisdom"],
+      "notes": "Passive check calculation"
+    },
+    {
+      "id": "calc_007",
+      "question": "What's my carrying capacity with 15 Strength?",
+      "category": "CALCULATE_VALUES",
+      "relevant_sections": ["strength", "lifting-and-carrying"],
+      "notes": "Carrying capacity calculation"
+    },
+    {
+      "id": "calc_008",
+      "question": "How far can I jump with 16 Strength?",
+      "category": "CALCULATE_VALUES",
+      "relevant_sections": ["jumping", "strength"],
+      "notes": "Jump distance calculation"
+    },
+    {
+      "id": "calc_009",
+      "question": "How many spell slots does a 3rd level wizard have?",
+      "category": "CALCULATE_VALUES",
+      "relevant_sections": ["section-wizard", "spell-slots"],
+      "notes": "Spell slot calculation"
+    },
+    {
+      "id": "calc_010",
+      "question": "What's my initiative bonus with 14 Dexterity?",
+      "category": "CALCULATE_VALUES",
+      "relevant_sections": ["initiative", "dexterity"],
+      "notes": "Initiative calculation"
     },
     {
       "id": "combined_001",
@@ -163,7 +339,7 @@
       "id": "combined_003",
       "question": "What's my AC with plate armor and a shield, and how does cover affect it?",
       "category": "COMBINED",
-      "relevant_sections": ["armor-class", "shield", "cover"],
+      "relevant_sections": ["armor-class", "section-armor", "section-cover"],
       "notes": "AC + cover interaction"
     },
     {
@@ -172,6 +348,216 @@
       "category": "COMBINED",
       "relevant_sections": ["invisibility", "invisible", "opportunity-attacks"],
       "notes": "Spell + combat interaction"
+    },
+    {
+      "id": "combined_005",
+      "question": "Can a grappled creature still cast spells?",
+      "category": "COMBINED",
+      "relevant_sections": ["grappled", "section-conditions", "section-casting-a-spell"],
+      "notes": "Condition + spellcasting interaction"
+    },
+    {
+      "id": "combined_006",
+      "question": "How does rage affect a barbarian's damage and resistances?",
+      "category": "COMBINED",
+      "relevant_sections": ["rage", "section-barbarian", "damage-resistance-and-vulnerability"],
+      "notes": "Class feature + damage interaction"
+    },
+    {
+      "id": "class_001",
+      "question": "What is sneak attack and how does it work?",
+      "category": "CLASS_FEATURES",
+      "relevant_sections": ["sneak-attack", "section-rogue"],
+      "notes": "Rogue signature feature"
+    },
+    {
+      "id": "class_002",
+      "question": "How does wild shape work for druids?",
+      "category": "CLASS_FEATURES",
+      "relevant_sections": ["wild-shape", "section-druid"],
+      "notes": "Druid signature feature"
+    },
+    {
+      "id": "class_003",
+      "question": "What is channel divinity for clerics?",
+      "category": "CLASS_FEATURES",
+      "relevant_sections": ["channel-divinity", "section-cleric"],
+      "notes": "Cleric signature feature"
+    },
+    {
+      "id": "class_004",
+      "question": "How does divine smite work?",
+      "category": "CLASS_FEATURES",
+      "relevant_sections": ["divine-smite", "section-paladin"],
+      "notes": "Paladin signature feature"
+    },
+    {
+      "id": "class_005",
+      "question": "What are eldritch invocations?",
+      "category": "CLASS_FEATURES",
+      "relevant_sections": ["section-eldritch-invocations", "section-warlock"],
+      "notes": "Warlock customization feature"
+    },
+    {
+      "id": "class_006",
+      "question": "How does ki work for monks?",
+      "category": "CLASS_FEATURES",
+      "relevant_sections": ["ki", "section-monk"],
+      "notes": "Monk resource system"
+    },
+    {
+      "id": "class_007",
+      "question": "What is action surge?",
+      "category": "CLASS_FEATURES",
+      "relevant_sections": ["action-surge", "section-fighter"],
+      "notes": "Fighter signature feature"
+    },
+    {
+      "id": "class_008",
+      "question": "How does metamagic work for sorcerers?",
+      "category": "CLASS_FEATURES",
+      "relevant_sections": ["metamagic", "section-sorcerer"],
+      "notes": "Sorcerer customization feature"
+    },
+    {
+      "id": "spell_001",
+      "question": "What does the shield spell do?",
+      "category": "SPELLCASTING",
+      "relevant_sections": ["shield"],
+      "notes": "Defensive reaction spell"
+    },
+    {
+      "id": "spell_002",
+      "question": "How does healing word work?",
+      "category": "SPELLCASTING",
+      "relevant_sections": ["healing-word"],
+      "notes": "Bonus action healing spell"
+    },
+    {
+      "id": "spell_003",
+      "question": "What is the hold person spell?",
+      "category": "SPELLCASTING",
+      "relevant_sections": ["hold-person"],
+      "notes": "Control spell"
+    },
+    {
+      "id": "spell_004",
+      "question": "Describe the dispel magic spell",
+      "category": "SPELLCASTING",
+      "relevant_sections": ["dispel-magic"],
+      "notes": "Utility spell"
+    },
+    {
+      "id": "spell_005",
+      "question": "What does revivify do?",
+      "category": "SPELLCASTING",
+      "relevant_sections": ["revivify"],
+      "notes": "Resurrection spell"
+    },
+    {
+      "id": "combat_001",
+      "question": "How do opportunity attacks work?",
+      "category": "COMBAT",
+      "relevant_sections": ["opportunity-attacks"],
+      "notes": "Melee combat mechanic"
+    },
+    {
+      "id": "combat_002",
+      "question": "What actions can I take in combat?",
+      "category": "COMBAT",
+      "relevant_sections": ["section-actions-in-combat", "attack", "cast-a-spell"],
+      "notes": "Combat action options"
+    },
+    {
+      "id": "combat_003",
+      "question": "How does two-weapon fighting work?",
+      "category": "COMBAT",
+      "relevant_sections": ["two-weapon-fighting"],
+      "notes": "Combat style"
+    },
+    {
+      "id": "combat_004",
+      "question": "What is the dodge action?",
+      "category": "COMBAT",
+      "relevant_sections": ["dodge", "section-actions-in-combat"],
+      "notes": "Defensive action"
+    },
+    {
+      "id": "combat_005",
+      "question": "How do I grapple a creature?",
+      "category": "COMBAT",
+      "relevant_sections": ["grappling", "melee-attacks"],
+      "notes": "Special melee action"
+    },
+    {
+      "id": "equipment_001",
+      "question": "What types of armor are there?",
+      "category": "EQUIPMENT",
+      "relevant_sections": ["section-armor", "light-armor", "medium-armor", "heavy-armor"],
+      "notes": "Armor categories"
+    },
+    {
+      "id": "equipment_002",
+      "question": "What are martial weapons?",
+      "category": "EQUIPMENT",
+      "relevant_sections": ["section-weapons", "martial-melee-weapons", "martial-ranged-weapons"],
+      "notes": "Weapon categories"
+    },
+    {
+      "id": "equipment_003",
+      "question": "What adventuring gear should I buy?",
+      "category": "EQUIPMENT",
+      "relevant_sections": ["section-adventuring-gear"],
+      "notes": "Basic equipment"
+    },
+    {
+      "id": "equipment_004",
+      "question": "How do magic items work?",
+      "category": "EQUIPMENT",
+      "relevant_sections": ["chapter-magic-items", "section-attunement"],
+      "notes": "Magic item rules"
+    },
+    {
+      "id": "exploration_001",
+      "question": "How does travel pace affect the party?",
+      "category": "EXPLORATION",
+      "relevant_sections": ["travel-pace", "section-movement"],
+      "notes": "Overland travel"
+    },
+    {
+      "id": "exploration_002",
+      "question": "What happens when you fall?",
+      "category": "EXPLORATION",
+      "relevant_sections": ["falling", "section-environment"],
+      "notes": "Environmental hazard"
+    },
+    {
+      "id": "exploration_003",
+      "question": "How does vision and light work?",
+      "category": "EXPLORATION",
+      "relevant_sections": ["vision-and-light", "section-environment"],
+      "notes": "Visibility rules"
+    },
+    {
+      "id": "creature_001",
+      "question": "What is a goblin?",
+      "category": "CREATURES",
+      "relevant_sections": ["goblin"],
+      "notes": "Common monster"
+    },
+    {
+      "id": "creature_002",
+      "question": "Tell me about dragons",
+      "category": "CREATURES",
+      "relevant_sections": ["dragons-chromatic", "dragons-metallic"],
+      "notes": "Iconic monster type"
+    },
+    {
+      "id": "creature_003",
+      "question": "What is an owlbear?",
+      "category": "CREATURES",
+      "relevant_sections": ["owlbear"],
+      "notes": "Classic D&D monster"
     }
   ]
 }

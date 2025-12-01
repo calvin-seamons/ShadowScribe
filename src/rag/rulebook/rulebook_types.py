@@ -251,20 +251,32 @@ class QueryResponse:
 
 
 # Intention to Category Mapping
+# NOTE: Mappings are intentionally broad to avoid missing relevant sections.
+# It's better to search more sections and let ranking sort out relevance
+# than to filter out relevant content too aggressively.
 INTENTION_CATEGORY_MAP: Dict[RulebookQueryIntent, List[RulebookCategory]] = {
+    # DESCRIBE_ENTITY: Expanded to include CONDITIONS (for describing conditions like "poisoned"),
+    # CORE_MECHANICS (for core rules), and EXPLORATION (for resting, travel, etc.)
     RulebookQueryIntent.DESCRIBE_ENTITY: [
         RulebookCategory.CHARACTER_CREATION,
         RulebookCategory.CLASS_FEATURES,
         RulebookCategory.SPELLCASTING,
         RulebookCategory.EQUIPMENT,
-        RulebookCategory.CREATURES
+        RulebookCategory.CREATURES,
+        RulebookCategory.CONDITIONS,
+        RulebookCategory.CORE_MECHANICS,
+        RulebookCategory.EXPLORATION,
     ],
+    # COMPARE_ENTITIES: Same expansion as DESCRIBE_ENTITY
     RulebookQueryIntent.COMPARE_ENTITIES: [
         RulebookCategory.CHARACTER_CREATION,
         RulebookCategory.CLASS_FEATURES,
         RulebookCategory.SPELLCASTING,
         RulebookCategory.EQUIPMENT,
-        RulebookCategory.CREATURES
+        RulebookCategory.CREATURES,
+        RulebookCategory.CONDITIONS,
+        RulebookCategory.CORE_MECHANICS,
+        RulebookCategory.EXPLORATION,
     ],
     RulebookQueryIntent.LEVEL_PROGRESSION: [
         RulebookCategory.CLASS_FEATURES
@@ -273,13 +285,23 @@ INTENTION_CATEGORY_MAP: Dict[RulebookQueryIntent, List[RulebookCategory]] = {
         RulebookCategory.COMBAT,
         RulebookCategory.CORE_MECHANICS
     ],
+    # RULE_MECHANICS: Expanded to include SPELLCASTING for concentration, ritual rules, etc.
+    # and COMBAT for attack/damage rules, CONDITIONS for rule interactions
     RulebookQueryIntent.RULE_MECHANICS: [
-        RulebookCategory.CORE_MECHANICS
+        RulebookCategory.CORE_MECHANICS,
+        RulebookCategory.SPELLCASTING,
+        RulebookCategory.COMBAT,
+        RulebookCategory.CONDITIONS,
+        RulebookCategory.EXPLORATION,
     ],
+    # CALCULATE_VALUES: Expanded to include EQUIPMENT for AC calculations (armor, shields)
+    # and COMBAT for attack/damage calculations
     RulebookQueryIntent.CALCULATE_VALUES: [
         RulebookCategory.CHARACTER_CREATION,
         RulebookCategory.CLASS_FEATURES,
-        RulebookCategory.CORE_MECHANICS
+        RulebookCategory.CORE_MECHANICS,
+        RulebookCategory.EQUIPMENT,
+        RulebookCategory.COMBAT,
     ],
     RulebookQueryIntent.SPELL_DETAILS: [
         RulebookCategory.SPELLCASTING
@@ -537,6 +559,14 @@ RULEBOOK_CATEGORY_ASSIGNMENTS = {
     
     # Restorative items should only be EQUIPMENT (override parent inheritance)
     "restorative-ointment": [6],  # EQUIPMENT
+    
+    # MONSTER STAT BLOCK SECTIONS - Need dual categorization for core mechanics + creatures
+    # These appear in monster stat blocks but explain core game mechanics
+    "hit-points": [7, 9],  # CORE_MECHANICS, CREATURES - HP rules are core mechanics
+    "armor-class": [4, 7, 9],  # COMBAT, CORE_MECHANICS, CREATURES - AC is combat/core
+    "speed": [7, 9],  # CORE_MECHANICS, CREATURES - Speed rules
+    "skills": [7, 9],  # CORE_MECHANICS, CREATURES - Skills overview
+    "experience-points": [1, 7, 9],  # CHARACTER_CREATION, CORE_MECHANICS, CREATURES
     
     # COMBAT CHAPTER
     "chapter-combat": [4],  # COMBAT

@@ -9,6 +9,7 @@ generates embeddings using OpenAI, and saves the complete storage system.
 import sys
 from pathlib import Path
 import time
+import argparse
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -19,6 +20,10 @@ from src.rag.rulebook.rulebook_storage import RulebookStorage
 
 def main():
     """Main build process"""
+    parser = argparse.ArgumentParser(description="Build D&D 5e Rulebook Storage")
+    parser.add_argument("--force", action="store_true", help="Force rebuild from scratch")
+    args = parser.parse_args()
+    
     print("🐲 Building D&D 5e Rulebook Storage System")
     print("=" * 50)
     
@@ -32,11 +37,14 @@ def main():
         print(f"Loaded: {stats['total_sections']} sections")
         print(f"Embeddings: {stats['embedding_coverage']}")
         
-        # Ask if user wants to rebuild
-        response = input("\nDo you want to rebuild from scratch? (y/N): ").lower()
-        if response not in ['y', 'yes']:
-            print("Using existing storage. Run with --force to rebuild.")
-            return
+        if not args.force:
+            # Ask if user wants to rebuild
+            response = input("\nDo you want to rebuild from scratch? (y/N): ").lower()
+            if response not in ['y', 'yes']:
+                print("Using existing storage. Run with --force to rebuild.")
+                return
+        else:
+            print("\n🔄 Force rebuild requested...")
         
         # Clear existing data for rebuild
         storage.sections.clear()

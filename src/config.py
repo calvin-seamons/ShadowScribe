@@ -15,11 +15,17 @@ load_dotenv(env_path)
 
 
 EmbeddingModel = Literal[
+    # OpenAI models (API-based)
     "text-embedding-3-small",  # Fast, good quality (1536 dim)
     "text-embedding-3-large",  # Slower, best quality (3072 dim) 
     "text-embedding-ada-002",  # Legacy, fast (1536 dim)
+    # Local models (no API calls)
     "local-minilm-l6",         # Local, very fast (384 dim)
-    "local-mpnet-base"         # Local, fast (768 dim)
+    "local-mpnet-base",        # Local, fast, good quality (768 dim)
+    "local-bge-small",         # Local, high quality (384 dim)
+    "local-bge-base",          # Local, very high quality (768 dim)
+    "local-gte-small",         # Local, excellent quality (384 dim)
+    "local-gte-base"           # Local, excellent quality (768 dim)
 ]
 
 # OpenAI Model Categories - Different models require different parameters
@@ -85,7 +91,8 @@ class RAGConfig:
     anthropic_final_model: str = "claude-sonnet-4-5"    # Latest Claude 4.5 Sonnet - Default response model
     
     # Embedding Model Settings
-    embedding_model: EmbeddingModel = "text-embedding-3-small"  # Default: fast and good
+    # Use local model by default (no API calls, fast, good quality)
+    embedding_model: EmbeddingModel = "local-bge-base"
     
     # LLM Generation Settings
     # Router LLM Settings (fast, cheaper models for routing decisions)
@@ -225,13 +232,19 @@ class RAGConfig:
     def get_embedding_dimensions(self) -> int:
         """Get the expected embedding dimensions for the current model"""
         dimensions = {
+            # OpenAI models
             "text-embedding-3-small": 1536,
             "text-embedding-3-large": 3072,
             "text-embedding-ada-002": 1536,
+            # Local models
             "local-minilm-l6": 384,
-            "local-mpnet-base": 768
+            "local-mpnet-base": 768,
+            "local-bge-small": 384,
+            "local-bge-base": 768,
+            "local-gte-small": 384,
+            "local-gte-base": 768
         }
-        return dimensions.get(self.embedding_model, 1536)
+        return dimensions.get(self.embedding_model, 768)
     
     def is_local_model(self) -> bool:
         """Check if the current model is a local model"""
