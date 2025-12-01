@@ -1,0 +1,177 @@
+{
+  "metadata": {
+    "description": "24 test questions for rulebook retrieval evaluation",
+    "source": "docs/rulebook-testqs.md",
+    "version": "1.0"
+  },
+  "questions": [
+    {
+      "id": "rule_001",
+      "question": "How does concentration work?",
+      "category": "RULE_MECHANICS",
+      "relevant_sections": ["concentration"],
+      "notes": "Core spellcasting mechanic"
+    },
+    {
+      "id": "rule_002",
+      "question": "Explain the advantage and disadvantage system",
+      "category": "RULE_MECHANICS",
+      "relevant_sections": ["section-advantage-and-disadvantage"],
+      "notes": "Core d20 mechanic"
+    },
+    {
+      "id": "rule_003",
+      "question": "How do saving throws work?",
+      "category": "RULE_MECHANICS",
+      "relevant_sections": ["section-saving-throws", "saving-throws"],
+      "notes": "Core mechanic"
+    },
+    {
+      "id": "rule_004",
+      "question": "What is proficiency bonus?",
+      "category": "RULE_MECHANICS",
+      "relevant_sections": ["section-proficiency-bonus", "proficiency-bonus"],
+      "notes": "Core mechanic"
+    },
+    {
+      "id": "rule_005",
+      "question": "Explain how ability checks work",
+      "category": "RULE_MECHANICS",
+      "relevant_sections": ["section-ability-checks"],
+      "notes": "Core mechanic"
+    },
+    {
+      "id": "entity_001",
+      "question": "What are the traits of a dwarf?",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["section-dwarf", "dwarf-traits"],
+      "notes": "Race description"
+    },
+    {
+      "id": "entity_002",
+      "question": "Describe the fireball spell",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["fireball"],
+      "notes": "Spell description"
+    },
+    {
+      "id": "entity_003",
+      "question": "Tell me about the fighter class",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["section-fighter"],
+      "notes": "Class description"
+    },
+    {
+      "id": "entity_004",
+      "question": "What is the poisoned condition?",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["poisoned", "section-conditions"],
+      "notes": "Condition description"
+    },
+    {
+      "id": "entity_005",
+      "question": "Explain what a longsword is",
+      "category": "DESCRIBE_ENTITY",
+      "relevant_sections": ["longsword"],
+      "notes": "Equipment description"
+    },
+    {
+      "id": "compare_001",
+      "question": "What's the difference between a wizard and a sorcerer?",
+      "category": "COMPARE_ENTITIES",
+      "relevant_sections": ["section-wizard", "section-sorcerer"],
+      "notes": "Class comparison"
+    },
+    {
+      "id": "compare_002",
+      "question": "Compare the dwarf and elf races",
+      "category": "COMPARE_ENTITIES",
+      "relevant_sections": ["section-dwarf", "dwarf-traits", "section-elf", "elf-traits"],
+      "notes": "Race comparison"
+    },
+    {
+      "id": "compare_003",
+      "question": "Compare fireball and lightning bolt spells",
+      "category": "COMPARE_ENTITIES",
+      "relevant_sections": ["fireball", "lightning-bolt"],
+      "notes": "Spell comparison"
+    },
+    {
+      "id": "compare_004",
+      "question": "How do the barbarian and fighter differ?",
+      "category": "COMPARE_ENTITIES",
+      "relevant_sections": ["section-barbarian", "section-fighter"],
+      "notes": "Class comparison"
+    },
+    {
+      "id": "compare_005",
+      "question": "What's the difference between a short rest and long rest?",
+      "category": "COMPARE_ENTITIES",
+      "relevant_sections": ["short-rest", "long-rest", "section-resting"],
+      "notes": "Rest mechanic comparison"
+    },
+    {
+      "id": "calc_001",
+      "question": "How do I calculate my attack bonus?",
+      "category": "CALCULATE_VALUES",
+      "relevant_sections": ["section-making-an-attack", "attack-rolls-and-damage"],
+      "notes": "Attack calculation"
+    },
+    {
+      "id": "calc_002",
+      "question": "What's my AC with chain mail and a shield?",
+      "category": "CALCULATE_VALUES",
+      "relevant_sections": ["armor-class", "heavy-armor", "shield"],
+      "notes": "AC calculation"
+    },
+    {
+      "id": "calc_003",
+      "question": "Calculate my spell save DC with 18 Intelligence",
+      "category": "CALCULATE_VALUES",
+      "relevant_sections": ["spellcasting-ability", "spell-save-dc"],
+      "notes": "Spell DC calculation"
+    },
+    {
+      "id": "calc_004",
+      "question": "What's the damage for a longsword with 16 Strength?",
+      "category": "CALCULATE_VALUES",
+      "relevant_sections": ["longsword", "attack-rolls-and-damage", "section-damage-and-healing"],
+      "notes": "Damage calculation"
+    },
+    {
+      "id": "calc_005",
+      "question": "How much HP does a 5th level fighter with 14 Constitution have?",
+      "category": "CALCULATE_VALUES",
+      "relevant_sections": ["hit-points", "hit-points-and-hit-dice", "section-fighter"],
+      "notes": "HP calculation"
+    },
+    {
+      "id": "combined_001",
+      "question": "Compare the fighter and barbarian at level 5, including their features and combat tactics",
+      "category": "COMBINED",
+      "relevant_sections": ["section-fighter", "section-barbarian", "extra-attack"],
+      "notes": "Multi-section comparison"
+    },
+    {
+      "id": "combined_002",
+      "question": "How does the poisoned condition affect my attack rolls and saving throws?",
+      "category": "COMBINED",
+      "relevant_sections": ["poisoned", "section-conditions", "attack-rolls-and-damage", "section-saving-throws"],
+      "notes": "Condition + mechanics interaction"
+    },
+    {
+      "id": "combined_003",
+      "question": "What's my AC with plate armor and a shield, and how does cover affect it?",
+      "category": "COMBINED",
+      "relevant_sections": ["armor-class", "shield", "cover"],
+      "notes": "AC + cover interaction"
+    },
+    {
+      "id": "combined_004",
+      "question": "How does invisibility interact with opportunity attacks?",
+      "category": "COMBINED",
+      "relevant_sections": ["invisibility", "invisible", "opportunity-attacks"],
+      "notes": "Spell + combat interaction"
+    }
+  ]
+}

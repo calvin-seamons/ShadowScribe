@@ -1,6 +1,0 @@
-# Results folder for query rewriter tests
-# Test results are saved as JSON files with timestamps
-
-This folder stores test results from `run_tests.py`.
-
-Each run creates a file like: `test_results_20251129_143022.json`
