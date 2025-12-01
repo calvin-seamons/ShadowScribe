@@ -398,8 +398,6 @@ class LLMClientFactory:
         if cfg.openai_api_key:
             out["openai"] = OpenAILLMClient(use_router_model=False)  # Final model
             out["openai_router"] = OpenAILLMClient(use_router_model=True)  # Router model
-            # Legacy compatibility
-            out["openai_4o"] = OpenAILLMClient(default_model="gpt-4o")
             
         if cfg.anthropic_api_key:
             out["anthropic"] = AnthropicLLMClient(use_router_model=False)  # Final model

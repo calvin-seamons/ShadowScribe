@@ -19,6 +19,7 @@ RUN pip install --no-cache-dir \
     torch --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir \
     transformers==4.36.0 \
+    sentence-transformers \
     safetensors \
     sentencepiece \
     protobuf
@@ -39,7 +40,10 @@ RUN pip install --no-cache-dir \
     pymysql \
     httpx==0.25.2 \
     dacite==1.8.1 \
-    rank_bm25==0.2.2
+    rank_bm25==0.2.2 \
+    python-dotenv \
+    openai \
+    anthropic
 
 # Copy application code
 COPY . .

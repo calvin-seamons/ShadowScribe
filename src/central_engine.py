@@ -38,7 +38,6 @@ from .rag.tool_intentions import get_fallback_intention
 # Import Gazetteer-based entity extraction
 from .classifiers.gazetteer_ner import GazetteerEntityExtractor, Entity
 
-
 # ===== SINGLETON LOCAL CLASSIFIER =====
 # Shared across all CentralEngine instances to avoid repeated model loading
 _local_classifier_singleton: Optional[Any] = None
@@ -1074,19 +1073,18 @@ class CentralEngine:
                     intention=intention,
                     entities=[{"name": e} for e in entities],
                     context_hints=[],
-                    top_k=5
+                    top_k=self.config.max_results
                 )
                 
             elif tool == "rulebook" and self.rulebook_router:
                 try:
                     intention_enum = RulebookQueryIntent(intention.lower())
-                    # Store as tuple to match what get_final_response_prompt expects
                     results["rulebook"] = self.rulebook_router.query(
                         intention=intention_enum,
                         user_query=user_query,
                         entities=entities,
                         context_hints=[],
-                        k=5
+                        k=self.config.max_results
                     )
                 except ValueError:
                     print(f"🔧 WARNING: Invalid rulebook intention '{intention}', skipping")
