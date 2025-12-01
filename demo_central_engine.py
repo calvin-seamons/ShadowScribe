@@ -6,13 +6,15 @@ Simple script that lets you ask questions to the CentralEngine and see:
 - Performance metrics
 - Full response from the model
 - All using config.py settings
+
+Also stores routing feedback to the database for training data collection.
 """
 import asyncio
 import sys
 from pathlib import Path
 import json
 import argparse
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 # Add project root to path
 project_root = Path(__file__).parent
@@ -25,6 +27,11 @@ from src.config import get_config
 from src.rag.character.character_manager import CharacterManager
 from src.rag.rulebook.rulebook_storage import RulebookStorage
 from src.rag.session_notes.session_notes_storage import SessionNotesStorage
+
+# Database imports for feedback storage
+from api.database.connection import AsyncSessionLocal
+from api.database.feedback_models import RoutingFeedback
+from api.database.repositories.feedback_repo import FeedbackRepository
 
 
 class InteractiveCentralEngineDemo:
@@ -159,6 +166,24 @@ class InteractiveCentralEngineDemo:
         import time
         start_time = time.time()
         
+        # Track routing info for feedback storage
+        routing_info: Dict[str, Any] = {
+            'tools_needed': None,
+            'entities': None,
+            'normalized_query': None,
+            'backend': 'local' if self.routing_mode == 'local' else 'llm',
+            'inference_time_ms': None
+        }
+        
+        async def capture_metadata(event_type: str, data: dict):
+            """Callback to capture routing metadata for feedback storage."""
+            if event_type == 'routing_metadata':
+                routing_info['tools_needed'] = data.get('tools_needed', [])
+                routing_info['backend'] = data.get('classifier_backend', 'local')
+                routing_info['normalized_query'] = data.get('normalized_query')
+                routing_info['entities'] = data.get('extracted_entities', [])
+                routing_info['inference_time_ms'] = data.get('local_inference_time_ms')
+        
         # Stream the response from CentralEngine
         final_response = ""
         try:
@@ -168,11 +193,18 @@ class InteractiveCentralEngineDemo:
             else:
                 print(f"\n💬 Response:")
             
-            async for chunk in self.engine.process_query_stream(user_query, character_name):
+            async for chunk in self.engine.process_query_stream(
+                user_query, 
+                character_name,
+                metadata_callback=capture_metadata
+            ):
                 print(chunk, end='', flush=True)
                 final_response += chunk
             
             print()  # New line after streaming completes
+            
+            # Store routing feedback to database
+            await self._store_routing_feedback(routing_info, character_name, show_details)
             
         except Exception as e:
             print(f"\n❌ Error processing query: {e}")
@@ -198,6 +230,57 @@ class InteractiveCentralEngineDemo:
             print("=" * 80)
         
         return final_response
+    
+    async def _store_routing_feedback(self, routing_info: Dict[str, Any], character_name: str, show_details: bool):
+        """Store routing feedback to the database for training data collection.
+        
+        Args:
+            routing_info: Dictionary containing tools_needed, entities, normalized_query, etc.
+            character_name: Name of the character used
+            show_details: Whether to show feedback storage confirmation
+        """
+        if not routing_info['tools_needed'] or not routing_info['normalized_query']:
+            if show_details:
+                print("⚠️  No routing info to store (missing tools or query)")
+            return
+        
+        try:
+            async with AsyncSessionLocal() as db:
+                repo = FeedbackRepository(db)
+                
+                # Convert entities to serializable format
+                entities_data = None
+                if routing_info['entities']:
+                    entities_data = [
+                        {
+                            'name': e.get('name', ''),
+                            'text': e.get('text', ''),
+                            'type': e.get('type', ''),
+                            'confidence': e.get('confidence', 1.0)
+                        }
+                        for e in routing_info['entities']
+                    ]
+                
+                # Create feedback record
+                feedback_record = RoutingFeedback(
+                    user_query=routing_info['normalized_query'],
+                    character_name=character_name,
+                    campaign_id='main_campaign',
+                    predicted_tools=routing_info['tools_needed'],
+                    predicted_entities=entities_data,
+                    classifier_backend=routing_info['backend'],
+                    classifier_inference_time_ms=routing_info['inference_time_ms']
+                )
+                
+                created = await repo.create(feedback_record)
+                await db.commit()
+                
+                if show_details:
+                    print(f"💾 Routing feedback stored (ID: {created.id[:8]}...)")
+                    
+        except Exception as e:
+            if show_details:
+                print(f"⚠️  Failed to store routing feedback: {e}")
     
     async def _debug_tool_selector_response(self, user_query: str):
         """Debug the tool selector LLM response to see what's working"""
