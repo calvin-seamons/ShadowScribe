@@ -52,6 +52,10 @@ export function ActionsEditor({ data, onSave }: ActionsEditorProps) {
     }
   }
   
+  const updateActionsData = (newActions: ActionsData) => {
+    setActions(newActions)
+  }
+
   const addAction = () => {
     const newAction: CharacterAction = {
       name: 'New Action',
@@ -62,7 +66,7 @@ export function ActionsEditor({ data, onSave }: ActionsEditorProps) {
       range: '5 feet',
       description: '',
     }
-    setActions({
+    updateActionsData({
       ...actions,
       actions: [...(actions.actions || []), newAction]
     })
@@ -70,7 +74,7 @@ export function ActionsEditor({ data, onSave }: ActionsEditorProps) {
   }
   
   const removeAction = (index: number) => {
-    setActions({
+    updateActionsData({
       ...actions,
       actions: actions.actions?.filter((_, i) => i !== index) || []
     })
@@ -82,7 +86,7 @@ export function ActionsEditor({ data, onSave }: ActionsEditorProps) {
   const updateAction = (index: number, field: string, value: any) => {
     const updated = [...(actions.actions || [])]
     updated[index] = { ...updated[index], [field]: value }
-    setActions({ ...actions, actions: updated })
+    updateActionsData({ ...actions, actions: updated })
   }
   
   const updateLimitedUses = (index: number, field: string, value: any) => {
@@ -94,7 +98,7 @@ export function ActionsEditor({ data, onSave }: ActionsEditorProps) {
         [field]: value
       }
     }
-    setActions({ ...actions, actions: updated })
+    updateActionsData({ ...actions, actions: updated })
   }
   
   const getActionTypeIcon = (type?: string) => {

@@ -37,17 +37,13 @@ class DNDBeyondInventoryParser:
             for item in items
         )
         
-        # Organize items by equipped status
-        equipped_items = {}
+        # Simple split: equipped vs backpack based on equipped status
+        equipped_items = []
         backpack = []
         
         for item in items:
             if item.equipped:
-                # Group equipped items by type
-                item_type = item.definition.type or "other"
-                if item_type not in equipped_items:
-                    equipped_items[item_type] = []
-                equipped_items[item_type].append(item)
+                equipped_items.append(item)
             else:
                 backpack.append(item)
         

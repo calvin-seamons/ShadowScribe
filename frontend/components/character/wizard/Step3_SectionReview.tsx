@@ -103,17 +103,34 @@ export function Step3_SectionReview({
 }: Step3_SectionReviewProps) {
   const [expandedSection, setExpandedSection] = useState<SectionName | null>(null)
   const [savingSection, setSavingSection] = useState<SectionName | null>(null)
+  // Track which sections have been saved (to show saved indicator)
+  const [savedSections, setSavedSections] = useState<Set<SectionName>>(new Set())
+  // Key counter to force editor remount when collapsing/expanding
+  // This ensures unsaved edits are discarded when user collapses a section
+  const [editorKeys, setEditorKeys] = useState<Record<string, number>>({})
 
   const toggleSection = (sectionName: SectionName) => {
-    setExpandedSection(expandedSection === sectionName ? null : sectionName)
+    if (expandedSection === sectionName) {
+      // Collapsing - increment key to reset editor state (discard unsaved changes)
+      setEditorKeys(prev => ({ ...prev, [sectionName]: (prev[sectionName] || 0) + 1 }))
+      setExpandedSection(null)
+    } else {
+      setExpandedSection(sectionName)
+    }
   }
 
-  const handleSectionSave = async (sectionName: SectionName) => {
-    if (!characterData || !characterData[sectionName]) return
+  const getEditorKey = (sectionName: SectionName) => {
+    return `${sectionName}-${editorKeys[sectionName] || 0}`
+  }
+
+  const handleSectionSave = async (sectionName: SectionName, data: any) => {
+    if (!data) return
 
     setSavingSection(sectionName)
     try {
-      await onSectionSave(sectionName, characterData[sectionName])
+      await onSectionSave(sectionName, data)
+      // Mark section as saved
+      setSavedSections(prev => new Set(prev).add(sectionName))
     } finally {
       setSavingSection(null)
     }
@@ -177,7 +194,7 @@ export function Step3_SectionReview({
                     {hasData && (
                       <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 text-xs font-medium">
                         <Check className="w-3 h-3" />
-                        Loaded
+                        {savedSections.has(section.name) ? 'Saved' : 'Loaded'}
                       </span>
                     )}
                     <ChevronDown className={cn(
@@ -198,50 +215,58 @@ export function Step3_SectionReview({
                             <>
                               {section.name === 'ability_scores' && (
                                 <AbilityScoresEditor
+                                  key={getEditorKey(section.name)}
                                   data={characterData[section.name]}
-                                  onSave={async (data) => handleSectionSave(section.name)}
+                                  onSave={(data) => handleSectionSave(section.name, data)}
                                 />
                               )}
                               {section.name === 'combat_stats' && (
                                 <CombatStatsEditor
+                                  key={getEditorKey(section.name)}
                                   data={characterData[section.name]}
-                                  onSave={async (data) => handleSectionSave(section.name)}
+                                  onSave={(data) => handleSectionSave(section.name, data)}
                                 />
                               )}
                               {section.name === 'inventory' && (
                                 <InventoryEditor
+                                  key={getEditorKey(section.name)}
                                   data={characterData[section.name]}
-                                  onSave={async (data) => handleSectionSave(section.name)}
+                                  onSave={(data) => handleSectionSave(section.name, data)}
                                 />
                               )}
                               {section.name === 'spell_list' && (
                                 <SpellListEditor
+                                  key={getEditorKey(section.name)}
                                   data={characterData[section.name]}
-                                  onSave={async (data) => handleSectionSave(section.name)}
+                                  onSave={(data) => handleSectionSave(section.name, data)}
                                 />
                               )}
                               {section.name === 'action_economy' && (
                                 <ActionsEditor
+                                  key={getEditorKey(section.name)}
                                   data={characterData[section.name]}
-                                  onSave={async (data) => handleSectionSave(section.name)}
+                                  onSave={(data) => handleSectionSave(section.name, data)}
                                 />
                               )}
                               {section.name === 'features_and_traits' && (
                                 <FeaturesAndTraitsEditor
+                                  key={getEditorKey(section.name)}
                                   data={characterData[section.name]}
-                                  onSave={async (data) => handleSectionSave(section.name)}
+                                  onSave={(data) => handleSectionSave(section.name, data)}
                                 />
                               )}
                               {section.name === 'backstory' && (
                                 <BackstoryEditor
+                                  key={getEditorKey(section.name)}
                                   data={characterData[section.name]}
-                                  onSave={async (data) => handleSectionSave(section.name)}
+                                  onSave={(data) => handleSectionSave(section.name, data)}
                                 />
                               )}
                               {section.name === 'personality' && (
                                 <PersonalityEditor
+                                  key={getEditorKey(section.name)}
                                   data={characterData[section.name]}
-                                  onSave={async (data) => handleSectionSave(section.name)}
+                                  onSave={(data) => handleSectionSave(section.name, data)}
                                 />
                               )}
                             </>

@@ -878,43 +878,21 @@ class Inventory:
       * Consider inventory[].definition.weightMultiplier (usually 1 or 0)
       * Some items like Bag of Holding have weightMultiplier = 0
     - weight_unit: NOT EXPLICIT - assume "lb" (pounds) as D&D standard
-    - equipped_items: Organize inventory[] where inventory[].equipped == true
-      * Group by equipment slot (though slot info not explicit in JSON)
-      * Key could be item type or custom categorization
+    - equipped_items: All inventory[] items where inventory[].equipped == true
     - backpack: All inventory[] items where inventory[].equipped == false
     - valuables: NOT AVAILABLE - no separate valuables tracking in D&D Beyond
     
-    INVENTORY ORGANIZATION IN JSON:
-    - Single inventory[] array contains all items
-    - equipped status tracked per item
-    - containerEntityId links items to containers (like Bag of Holding)
-    - No explicit equipment slot categorization
-    
-    CONTAINER ITEMS:
-    - Some items are containers (inventory[].definition.isContainer == true)
-    - Items can be stored in containers via containerEntityId
-    - Bag of Holding example: other items reference its ID as container
+    INVENTORY ORGANIZATION:
+    - Simple equipped/backpack split based on equipped status
+    - No slot-based categorization
     
     CURRENCY TRACKING:
     - Separate currencies object: {"cp": int, "sp": int, "gp": int, "ep": int, "pp": int}
     - Not included in regular inventory weight calculations
-    
-    MISSING INFORMATION:
-    - No explicit equipment slot categorization
-    - No separate valuables vs regular items distinction
-    - Weight unit not specified (assumed to be pounds)
-    - No pre-calculated total weight
-    
-    LLM ASSISTANCE NEEDED:
-    - Calculate total weight from all items and their quantities
-    - Categorize equipped items by logical slots (armor, weapons, accessories, etc.)
-    - Handle container relationships (items stored in other items)
-    - Distinguish between valuable items and regular equipment for organization
-    - Account for special weight rules (like Bag of Holding weightMultiplier)
     """
     total_weight: float
     weight_unit: str = "lb"
-    equipped_items: Dict[str, List[InventoryItem]] = field(default_factory=dict)
+    equipped_items: List[InventoryItem] = field(default_factory=list)
     backpack: List[InventoryItem] = field(default_factory=list)
     valuables: List[Dict[str, Any]] = field(default_factory=list)
 

@@ -54,12 +54,16 @@ export function BackstoryEditor({ data, onSave }: BackstoryEditorProps) {
     }
   }
   
+  const updateBackstory = (newBackstory: BackstoryData) => {
+    setBackstory(newBackstory)
+  }
+
   const updateTitle = (value: string) => {
-    setBackstory({ ...backstory, title: value })
+    updateBackstory({ ...backstory, title: value })
   }
   
   const updateFamilyParents = (value: string) => {
-    setBackstory({
+    updateBackstory({
       ...backstory,
       family_backstory: {
         ...backstory.family_backstory,
@@ -71,18 +75,18 @@ export function BackstoryEditor({ data, onSave }: BackstoryEditorProps) {
   const updateSection = (index: number, field: 'heading' | 'content', value: string) => {
     const sections = [...(backstory.sections || [])]
     sections[index] = { ...sections[index], [field]: value }
-    setBackstory({ ...backstory, sections })
+    updateBackstory({ ...backstory, sections })
   }
   
   const addSection = () => {
     const sections = [...(backstory.sections || [])]
     sections.push({ heading: 'New Section', content: '' })
-    setBackstory({ ...backstory, sections })
+    updateBackstory({ ...backstory, sections })
   }
   
   const removeSection = (index: number) => {
     const sections = backstory.sections?.filter((_, i) => i !== index) || []
-    setBackstory({ ...backstory, sections })
+    updateBackstory({ ...backstory, sections })
   }
   
   return (

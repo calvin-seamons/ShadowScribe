@@ -54,6 +54,10 @@ export function SpellListEditor({ data, onSave }: SpellListEditorProps) {
     }
   }
   
+  const updateSpellList = (newSpellList: SpellListData) => {
+    setSpellList(newSpellList)
+  }
+
   const addSpell = (level: number) => {
     const newSpell: Spell = {
       name: 'New Spell',
@@ -70,33 +74,52 @@ export function SpellListEditor({ data, onSave }: SpellListEditorProps) {
       ? spellList.spells 
       : []
     
-    setSpellList({
+    updateSpellList({
       ...spellList,
       spells: [...currentSpells, newSpell]
     })
   }
   
-  const removeSpell = (spellToRemove: Spell) => {
+  const removeSpell = (spellToRemove: Spell, indexInLevel: number) => {
     const currentSpells = Array.isArray(spellList.spells) 
       ? spellList.spells 
       : []
     
-    setSpellList({
+    // Find the spell by matching name and level since reference equality doesn't work
+    // when spells come from nested structures
+    let removedCount = 0
+    const spellsToKeep = currentSpells.filter(spell => {
+      if (removedCount > 0) return true // Only remove one spell
+      if (spell.name === spellToRemove.name && spell.level === spellToRemove.level) {
+        removedCount++
+        return false
+      }
+      return true
+    })
+    
+    updateSpellList({
       ...spellList,
-      spells: currentSpells.filter(spell => spell !== spellToRemove)
+      spells: spellsToKeep
     })
   }
   
-  const updateSpellName = (spellToUpdate: Spell, newName: string) => {
+  const updateSpellName = (spellToUpdate: Spell, spellIndex: number, newName: string) => {
     const currentSpells = Array.isArray(spellList.spells) 
       ? spellList.spells 
       : []
     
-    setSpellList({
+    // Find the spell by matching name and level since reference equality doesn't work
+    let updatedCount = 0
+    updateSpellList({
       ...spellList,
-      spells: currentSpells.map(spell => 
-        spell === spellToUpdate ? { ...spell, name: newName } : spell
-      )
+      spells: currentSpells.map(spell => {
+        if (updatedCount > 0) return spell // Only update one spell
+        if (spell.name === spellToUpdate.name && spell.level === spellToUpdate.level) {
+          updatedCount++
+          return { ...spell, name: newName }
+        }
+        return spell
+      })
     })
   }
   
@@ -266,7 +289,7 @@ export function SpellListEditor({ data, onSave }: SpellListEditorProps) {
                                 <input
                                   type="text"
                                   value={spell.name || ''}
-                                  onChange={(e) => updateSpellName(spell, e.target.value)}
+                                  onChange={(e) => updateSpellName(spell, spellIndex, e.target.value)}
                                   className="w-full px-2 py-1 border border-gray-300 rounded"
                                 />
                               </div>
@@ -317,7 +340,7 @@ export function SpellListEditor({ data, onSave }: SpellListEditorProps) {
                             </div>
                             <div className="flex justify-end">
                               <button
-                                onClick={() => removeSpell(spell)}
+                                onClick={() => removeSpell(spell, spellIndex)}
                                 className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-medium"
                               >
                                 🗑️ Delete Spell
@@ -343,6 +366,17 @@ export function SpellListEditor({ data, onSave }: SpellListEditorProps) {
             {SPELL_LEVELS.reduce((count, level) => count + getSpellsByLevel(level).length, 0)}
           </span>
         </div>
+      </div>
+      
+      {/* Save Button */}
+      <div className="flex justify-end pt-4">
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-medium transition-all transform hover:scale-105 active:scale-95 disabled:transform-none"
+        >
+          {isSaving ? 'Saving...' : 'Save Spells'}
+        </button>
       </div>
     </div>
   )
