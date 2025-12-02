@@ -31,11 +31,11 @@ class EntitySearchEngine:
     3. Fuzzy similarity match - confidence based on similarity score
     """
     
-    def __init__(self, threshold: float = 0.75):
+    def __init__(self, threshold: float = 0.60):
         """Initialize the entity search engine.
         
         Args:
-            threshold: Minimum similarity score for fuzzy matching (default 0.75)
+            threshold: Minimum similarity score for fuzzy matching (default 0.60 - permissive to avoid missing content)
         """
         self.threshold = threshold
         self._rulebook_cache: Dict[str, List['EntitySearchResult']] = {}  # Cache for rulebook lookups
@@ -82,14 +82,13 @@ class EntitySearchEngine:
                 char_results = self.search_all_character_sections(character, entity_name)
                 all_results.extend(char_results)
             
-            # 2. Search session notes if selected
+            # 2. Search session notes if selected (returns list of matches)
             if 'session_notes' in selected_tools and session_notes_storage:
-                session_result = self.search_session_notes(
+                session_results = self.search_session_notes(
                     session_notes_storage, 
                     entity_name
                 )
-                if session_result:
-                    all_results.append(session_result)
+                all_results.extend(session_results)
             
             # 3. Search rulebook if selected (with caching)
             if 'rulebook' in selected_tools and rulebook_storage:
@@ -130,7 +129,10 @@ class EntitySearchEngine:
         candidate_name: str,
         threshold: Optional[float] = None
     ) -> Optional[tuple]:
-        """Match an entity name against a candidate using 3-strategy approach.
+        """Match an entity name against a candidate using multi-strategy approach.
+        
+        Philosophy: More context is better. We prefer to match too much (let LLM filter)
+        rather than miss relevant entities.
         
         Args:
             entity_name: Name to search for
@@ -151,11 +153,56 @@ class EntitySearchEngine:
         if normalized_search == normalized_candidate:
             return (1.0, "exact", candidate_name)
         
-        # Strategy 2: Substring match (partial name)
+        # Strategy 2: Substring match (partial name) - handles "Ghul" in "Ghul'Vor"
         if normalized_search in normalized_candidate or normalized_candidate in normalized_search:
             return (0.9, "substring", candidate_name)
         
-        # Strategy 3: Fuzzy similarity match
+        # Strategy 3: Word-level partial match - handles "Duskryn" matching "Duskryn Nightwarden"
+        # Also handles possessives like "Ghul'Vor's servants"
+        search_words = normalized_search.split()
+        candidate_words = normalized_candidate.split()
+        
+        # Check if any search word matches any candidate word
+        for search_word in search_words:
+            if len(search_word) >= 3:  # Only for words 3+ chars
+                for candidate_word in candidate_words:
+                    if search_word == candidate_word:
+                        return (0.85, "word_match", candidate_name)
+                    # Partial word match (start of word)
+                    if len(search_word) >= 4 and candidate_word.startswith(search_word):
+                        return (0.80, "word_prefix", candidate_name)
+                    if len(candidate_word) >= 4 and search_word.startswith(candidate_word):
+                        return (0.80, "word_prefix", candidate_name)
+        
+        # Strategy 4: Component matching for apostrophe/hyphen names
+        # "Ghul" should match "Ghul'Vor", "Ghul'Vor's Twin Servants", "Ghul-kin", etc.
+        # Extract components by splitting on apostrophes, hyphens, and spaces
+        search_components = re.split(r"['\"'\s-]+", entity_name.lower())
+        candidate_components = re.split(r"['\"'\s-]+", candidate_name.lower())
+        
+        for search_comp in search_components:
+            if len(search_comp) >= 3:
+                for cand_comp in candidate_components:
+                    if len(cand_comp) >= 3:
+                        # Exact component match
+                        if search_comp == cand_comp:
+                            return (0.85, "component_match", candidate_name)
+                        # Component prefix match
+                        if len(search_comp) >= 4 and cand_comp.startswith(search_comp):
+                            return (0.75, "component_prefix", candidate_name)
+                        if len(cand_comp) >= 4 and search_comp.startswith(cand_comp):
+                            return (0.75, "component_prefix", candidate_name)
+        
+        # Strategy 5: First word/component match with fuzzy
+        if len(search_words) >= 1 and len(candidate_words) >= 1:
+            first_search = search_words[0]
+            first_candidate = candidate_words[0]
+            if len(first_search) >= 4 and len(first_candidate) >= 4:
+                first_similarity = SequenceMatcher(None, first_search, first_candidate).ratio()
+                if first_similarity >= 0.75:
+                    return (first_similarity * 0.9, "first_word_fuzzy", candidate_name)
+        
+        # Strategy 6: Fuzzy similarity match on full name
         similarity = self.calculate_similarity(entity_name, candidate_name)
         if similarity >= threshold:
             return (similarity, "fuzzy", candidate_name)
@@ -302,9 +349,13 @@ class EntitySearchEngine:
         # Search in backstory sections
         if character.backstory.sections:
             for idx, section in enumerate(character.backstory.sections):
+                # Handle both dict and object access (database vs pickle loading)
+                section_heading = section.get('heading') if isinstance(section, dict) else getattr(section, 'heading', None)
+                section_content = section.get('content') if isinstance(section, dict) else getattr(section, 'content', None)
+                
                 # Search in section heading
-                if section.heading:
-                    match_result = self.match_entity_name(entity_name, section.heading)
+                if section_heading:
+                    match_result = self.match_entity_name(entity_name, section_heading)
                     if match_result:
                         confidence, strategy, matched_text = match_result
                         if confidence > best_confidence:
@@ -314,14 +365,14 @@ class EntitySearchEngine:
                             best_strategy = strategy
                 
                 # Search in section content
-                if section.content:
+                if section_content:
                     # Check if entity_name appears in content
                     normalized_entity = self.normalize_text(entity_name)
-                    normalized_content = self.normalize_text(section.content)
+                    normalized_content = self.normalize_text(section_content)
                     if normalized_entity in normalized_content:
                         confidence = 0.85  # High confidence for content matches
                         if confidence > best_confidence:
-                            best_match = section.heading or f"Section {idx}"
+                            best_match = section_heading or f"Section {idx}"
                             best_confidence = confidence
                             best_section = f'backstory.sections[{idx}].content'
                             best_strategy = "content_match"
@@ -372,72 +423,128 @@ class EntitySearchEngine:
     def search_session_notes(
         self,
         campaign_storage: 'CampaignSessionNotesStorage',
-        entity_name: str
-    ) -> Optional['EntitySearchResult']:
-        """Search session notes for an entity (NPCs, locations, quests, etc.)."""
+        entity_name: str,
+        max_results: int = 10
+    ) -> List['EntitySearchResult']:
+        """Search session notes for an entity (NPCs, locations, quests, etc.).
+        
+        Uses multiple search strategies:
+        1. Search indexed entities (NPCs, locations, etc.)
+        2. Search entity aliases
+        3. Search raw session content for text mentions (fallback)
+        
+        Returns up to max_results matches sorted by confidence (highest first).
+        More context is better - prefer returning too many matches over too few.
+        """
         from src.rag.character.character_query_types import EntitySearchResult
         
-        if not campaign_storage or not campaign_storage.entities:
-            return None
+        if not campaign_storage:
+            return []
         
-        best_match = None
-        best_confidence = 0.0
-        best_section = None
+        all_matches = []
         
-        for entity_id, entity in campaign_storage.entities.items():
-            # Get entity name
-            name = self._get_item_name(entity)
-            if not name:
-                continue
-            
-            # Get entity type for section identification
-            entity_type = None
-            if hasattr(entity, 'entity_type'):
-                entity_type = str(entity.entity_type.value) if hasattr(entity.entity_type, 'value') else str(entity.entity_type)
-            elif isinstance(entity, dict) and 'entity_type' in entity:
-                entity_type = entity['entity_type']
-            
-            # Check main name
-            match_result = self.match_entity_name(entity_name, name)
-            if match_result:
-                confidence, strategy, matched_text = match_result
-                if confidence > best_confidence:
-                    best_match = (confidence, strategy, matched_text)
-                    best_confidence = confidence
-                    best_section = f'session_notes.{entity_type}' if entity_type else 'session_notes.entity'
-            
-            # Check aliases
-            aliases = []
-            if hasattr(entity, 'aliases'):
-                aliases = entity.aliases
-            elif isinstance(entity, dict) and 'aliases' in entity:
-                aliases = entity['aliases']
-            
-            for alias in aliases:
-                if not alias:
+        # Strategy 1 & 2: Search indexed entities and aliases
+        if campaign_storage.entities:
+            for entity_id, entity in campaign_storage.entities.items():
+                # Get entity name
+                name = self._get_item_name(entity)
+                if not name:
                     continue
                 
-                match_result = self.match_entity_name(entity_name, alias)
+                # Get entity type for section identification
+                entity_type = None
+                if hasattr(entity, 'entity_type'):
+                    entity_type = str(entity.entity_type.value) if hasattr(entity.entity_type, 'value') else str(entity.entity_type)
+                elif isinstance(entity, dict) and 'entity_type' in entity:
+                    entity_type = entity['entity_type']
+                
+                section = f'session_notes.{entity_type}' if entity_type else 'session_notes.entity'
+                
+                # Check main name
+                match_result = self.match_entity_name(entity_name, name)
                 if match_result:
-                    confidence, strategy, _ = match_result
-                    # Slightly lower confidence for alias matches
-                    confidence = min(confidence, 0.95)
-                    if confidence > best_confidence:
-                        best_match = (confidence, f"{strategy}_alias", f"{name} (alias: {alias})")
-                        best_confidence = confidence
-                        best_section = f'session_notes.{entity_type}' if entity_type else 'session_notes.entity'
+                    confidence, strategy, matched_text = match_result
+                    all_matches.append((confidence, strategy, matched_text, section))
+                
+                # Check aliases
+                aliases = []
+                if hasattr(entity, 'aliases'):
+                    aliases = entity.aliases
+                elif isinstance(entity, dict) and 'aliases' in entity:
+                    aliases = entity['aliases']
+                
+                for alias in aliases:
+                    if not alias:
+                        continue
+                    
+                    match_result = self.match_entity_name(entity_name, alias)
+                    if match_result:
+                        confidence, strategy, _ = match_result
+                        # Slightly lower confidence for alias matches
+                        confidence = min(confidence, 0.95)
+                        all_matches.append((confidence, f"{strategy}_alias", f"{name} (alias: {alias})", section))
         
-        if best_match:
-            confidence, strategy, matched_text = best_match
-            return EntitySearchResult(
-                entity_name=entity_name,
-                found_in_sections=[best_section],
-                match_confidence=confidence,
-                matched_text=matched_text,
-                match_strategy=strategy
-            )
+        # Strategy 3: Search raw session content for text mentions (if no high-confidence match found)
+        high_confidence_found = any(m[0] >= 0.8 for m in all_matches)
         
-        return None
+        if not high_confidence_found and campaign_storage.sessions:
+            normalized_entity = self.normalize_text(entity_name)
+            
+            for session_id, session in campaign_storage.sessions.items():
+                # Check session content/summary
+                content = None
+                if hasattr(session, 'content'):
+                    content = session.content
+                elif hasattr(session, 'summary'):
+                    content = session.summary
+                
+                if content and normalized_entity in self.normalize_text(content):
+                    # Found in raw content
+                    all_matches.append((0.75, "content_search", f"Found in session {session_id}", 'session_notes.content'))
+                
+                # Check raw_notes.raw_sections if available
+                raw_notes = getattr(session, 'raw_notes', None)
+                if raw_notes and hasattr(raw_notes, 'raw_sections'):
+                    for section_name, section_content in raw_notes.raw_sections.items():
+                        if normalized_entity in self.normalize_text(section_content):
+                            # Determine section type from section name
+                            section_type = 'content'
+                            if 'npc' in section_name.lower():
+                                section_type = 'non_player_character'
+                            elif 'player' in section_name.lower() or 'character' in section_name.lower():
+                                section_type = 'player_character'
+                            elif 'location' in section_name.lower():
+                                section_type = 'location'
+                            elif 'combat' in section_name.lower():
+                                section_type = 'combat'
+                            elif 'event' in section_name.lower():
+                                section_type = 'event'
+                            
+                            all_matches.append((0.75, "raw_section_search", f"Found in {section_name}", f'session_notes.{section_type}'))
+                            break  # One match per session is enough
+        
+        # Return ALL matches above threshold, sorted by confidence
+        if all_matches:
+            all_matches.sort(key=lambda x: x[0], reverse=True)
+            results = []
+            seen_sections = set()
+            for confidence, strategy, matched_text, section in all_matches[:max_results]:
+                # Avoid duplicate sections but allow different entities in same section type
+                section_key = f"{section}:{matched_text}"
+                if section_key in seen_sections:
+                    continue
+                seen_sections.add(section_key)
+                
+                results.append(EntitySearchResult(
+                    entity_name=entity_name,
+                    found_in_sections=[section],
+                    match_confidence=confidence,
+                    matched_text=matched_text,
+                    match_strategy=strategy
+                ))
+            return results
+        
+        return []
     
     # ===== RULEBOOK SEARCH =====
     

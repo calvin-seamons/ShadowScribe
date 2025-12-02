@@ -100,14 +100,15 @@ TOOL SELECTION GUIDELINES:
 - For specific items, weapons, or inventory: ALWAYS use character_data
 - For NPCs or story characters: Use session_notes
 - For general D&D rules: Use rulebook
+- Queries use placeholders like {{CHARACTER}}, {{NPC}}, {{ITEM}}, {{SPELL}}, {{PARTY_MEMBER}}, {{LOCATION}}
 - Examples:
   * "What's my AC?" → character_data only
-  * "Tell me about Elara" (if asking about an NPC) → session_notes + character_data
-  * "Tell me about Eldaryth" (if asking about an item/weapon) → character_data only
+  * "Tell me about {{NPC}}" → session_notes + character_data
+  * "Tell me about {{ITEM}}" → character_data only
   * "How does grappling work?" → rulebook only
   * "What persuasion abilities do I have?" → character_data only
-  * "Remind me about Elara and my persuasion abilities" → session_notes + character_data
-  * "Tell me about [weapon name]" → character_data (inventory_info)
+  * "Remind me about {{NPC}} and my persuasion abilities" → session_notes + character_data
+  * "Tell me about {{ITEM}}" → character_data (inventory_info)
 
 CHARACTER_DATA INTENTIONS (choose ONE per tool):
 {character_intentions_text}
@@ -120,14 +121,14 @@ RULEBOOK INTENTIONS (choose ONE per tool):
 
 EXAMPLES:
 
-Query: "What combat abilities do I have tied to Eldaryth of Regret?"
+Query: "What combat abilities do I have tied to {{ITEM}}?"
 Response: {{
   "tools_needed": [
     {{"tool": "character_data", "intention": "combat_info", "confidence": 0.95}}
   ]
 }}
 
-Query: "Remind me who Elara is and what persuasion abilities I have"
+Query: "Remind me who {{NPC}} is and what persuasion abilities I have"
 Response: {{
   "tools_needed": [
     {{"tool": "session_notes", "intention": "npc_history", "confidence": 0.95}},
@@ -157,14 +158,14 @@ Response: {{
   ]
 }}
 
-Query: "Tell me about Eldaryth of Regret"
+Query: "Tell me about {{ITEM}}"
 Response: {{
   "tools_needed": [
     {{"tool": "character_data", "intention": "inventory_info", "confidence": 0.9}}
   ]
 }}
 
-Query: "What can you tell me about the Bag of Holding?"
+Query: "What can you tell me about the {{ITEM}}?"
 Response: {{
   "tools_needed": [
     {{"tool": "character_data", "intention": "inventory_info", "confidence": 0.8}},
@@ -172,14 +173,14 @@ Response: {{
   ]
 }}
 
-Query: "Tell me about Dusk's backstory and his parents"
+Query: "Tell me about {{CHARACTER}}'s backstory and his parents"
 Response: {{
   "tools_needed": [
     {{"tool": "character_data", "intention": "backstory_info", "confidence": 1.0}}
   ]
 }}
 
-Query: "List all the actions Dusk can take"
+Query: "List all the actions {{CHARACTER}} can take"
 Response: {{
   "tools_needed": [
     {{"tool": "character_data", "intention": "combat_info", "confidence": 0.95}}
@@ -198,136 +199,7 @@ Return ONLY valid JSON:
 }}
 
 IMPORTANT: Return valid JSON only. No explanations.{inventory_context}'''
-    
-    def get_entity_extraction_prompt(self, user_query: str, conversation_history=None) -> str:
-        """
-        Build prompt for Entity Extraction LLM call (NEW ARCHITECTURE).
-        
-        This is the second of 2 parallel LLM calls that replace the old 3 sequential router calls.
-        Extracts entity names from the user query without worrying about search contexts
-        (those are derived from tool selection).
-        
-        Args:
-            user_query: The user's question
-            conversation_history: Previous conversation turns for context
-            
-        Returns:
-            Prompt string for the entity extractor LLM
-        """
-        history_context = ""
-        if conversation_history and len(conversation_history) > 0:
-            history_context = "\n\n--- CONVERSATION HISTORY ---\n"
-            for turn in conversation_history[-5:]:
-                role = turn.get('role', 'unknown').upper()
-                content = turn.get('content', '')
-                history_context += f"{role}: {content}\n"
-            history_context += "--- END HISTORY ---\n"
-        
-        return f'''You are an expert D&D entity extractor. Extract ALL specific named entities from this query.{history_context}
 
-Current Query: "{user_query}"
-
-TASK: Extract entity names with confidence scores. DO NOT determine where to search - that's handled separately.
-
-ENTITY TYPES TO EXTRACT:
-- Character names (PC or NPC names)
-- Item names (weapons, armor, magical items)
-- Spell names (specific spells like "Eldritch Blast")
-- Feature/ability names (class features, racial traits)
-- Location names (cities, dungeons, regions)
-- Rule terms (game mechanics like "grappling", "opportunity attack")
-- Organization names (guilds, factions)
-
-EXTRACTION GUIDELINES:
-1. Extract the EXACT name as mentioned in the query
-2. Include partial names if clearly referenced (e.g., "Eldaryth" when full name is "Eldaryth of Regret")
-3. Confidence scoring:
-   - 1.0: Explicit mention with exact name
-   - 0.95: Clear reference with minor variations
-   - 0.9: Implied reference or partial name
-   - 0.8: Ambiguous reference
-4. DO NOT extract:
-   - Generic terms ("my spell", "my weapon" without specific name)
-   - Question words ("what", "how", "tell me")
-   - Character stats without specific names ("AC", "HP" by themselves)
-
-EXAMPLES:
-
-Query: "What combat abilities do I have tied to Eldaryth of Regret?"
-Response: {{
-  "entities": [
-    {{"name": "Eldaryth of Regret", "confidence": 1.0}}
-  ]
-}}
-
-Query: "Tell me about my Hexblade's Curse ability"
-Response: {{
-  "entities": [
-    {{"name": "Hexblade's Curse", "confidence": 1.0}}
-  ]
-}}
-
-Query: "How many spell slots do I have?"
-Response: {{
-  "entities": []
-}}
-Explanation: No specific entity mentioned, just general magic info request.
-
-Query: "Remind me who Elara is and what persuasion abilities I have"
-Response: {{
-  "entities": [
-    {{"name": "Elara", "confidence": 1.0}}
-  ]
-}}
-Explanation: "Elara" is an NPC name. "persuasion abilities" is generic, not an entity.
-
-Query: "How does grappling work and what's my athletics bonus?"
-Response: {{
-  "entities": [
-    {{"name": "grappling", "confidence": 1.0}},
-    {{"name": "athletics", "confidence": 1.0}}
-  ]
-}}
-Explanation: Both are specific game mechanics/skills to look up.
-
-Query: "What spells can I cast with my staff?"
-Response: {{
-  "entities": []
-}}
-Explanation: Generic "staff" without specific name. If they said "Staff of Power" → extract it.
-
-Query: "Tell me about Shadowfell and the Raven Queen"
-Response: {{
-  "entities": [
-    {{"name": "Shadowfell", "confidence": 1.0}},
-    {{"name": "Raven Queen", "confidence": 1.0}}
-  ]
-}}
-Explanation: Both are specific named entities (location and deity).
-
-Query: "What's my AC?"
-Response: {{
-  "entities": []
-}}
-Explanation: Pure stat check, no entities.
-
-Query: "Can I use my Eldritch Blast on the orc?"
-Response: {{
-  "entities": [
-    {{"name": "Eldritch Blast", "confidence": 1.0}}
-  ]
-}}
-Explanation: Specific spell name. "orc" is generic monster type, not a named NPC.
-
-Return ONLY valid JSON:
-{{
-  "entities": [
-    {{"name": "entity_name", "confidence": 0.0-1.0}}
-  ]
-}}
-
-IMPORTANT: Return valid JSON only. Empty array [] if no entities found. No explanations.'''
-    
     def get_final_response_prompt(self, raw_results: Dict[str, Any], user_query: str) -> str:
         """
         Build the final response prompt using assembled context data.
@@ -385,6 +257,19 @@ IMPORTANT: Return valid JSON only. Empty array [] if no entities found. No expla
                 
                 if session_content:
                     context_sections.append("CAMPAIGN HISTORY:\n" + "\n\n".join(session_content))
+        
+        # Process entity-based context (independent of intentions)
+        if "entity_context" in raw_results and raw_results["entity_context"]:
+            entity_context = raw_results["entity_context"]
+            entity_content = []
+            
+            for entity_name, sources in entity_context.items():
+                for source_type, content in sources.items():
+                    if content:
+                        entity_content.append(f"INFORMATION ABOUT {entity_name.upper()}:\n{content}")
+            
+            if entity_content:
+                context_sections.append("ENTITY DETAILS:\n" + "\n\n".join(entity_content))
         
         # Assemble the full context
         full_context = "\n\n".join(context_sections) if context_sections else "No relevant data found."

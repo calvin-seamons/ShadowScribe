@@ -1,55 +1,98 @@
+"""Configuration for 574 NLP Assignment - Transformer Training
+
+This config uses relative paths for portability with VS Code Colab extension.
 """
-Configuration for 574 Assignment RAG Comparison
-"""
-import os
 from pathlib import Path
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Project paths (relative to this file's location)
+PROJECT_ROOT = Path(__file__).parent.resolve()
+DATA_PATH = PROJECT_ROOT / "data" / "generated"
+TEMPLATE_PATH = PROJECT_ROOT / "data" / "templates"
+MODEL_PATH = PROJECT_ROOT / "models" / "joint_deberta"
+RESULTS_PATH = PROJECT_ROOT / "results"
 
-class Config:
-    """Configuration for RAG system comparison"""
-    
-    # Project paths
-    PROJECT_ROOT = Path(__file__).parent
-    EMBEDDINGS_DIR = PROJECT_ROOT / "embeddings"
-    GROUND_TRUTH_DIR = PROJECT_ROOT / "ground_truth"
-    RESULTS_DIR = PROJECT_ROOT / "results"
-    
-    # System 1: OpenAI + In-Memory
-    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-    OPENAI_EMBEDDING_MODEL = 'text-embedding-3-large'
-    OPENAI_EMBEDDING_DIM = 3072
-    OPENAI_STORAGE_PATH = EMBEDDINGS_DIR / "openai_embeddings.pkl"
-    
-    # System 2: Qwen + FAISS
-    QWEN_MODEL_NAME = 'Qwen/Qwen3-Embedding-0.6B'  # Qwen3 embedding model
-    QWEN_EMBEDDING_DIM = 768  # Qwen3-Embedding dimension
-    FAISS_INDEX_PATH = str(EMBEDDINGS_DIR / "qwen_faiss.index")
-    FAISS_METADATA_PATH = str(EMBEDDINGS_DIR / "qwen_metadata.pkl")
-    
-    # Evaluation settings
-    K_VALUES = [1, 3, 10]  # Precision@k, Recall@k, nDCG@k values
-    
-    # Scoring weights (from existing system)
-    SEMANTIC_WEIGHT = 0.75
-    ENTITY_WEIGHT = 0.25
-    CONTEXT_WEIGHT = 0.15
-    
-    @classmethod
-    def validate(cls):
-        """Validate configuration"""
-        if not cls.OPENAI_API_KEY:
-            raise ValueError("OPENAI_API_KEY not found in environment variables")
-        
-        # Create directories if they don't exist
-        cls.EMBEDDINGS_DIR.mkdir(parents=True, exist_ok=True)
-        cls.GROUND_TRUTH_DIR.mkdir(parents=True, exist_ok=True)
-        cls.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-        
-        return True
+# Ensure directories exist
+DATA_PATH.mkdir(parents=True, exist_ok=True)
+MODEL_PATH.mkdir(parents=True, exist_ok=True)
+RESULTS_PATH.mkdir(parents=True, exist_ok=True)
 
+# Model configuration
+MODEL_CONFIG = {
+    'model_name': 'microsoft/deberta-v3-base',
+    'batch_size': 32,
+    'learning_rate': 2e-5,
+    'num_epochs': 10,
+    'warmup_ratio': 0.1,
+    'weight_decay': 0.01,
+    'max_length': 128,
+    'gradient_accumulation_steps': 1,
+    'tool_loss_weight': 1.0,
+    'intent_loss_weight': 1.0,
+    'ner_loss_weight': 1.0,
+    'patience': 3,
+    'classifier_dropout': 0.1,
+}
 
-# Validate on import
-Config.validate()
+# Dataset configuration
+DATASET_CONFIG = {
+    # K-expansion: generate K samples per template with different entity fills
+    # Templates WITH slots generate K variations; templates WITHOUT slots generate 1
+    'expansions_per_template': 10,  # Each template generates up to K variations
+    
+    # Augmentations: typos, case changes, contractions per sample
+    'augmentations_per_sample': 3,  # Generate N augmented versions per sample
+    
+    # Train/val/test splits
+    'train_split': 0.80,
+    'val_split': 0.10,
+    'test_split': 0.10,
+    
+    'random_seed': 42,
+    
+    # Deduplication: skip samples that are identical to existing ones
+    'deduplicate': True,
+}
+
+# Tools and their intents
+TOOLS = ['character_data', 'session_notes', 'rulebook']
+
+CHARACTER_INTENTS = [
+    'ability_scores', 'combat_info', 'skills_proficiencies', 'class_features',
+    'spell_slots', 'inventory', 'background', 'race_traits', 'level_info', 'full_character'
+]
+
+SESSION_INTENTS = [
+    'recent_events', 'npc_interactions', 'location_info', 'quest_status',
+    'party_decisions', 'combat_history', 'treasure_loot', 'plot_threads',
+    'character_development', 'time_tracking', 'relationship_status', 'faction_standing',
+    'unresolved_mysteries', 'player_notes', 'dm_notes', 'session_summary',
+    'next_session_hooks', 'world_lore', 'house_rules', 'campaign_timeline'
+]
+
+RULEBOOK_INTENTS = [
+    'spell_details', 'spell_list_query', 'class_info', 'subclass_info',
+    'race_info', 'feat_info', 'condition_rules', 'combat_rules',
+    'skill_rules', 'ability_check_rules', 'saving_throw_rules', 'death_rules',
+    'rest_rules', 'movement_rules', 'cover_rules', 'action_rules',
+    'reaction_rules', 'equipment_info', 'weapon_info', 'armor_info',
+    'magic_item_info', 'monster_info', 'multiclassing_rules', 'spellcasting_rules',
+    'concentration_rules', 'ritual_rules', 'component_rules', 'aoe_rules',
+    'range_rules', 'duration_rules', 'damage_type_rules'
+]
+
+# NER tags (BIO scheme)
+NER_TAGS = [
+    'O',
+    'B-SPELL', 'I-SPELL',
+    'B-CLASS', 'I-CLASS',
+    'B-RACE', 'I-RACE',
+    'B-CREATURE', 'I-CREATURE',
+    'B-ITEM', 'I-ITEM',
+    'B-LOCATION', 'I-LOCATION',
+    'B-ABILITY', 'I-ABILITY',
+    'B-SKILL', 'I-SKILL',
+    'B-CONDITION', 'I-CONDITION',
+    'B-DAMAGE_TYPE', 'I-DAMAGE_TYPE',
+    'B-FEAT', 'I-FEAT',
+    'B-BACKGROUND', 'I-BACKGROUND'
+]

@@ -6,13 +6,15 @@ Simple script that lets you ask questions to the CentralEngine and see:
 - Performance metrics
 - Full response from the model
 - All using config.py settings
+
+Also stores routing feedback to the database for training data collection.
 """
 import asyncio
 import sys
 from pathlib import Path
 import json
 import argparse
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 # Add project root to path
 project_root = Path(__file__).parent
@@ -22,24 +24,37 @@ from src.central_engine import CentralEngine
 from src.llm.central_prompt_manager import CentralPromptManager
 from src.rag.context_assembler import ContextAssembler
 from src.config import get_config
-from src.utils.character_manager import CharacterManager
+from src.rag.character.character_manager import CharacterManager
 from src.rag.rulebook.rulebook_storage import RulebookStorage
 from src.rag.session_notes.session_notes_storage import SessionNotesStorage
+
+# Database imports for feedback storage
+from api.database.connection import AsyncSessionLocal
+from api.database.feedback_models import RoutingFeedback
+from api.database.repositories.feedback_repo import FeedbackRepository
 
 
 class InteractiveCentralEngineDemo:
     """Interactive demo that shows routing decisions and performance"""
     
-    def __init__(self, verbose: bool = True):
+    def __init__(self, verbose: bool = True, routing_mode: str = "llm"):
         """Initialize the demo with CentralEngine
         
         Args:
             verbose: Whether to show detailed initialization output
+            routing_mode: "llm" (default), "local", or "compare"
         """
         self.verbose = verbose
+        self.routing_mode = routing_mode
         
         if verbose:
             print("🚀 Initializing ShadowScribe2.0 Central Engine...")
+            if routing_mode == "local":
+                print("   🧠 Using LOCAL MODEL for routing (no LLM router calls)")
+            elif routing_mode == "compare":
+                print("   🔬 Using COMPARE mode (LLM routing + local comparison)")
+            else:
+                print("   ☁️  Using LLM for routing")
         
         # Load config
         self.config = get_config()
@@ -99,6 +114,20 @@ class InteractiveCentralEngineDemo:
         self.context_assembler = ContextAssembler()
         self.prompt_manager = CentralPromptManager(self.context_assembler)
         
+        # Configure comparison logging based on routing mode
+        if routing_mode == "compare":
+            self.config.comparison_logging = True
+        else:
+            # For local or llm mode, disable comparison
+            self.config.comparison_logging = False
+        
+        # Override use_local_classifier based on routing mode
+        if routing_mode == "local":
+            self.config.use_local_classifier = True
+        elif routing_mode == "llm":
+            self.config.use_local_classifier = False
+        # "compare" mode keeps whatever is in config
+        
         # Create central engine using config with storage components
         self.engine = CentralEngine.create_from_config(
             self.prompt_manager,
@@ -106,6 +135,10 @@ class InteractiveCentralEngineDemo:
             rulebook_storage=rulebook_storage,
             campaign_session_notes=main_campaign
         )
+        
+        # Store references for local routing
+        self.character = character
+        self.campaign_session_notes = main_campaign
         
         if verbose:
             print(f"   LLM Clients available: {list(self.engine.llm_clients.keys())}")
@@ -133,6 +166,24 @@ class InteractiveCentralEngineDemo:
         import time
         start_time = time.time()
         
+        # Track routing info for feedback storage
+        routing_info: Dict[str, Any] = {
+            'tools_needed': None,
+            'entities': None,
+            'normalized_query': None,
+            'backend': 'local' if self.routing_mode == 'local' else 'llm',
+            'inference_time_ms': None
+        }
+        
+        async def capture_metadata(event_type: str, data: dict):
+            """Callback to capture routing metadata for feedback storage."""
+            if event_type == 'routing_metadata':
+                routing_info['tools_needed'] = data.get('tools_needed', [])
+                routing_info['backend'] = data.get('classifier_backend', 'local')
+                routing_info['normalized_query'] = data.get('normalized_query')
+                routing_info['entities'] = data.get('extracted_entities', [])
+                routing_info['inference_time_ms'] = data.get('local_inference_time_ms')
+        
         # Stream the response from CentralEngine
         final_response = ""
         try:
@@ -142,11 +193,18 @@ class InteractiveCentralEngineDemo:
             else:
                 print(f"\n💬 Response:")
             
-            async for chunk in self.engine.process_query_stream(user_query, character_name):
+            async for chunk in self.engine.process_query_stream(
+                user_query, 
+                character_name,
+                metadata_callback=capture_metadata
+            ):
                 print(chunk, end='', flush=True)
                 final_response += chunk
             
             print()  # New line after streaming completes
+            
+            # Store routing feedback to database
+            await self._store_routing_feedback(routing_info, character_name, show_details)
             
         except Exception as e:
             print(f"\n❌ Error processing query: {e}")
@@ -172,6 +230,57 @@ class InteractiveCentralEngineDemo:
             print("=" * 80)
         
         return final_response
+    
+    async def _store_routing_feedback(self, routing_info: Dict[str, Any], character_name: str, show_details: bool):
+        """Store routing feedback to the database for training data collection.
+        
+        Args:
+            routing_info: Dictionary containing tools_needed, entities, normalized_query, etc.
+            character_name: Name of the character used
+            show_details: Whether to show feedback storage confirmation
+        """
+        if not routing_info['tools_needed'] or not routing_info['normalized_query']:
+            if show_details:
+                print("⚠️  No routing info to store (missing tools or query)")
+            return
+        
+        try:
+            async with AsyncSessionLocal() as db:
+                repo = FeedbackRepository(db)
+                
+                # Convert entities to serializable format
+                entities_data = None
+                if routing_info['entities']:
+                    entities_data = [
+                        {
+                            'name': e.get('name', ''),
+                            'text': e.get('text', ''),
+                            'type': e.get('type', ''),
+                            'confidence': e.get('confidence', 1.0)
+                        }
+                        for e in routing_info['entities']
+                    ]
+                
+                # Create feedback record
+                feedback_record = RoutingFeedback(
+                    user_query=routing_info['normalized_query'],
+                    character_name=character_name,
+                    campaign_id='main_campaign',
+                    predicted_tools=routing_info['tools_needed'],
+                    predicted_entities=entities_data,
+                    classifier_backend=routing_info['backend'],
+                    classifier_inference_time_ms=routing_info['inference_time_ms']
+                )
+                
+                created = await repo.create(feedback_record)
+                await db.commit()
+                
+                if show_details:
+                    print(f"💾 Routing feedback stored (ID: {created.id[:8]}...)")
+                    
+        except Exception as e:
+            if show_details:
+                print(f"⚠️  Failed to store routing feedback: {e}")
     
     async def _debug_tool_selector_response(self, user_query: str):
         """Debug the tool selector LLM response to see what's working"""
@@ -312,17 +421,26 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Ask a single question
+  # Ask a single question (default: compare LLM vs local routing)
   python demo_central_engine.py -q "What is Duskryn's alignment?"
+  
+  # Use LOCAL model for routing (faster, no LLM router calls)
+  python demo_central_engine.py -q "What is my AC?" --routing local
+  
+  # Use LLM only for routing (no local comparison)
+  python demo_central_engine.py -q "What is my AC?" --routing llm
+  
+  # Compare LLM and local routing (default)
+  python demo_central_engine.py -q "What is my AC?" --routing compare
   
   # Ask multiple questions in sequence (maintains context)
   python demo_central_engine.py -q "What is my AC?" -q "What about my HP?"
   
-  # Run in interactive mode (default)
+  # Run in interactive mode
   python demo_central_engine.py
   
   # Run quietly with minimal output
-  python demo_central_engine.py -q "What spells can I cast?" --quiet
+  python demo_central_engine.py -q "What spells can I cast?" --quiet --routing local
         """
     )
     parser.add_argument(
@@ -336,6 +454,12 @@ Examples:
         help="Minimal output - just show responses without details"
     )
     parser.add_argument(
+        "--routing",
+        choices=["llm", "local", "compare"],
+        default="compare",
+        help="Routing mode: 'llm' (LLM only), 'local' (local model only), 'compare' (LLM + local comparison, default)"
+    )
+    parser.add_argument(
         "--no-test",
         action="store_true",
         help="Skip the auto-test query on startup"
@@ -343,8 +467,11 @@ Examples:
     
     args = parser.parse_args()
     try:
-        # Initialize demo with appropriate verbosity
-        demo = InteractiveCentralEngineDemo(verbose=not args.quiet)
+        # Initialize demo with appropriate verbosity and routing mode
+        demo = InteractiveCentralEngineDemo(
+            verbose=not args.quiet,
+            routing_mode=args.routing
+        )
         
         # Handle command-line queries
         if args.query:

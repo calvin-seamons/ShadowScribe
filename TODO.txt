@@ -1,0 +1,2 @@
+It's looking like we are being too aggressive with matching natural language with rulebook type entities
+- Or just entities that aren't players, party members, or npcs

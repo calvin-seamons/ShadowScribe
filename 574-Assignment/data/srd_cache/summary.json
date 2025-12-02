@@ -1,0 +1,20 @@
+{
+  "spells": 319,
+  "monsters": 334,
+  "equipment": 237,
+  "magic-items": 362,
+  "features": 407,
+  "conditions": 15,
+  "classes": 12,
+  "races": 9,
+  "subclasses": 12,
+  "traits": 38,
+  "skills": 18,
+  "ability-scores": 6,
+  "damage-types": 13,
+  "weapon-properties": 11,
+  "proficiencies": 117,
+  "languages": 16,
+  "alignments": 9,
+  "backgrounds": 1
+}

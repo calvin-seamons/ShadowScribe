@@ -2,52 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import distinctive fonts */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @layer base {
   :root {
-    /* D&D Fantasy Theme - Light Mode */
-    --background: 43 70% 95%; /* Parchment */
-    --foreground: 270 50% 15%; /* Deep purple-black */
-    --card: 43 60% 98%;
-    --card-foreground: 270 50% 15%;
-    --popover: 43 60% 98%;
-    --popover-foreground: 270 50% 15%;
-    --primary: 45 100% 51%; /* Gold */
-    --primary-foreground: 270 50% 15%;
-    --secondary: 270 40% 60%; /* Purple */
-    --secondary-foreground: 43 70% 95%;
-    --muted: 43 30% 85%;
-    --muted-foreground: 270 20% 40%;
-    --accent: 0 65% 35%; /* Crimson */
-    --accent-foreground: 43 70% 95%;
-    --destructive: 0 84% 45%;
-    --destructive-foreground: 43 70% 95%;
-    --border: 43 30% 75%;
-    --input: 43 30% 85%;
-    --ring: 45 100% 51%;
-    --radius: 0.5rem;
+    /* Ancient Arcane Grimoire Theme - Light Mode */
+    --background: 35 25% 91%; /* Aged parchment */
+    --foreground: 220 15% 20%; /* Deep ink */
+    --card: 38 30% 95%;
+    --card-foreground: 220 15% 20%;
+    --popover: 38 35% 97%;
+    --popover-foreground: 220 15% 20%;
+    --primary: 43 85% 45%; /* Illuminated gold */
+    --primary-foreground: 220 15% 10%;
+    --secondary: 220 25% 35%; /* Deep navy */
+    --secondary-foreground: 38 30% 95%;
+    --muted: 35 20% 85%;
+    --muted-foreground: 220 10% 45%;
+    --accent: 355 70% 40%; /* Dragon blood red */
+    --accent-foreground: 38 30% 95%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 38 30% 95%;
+    --border: 35 20% 75%;
+    --input: 35 20% 88%;
+    --ring: 43 85% 50%;
+    --radius: 0.625rem;
+
+    /* Custom theme tokens */
+    --glow-gold: 43 90% 55%;
+    --glow-arcane: 270 70% 60%;
+    --ink-shadow: 220 30% 15%;
+    --parchment-light: 40 35% 96%;
+    --parchment-mid: 38 28% 88%;
+    --parchment-dark: 35 25% 78%;
   }
 
   .dark {
-    /* D&D Fantasy Theme - Dark Mode */
-    --background: 270 50% 8%; /* Deep purple background */
-    --foreground: 43 70% 92%; /* Light parchment text */
-    --card: 270 45% 12%;
-    --card-foreground: 43 70% 92%;
-    --popover: 270 45% 10%;
-    --popover-foreground: 43 70% 92%;
-    --primary: 45 100% 51%; /* Gold accent */
-    --primary-foreground: 270 50% 8%;
-    --secondary: 270 40% 35%; /* Deep purple */
-    --secondary-foreground: 43 70% 92%;
-    --muted: 270 35% 20%;
-    --muted-foreground: 43 20% 65%;
-    --accent: 0 65% 45%; /* Crimson */
-    --accent-foreground: 43 70% 92%;
-    --destructive: 0 62% 40%;
-    --destructive-foreground: 43 70% 92%;
-    --border: 270 35% 25%;
-    --input: 270 35% 20%;
-    --ring: 45 100% 51%;
+    /* Ancient Arcane Grimoire Theme - Dark Mode (Primary) */
+    --background: 225 25% 8%; /* Deep midnight */
+    --foreground: 38 35% 88%; /* Aged parchment text */
+    --card: 225 22% 11%;
+    --card-foreground: 38 35% 88%;
+    --popover: 225 25% 10%;
+    --popover-foreground: 38 35% 88%;
+    --primary: 43 90% 50%; /* Brilliant gold */
+    --primary-foreground: 225 25% 8%;
+    --secondary: 225 20% 22%; /* Midnight blue */
+    --secondary-foreground: 38 35% 90%;
+    --muted: 225 18% 16%;
+    --muted-foreground: 38 20% 60%;
+    --accent: 355 75% 55%; /* Dragon fire */
+    --accent-foreground: 38 35% 95%;
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 38 35% 95%;
+    --border: 225 20% 20%;
+    --input: 225 20% 14%;
+    --ring: 43 90% 55%;
+
+    /* Custom dark theme tokens */
+    --glow-gold: 43 95% 60%;
+    --glow-arcane: 270 80% 65%;
+    --ink-shadow: 225 40% 5%;
+    --parchment-light: 38 25% 22%;
+    --parchment-mid: 35 20% 18%;
+    --parchment-dark: 30 18% 12%;
   }
 }
 
@@ -55,7 +74,403 @@
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground;
+
+  html {
+    scroll-behavior: smooth;
   }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-feature-settings: 'liga' 1, 'kern' 1;
+  }
+
+  /* Typography hierarchy */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cinzel', 'Times New Roman', serif;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/30;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border hover:bg-muted-foreground/50;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+
+  /* Selection styling */
+  ::selection {
+    @apply bg-primary/30 text-foreground;
+  }
+}
+
+@layer components {
+  /* Arcane glow effect */
+  .glow-gold {
+    box-shadow:
+      0 0 20px hsl(var(--glow-gold) / 0.3),
+      0 0 40px hsl(var(--glow-gold) / 0.15),
+      inset 0 0 20px hsl(var(--glow-gold) / 0.05);
+  }
+
+  .glow-gold-sm {
+    box-shadow:
+      0 0 10px hsl(var(--glow-gold) / 0.25),
+      0 0 20px hsl(var(--glow-gold) / 0.1);
+  }
+
+  .glow-arcane {
+    box-shadow:
+      0 0 20px hsl(var(--glow-arcane) / 0.3),
+      0 0 40px hsl(var(--glow-arcane) / 0.15);
+  }
+
+  /* Parchment texture overlay */
+  .parchment-texture {
+    position: relative;
+  }
+
+  .parchment-texture::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  /* Ornate border decoration */
+  .border-ornate {
+    border-image: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--primary) / 0.5) 25%,
+      hsl(var(--primary)) 50%,
+      hsl(var(--primary) / 0.5) 75%,
+      hsl(var(--primary)) 100%
+    ) 1;
+  }
+
+  /* Gradient text for titles */
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-arcane {
+    @apply bg-gradient-to-r from-violet-400 via-purple-300 to-fuchsia-400 bg-clip-text text-transparent;
+  }
+
+  /* Button base styles */
+  .btn-primary {
+    @apply relative px-6 py-3 font-semibold rounded-lg transition-all duration-300;
+    @apply bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600;
+    @apply text-amber-950 shadow-lg;
+    @apply hover:from-amber-400 hover:via-yellow-400 hover:to-amber-500;
+    @apply hover:shadow-xl hover:shadow-amber-500/25 hover:-translate-y-0.5;
+    @apply active:translate-y-0 active:shadow-md;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-lg;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.05em;
+  }
+
+  .btn-secondary {
+    @apply relative px-6 py-3 font-medium rounded-lg transition-all duration-300;
+    @apply bg-secondary/80 text-secondary-foreground border border-border;
+    @apply hover:bg-secondary hover:border-primary/50;
+    @apply active:bg-secondary/90;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.03em;
+  }
+
+  .btn-ghost {
+    @apply relative px-4 py-2 font-medium rounded-lg transition-all duration-200;
+    @apply text-muted-foreground hover:text-foreground hover:bg-muted/50;
+    @apply active:bg-muted;
+  }
+
+  /* Card styles */
+  .card-arcane {
+    @apply relative bg-card rounded-xl border border-border/50 shadow-xl;
+    @apply before:absolute before:inset-0 before:rounded-xl before:p-[1px];
+    @apply before:bg-gradient-to-br before:from-primary/20 before:via-transparent before:to-primary/10;
+    @apply before:-z-10;
+  }
+
+  .card-elevated {
+    @apply bg-card rounded-xl border border-border shadow-2xl;
+    box-shadow:
+      0 25px 50px -12px hsl(var(--ink-shadow) / 0.4),
+      0 0 0 1px hsl(var(--border) / 0.5);
+  }
+
+  /* Input styles */
+  .input-arcane {
+    @apply w-full px-4 py-3 rounded-lg transition-all duration-200;
+    @apply bg-input border-2 border-border/50;
+    @apply text-foreground placeholder:text-muted-foreground;
+    @apply focus:outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    font-family: 'Crimson Pro', serif;
+    font-size: 1.0625rem;
+  }
+
+  /* Divider with ornament */
+  .divider-ornate {
+    @apply relative flex items-center gap-4 my-6;
+  }
+
+  .divider-ornate::before,
+  .divider-ornate::after {
+    content: '';
+    @apply flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent;
+  }
+
+  /* Floating particles animation */
+  @keyframes float-particle {
+    0%, 100% {
+      transform: translateY(0) translateX(0) scale(1);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-100px) translateX(20px) scale(0.5);
+      opacity: 0;
+    }
+  }
+
+  .particle {
+    animation: float-particle 4s ease-in-out infinite;
+  }
+
+  /* Pulse glow animation */
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 15px hsl(var(--glow-gold) / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 25px hsl(var(--glow-gold) / 0.5), 0 0 40px hsl(var(--glow-gold) / 0.2);
+    }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* Shimmer effect */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--primary) / 0.1) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  /* Typing cursor */
+  @keyframes blink-cursor {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .cursor-blink {
+    animation: blink-cursor 1s step-end infinite;
+  }
+
+  /* Fade in up animation */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.4s ease-out;
+  }
+
+  /* Slide in from left */
+  @keyframes slide-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .animate-slide-in-left {
+    animation: slide-in-left 0.3s ease-out;
+  }
+
+  /* Scale in */
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.2s ease-out;
+  }
+}
+
+@layer utilities {
+  /* Text shadow for dramatic effect */
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px hsl(var(--ink-shadow) / 0.3);
+  }
+
+  .text-shadow-md {
+    text-shadow: 0 2px 4px hsl(var(--ink-shadow) / 0.4);
+  }
+
+  .text-shadow-glow {
+    text-shadow:
+      0 0 10px hsl(var(--glow-gold) / 0.5),
+      0 0 20px hsl(var(--glow-gold) / 0.3);
+  }
+
+  /* Backdrop blur variations */
+  .backdrop-blur-xs {
+    backdrop-filter: blur(2px);
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Gradient borders */
+  .border-gradient-gold {
+    border: 2px solid transparent;
+    background:
+      linear-gradient(var(--background), var(--background)) padding-box,
+      linear-gradient(135deg, hsl(43 90% 50%), hsl(43 85% 40%)) border-box;
+  }
+}
+
+/* Prose/Markdown styling for chat messages */
+.prose-arcane {
+  @apply text-foreground leading-relaxed;
+}
+
+.prose-arcane h1,
+.prose-arcane h2,
+.prose-arcane h3 {
+  @apply text-primary font-semibold mt-6 mb-3;
+  font-family: 'Cinzel', serif;
+}
+
+.prose-arcane p {
+  @apply mb-4 last:mb-0;
+}
+
+.prose-arcane strong {
+  @apply text-primary font-semibold;
+}
+
+.prose-arcane em {
+  @apply italic text-muted-foreground;
+}
+
+.prose-arcane code {
+  @apply px-1.5 py-0.5 rounded bg-muted text-accent font-mono text-sm;
+}
+
+.prose-arcane pre {
+  @apply p-4 rounded-lg bg-muted/50 border border-border overflow-x-auto my-4;
+}
+
+.prose-arcane pre code {
+  @apply bg-transparent p-0 text-foreground;
+}
+
+.prose-arcane ul,
+.prose-arcane ol {
+  @apply my-4 pl-6;
+}
+
+.prose-arcane li {
+  @apply mb-2;
+}
+
+.prose-arcane ul li {
+  @apply list-disc;
+}
+
+.prose-arcane ol li {
+  @apply list-decimal;
+}
+
+.prose-arcane blockquote {
+  @apply border-l-4 border-primary/50 pl-4 italic text-muted-foreground my-4;
+}
+
+.prose-arcane a {
+  @apply text-primary underline underline-offset-2 hover:text-primary/80 transition-colors;
+}
+
+.prose-arcane hr {
+  @apply my-6 border-border;
+}
+
+.prose-arcane table {
+  @apply w-full border-collapse my-4;
+}
+
+.prose-arcane th,
+.prose-arcane td {
+  @apply border border-border px-3 py-2 text-left;
+}
+
+.prose-arcane th {
+  @apply bg-muted font-semibold;
 }

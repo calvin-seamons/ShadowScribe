@@ -38,7 +38,14 @@ async def get_db():
 
 
 async def init_db():
-    """Initialize database (create tables)."""
+    """Initialize database (create tables).
+    
+    Imports all models to ensure they're registered with Base.metadata.
+    """
+    # Import models to register them
+    from api.database.models import Character  # noqa: F401
+    from api.database.feedback_models import RoutingFeedback  # noqa: F401
+    
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 

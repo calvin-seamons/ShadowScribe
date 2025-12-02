@@ -5,15 +5,17 @@ import json
 import uuid
 import sys
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List, Optional
 
 # Add project root to path for character builder imports
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from api.database.connection import get_db
+from api.database.connection import get_db, AsyncSessionLocal
 from api.services.chat_service import ChatService
 from api.services.dndbeyond_service import DndBeyondService
+from api.database.feedback_models import RoutingFeedback
+from api.database.repositories.feedback_repo import FeedbackRepository
 from src.character_creation.async_character_builder import AsyncCharacterBuilder
 
 router = APIRouter()
@@ -24,17 +26,69 @@ active_connections: Dict[str, WebSocket] = {}
 
 @router.websocket("/ws/chat")
 async def websocket_endpoint(websocket: WebSocket):
-    """WebSocket endpoint for real-time chat."""
+    """WebSocket endpoint for real-time chat.
+    
+    Uses local model for routing and Gazetteer NER for entity extraction.
+    Entity extraction depends on the selected character and campaign.
+    
+    Message Types (Client -> Server):
+        - message: Send a chat message
+          {
+            "type": "message",
+            "message": "What is my AC?",
+            "character_name": "Duskryn Nightwarden",
+            "campaign_id": "main_campaign"  // optional, defaults to "main_campaign"
+          }
+        - clear_history: Clear conversation history
+          {
+            "type": "clear_history",
+            "character_name": "Duskryn Nightwarden",
+            "campaign_id": "main_campaign"  // optional
+          }
+        - ping: Keep-alive ping
+    
+    Message Types (Server -> Client):
+        - message_received: Acknowledgment that message was received
+        - response_chunk: Streamed response chunk
+        - response_complete: Response streaming finished
+        - error: Error occurred
+        - history_cleared: Conversation history cleared
+        - routing_metadata: Which tools were selected
+        - entities_metadata: Entities extracted from query
+        - context_sources: Sources used for response
+        - performance_metrics: Timing information
+        - pong: Keep-alive response
+    """
     await websocket.accept()
     
     connection_id = str(uuid.uuid4())
     active_connections[connection_id] = websocket
     
-    # Initialize chat service
+    # Initialize chat service - routing mode determined by config
     chat_service = ChatService()
     
+    # Track current query's routing info for feedback collection
+    current_routing_info = {
+        'tools_needed': None,
+        'entities': None,
+        'normalized_query': None,  # Placeholder-ized query from CentralEngine
+        'backend': 'local',
+        'inference_time_ms': None
+    }
+    
     async def emit_metadata(event_type: str, data: dict):
-        """Callback to emit metadata events to the client."""
+        """Callback to emit metadata events to the client and capture for feedback."""
+        # Capture routing info for feedback collection
+        if event_type == 'routing_metadata':
+            current_routing_info['tools_needed'] = data.get('tools_needed', [])
+            current_routing_info['backend'] = data.get('classifier_backend', 'local')
+            # Capture normalized query (placeholder-ized) from CentralEngine
+            current_routing_info['normalized_query'] = data.get('normalized_query')
+            # Capture extracted entities with text/type for training data
+            current_routing_info['entities'] = data.get('extracted_entities', [])
+            # Capture local classifier timing if available (comparison mode)
+            current_routing_info['inference_time_ms'] = data.get('local_inference_time_ms')
+        
         await websocket.send_json({
             'type': event_type,
             'data': data
@@ -55,13 +109,15 @@ async def websocket_endpoint(websocket: WebSocket):
             
             if message_type == 'clear_history':
                 character_name = message_data.get('character_name')
+                campaign_id = message_data.get('campaign_id', 'main_campaign')
                 if character_name:
-                    chat_service.clear_conversation_history(character_name)
+                    chat_service.clear_conversation_history(character_name, campaign_id)
                     await websocket.send_json({'type': 'history_cleared'})
                 continue
             
             user_message = message_data.get('message')
             character_name = message_data.get('character_name')
+            campaign_id = message_data.get('campaign_id', 'main_campaign')
             
             # Validate input
             if not user_message or not character_name:
@@ -74,11 +130,18 @@ async def websocket_endpoint(websocket: WebSocket):
             # Send acknowledgment
             await websocket.send_json({'type': 'message_received'})
             
+            # Reset routing info for this query
+            current_routing_info['tools_needed'] = None
+            current_routing_info['entities'] = None
+            current_routing_info['normalized_query'] = None
+            current_routing_info['inference_time_ms'] = None
+            
             # Stream response from CentralEngine
             try:
                 async for chunk in chat_service.process_query_stream(
                     user_message, 
                     character_name,
+                    campaign_id=campaign_id,
                     metadata_callback=emit_metadata
                 ):
                     await websocket.send_json({
@@ -88,6 +151,47 @@ async def websocket_endpoint(websocket: WebSocket):
                 
                 # Send completion signal
                 await websocket.send_json({'type': 'response_complete'})
+                
+                # Record routing decision for feedback collection
+                if current_routing_info['tools_needed'] and current_routing_info['normalized_query']:
+                    try:
+                        async with AsyncSessionLocal() as db:
+                            repo = FeedbackRepository(db)
+
+                            # Convert entities to serializable format
+                            entities_data = None
+                            if current_routing_info['entities']:
+                                entities_data = [
+                                    {
+                                        'name': e.get('name', ''),
+                                        'text': e.get('text', ''),
+                                        'type': e.get('type', ''),
+                                        'confidence': e.get('confidence', 1.0)
+                                    }
+                                    for e in current_routing_info['entities']
+                                ]
+
+                            # Use normalized query from CentralEngine (already has placeholders applied)
+                            feedback_record = RoutingFeedback(
+                                user_query=current_routing_info['normalized_query'],
+                                character_name=character_name,
+                                campaign_id=campaign_id,
+                                predicted_tools=current_routing_info['tools_needed'],
+                                predicted_entities=entities_data,
+                                classifier_backend=current_routing_info['backend'],
+                                classifier_inference_time_ms=current_routing_info['inference_time_ms']
+                            )
+
+                            created = await repo.create(feedback_record)
+                            await db.commit()
+
+                            # Send feedback ID to client for later feedback submission
+                            await websocket.send_json({
+                                'type': 'feedback_id',
+                                'data': {'id': created.id}
+                            })
+                    except Exception as e:
+                        print(f"Failed to record routing feedback: {e}")
                 
             except Exception as e:
                 await websocket.send_json({

@@ -1,6 +1,6 @@
 /**
  * Step 4: Preview & Save
- * 
+ *
  * Final preview of character with save to database
  */
 
@@ -9,6 +9,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { CharacterData } from '@/lib/types/character'
+import { Save, Loader2, AlertTriangle, PartyPopper, MessageSquare, User, RefreshCw, Backpack, Sparkles, ScrollText, Heart, Shield, Zap, Eye } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface Step4_PreviewAndSaveProps {
   characterData: CharacterData | null
@@ -26,7 +28,7 @@ export function Step4_PreviewAndSave({
   const router = useRouter()
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-  
+
   const handleSave = async () => {
     setIsSaving(true)
     setSaveError(null)
@@ -38,63 +40,61 @@ export function Step4_PreviewAndSave({
       setIsSaving(false)
     }
   }
-  
+
   if (!characterData) {
     return (
-      <div className="p-8 text-center">
-        <p className="text-gray-600">No character data available</p>
+      <div className="p-12 text-center">
+        <p className="text-muted-foreground">No character data available</p>
       </div>
     )
   }
-  
+
   // If character is already saved, show success state
   if (savedCharacterId) {
     return (
-      <div className="p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="mb-4">
-              <span className="text-6xl">🎉</span>
-            </div>
-            <h2 className="text-4xl font-bold text-green-600 mb-2">Character Saved Successfully!</h2>
-            <p className="text-gray-600 text-lg">
-              Your character has been saved to the database
-            </p>
+      <div className="p-8 md:p-12">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-6">
+            <PartyPopper className="w-10 h-10 text-emerald-500" />
           </div>
-          
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8">
-            <div className="text-center">
-              <p className="text-green-800 font-bold text-lg mb-2">Character ID: {savedCharacterId}</p>
-              <p className="text-green-700">
-                {characterData.character_base?.name || 'Your character'} is now ready to use!
-              </p>
-            </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-emerald-500 mb-3">
+            Character Saved!
+          </h2>
+          <p className="text-lg text-muted-foreground mb-8">
+            {characterData.character_base?.name || 'Your character'} is now ready for adventure
+          </p>
+
+          <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 p-6 mb-8">
+            <p className="text-sm text-muted-foreground mb-1">Character ID</p>
+            <p className="text-2xl font-bold text-foreground font-mono">{savedCharacterId}</p>
           </div>
-          
-          <div className="flex flex-col gap-4">
+
+          <div className="space-y-3">
             <button
               onClick={() => {
                 const characterName = characterData.character_base?.name
                 if (characterName) {
-                  // Encode character name for URL
                   const encodedName = encodeURIComponent(characterName)
                   router.push(`/?character=${encodedName}`)
                 }
               }}
-              className="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 font-bold text-lg transition-all transform hover:scale-105 active:scale-95 text-center"
+              className="btn-primary w-full py-4 text-lg flex items-center justify-center gap-3"
             >
-              Start Chatting with {characterData.character_base?.name || 'Character'} →
+              <MessageSquare className="w-5 h-5" />
+              Start Chatting with {characterData.character_base?.name || 'Character'}
             </button>
             <a
               href={`/characters/${savedCharacterId}`}
-              className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-medium transition-colors text-center"
+              className="btn-secondary w-full py-3 flex items-center justify-center gap-2"
             >
+              <User className="w-4 h-4" />
               View Character Details
             </a>
             <button
               onClick={onReset}
-              className="px-6 py-3 bg-white border border-gray-300 text-gray-800 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+              className="btn-ghost w-full py-3 flex items-center justify-center gap-2"
             >
+              <RefreshCw className="w-4 h-4" />
               Import Another Character
             </button>
           </div>
@@ -102,7 +102,7 @@ export function Step4_PreviewAndSave({
       </div>
     )
   }
-  
+
   // Otherwise show preview and save UI
   const charBase = characterData.character_base
   const abilityScores = characterData.ability_scores
@@ -111,77 +111,78 @@ export function Step4_PreviewAndSave({
   const spellList = characterData.spell_list
   const backstory = characterData.backstory
   const personality = characterData.personality
-  
+
   return (
-    <div className="p-8">
+    <div className="p-6 md:p-10">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Character Preview</h2>
-          <p className="text-gray-600">Review your character before saving to the database</p>
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
+            <Eye className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+            Character Preview
+          </h2>
+          <p className="text-muted-foreground">
+            Review your character before saving to the database
+          </p>
         </div>
-        
+
         {/* Error Display */}
         {saveError && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <span className="text-red-600 text-xl">⚠️</span>
-              <div>
-                <h3 className="font-bold text-red-800">Save Failed</h3>
-                <p className="text-red-700">{saveError}</p>
-              </div>
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/20 mb-8">
+            <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-destructive">Save Failed</p>
+              <p className="text-sm text-destructive/80 mt-1">{saveError}</p>
             </div>
           </div>
         )}
-        
+
         {/* Character Summary Card */}
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-8 mb-8 border-2 border-purple-200">
-          <div className="text-center mb-6">
-            <h3 className="text-4xl font-bold text-gray-900 mb-2">
+        <div className="rounded-2xl bg-gradient-to-br from-primary/5 via-card to-accent/5 border border-border/50 p-6 md:p-8 mb-8">
+          {/* Character header */}
+          <div className="text-center mb-8">
+            <h3 className="text-3xl md:text-4xl font-bold text-gradient-gold mb-2">
               {charBase?.name || 'Unknown Character'}
             </h3>
-            <p className="text-xl text-gray-700">
+            <p className="text-lg text-muted-foreground">
               {charBase?.race && charBase?.character_class
                 ? `${charBase.race} ${charBase.character_class}`
                 : 'Unknown Race/Class'}
             </p>
           </div>
-          
+
           {/* Core Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-lg p-4 text-center border border-gray-200">
-              <span className="text-sm text-gray-600 block mb-1">Level</span>
-              <span className="text-3xl font-bold text-purple-600">
-                {charBase?.total_level || '?'}
-              </span>
-            </div>
-            <div className="bg-white rounded-lg p-4 text-center border border-gray-200">
-              <span className="text-sm text-gray-600 block mb-1">Hit Points</span>
-              <span className="text-3xl font-bold text-red-600">
-                {combatStats?.current_hp || '?'}/{combatStats?.max_hp || '?'}
-              </span>
-            </div>
-            <div className="bg-white rounded-lg p-4 text-center border border-gray-200">
-              <span className="text-sm text-gray-600 block mb-1">Armor Class</span>
-              <span className="text-3xl font-bold text-blue-600">
-                {combatStats?.armor_class || '?'}
-              </span>
-            </div>
-            <div className="bg-white rounded-lg p-4 text-center border border-gray-200">
-              <span className="text-sm text-gray-600 block mb-1">Initiative</span>
-              <span className="text-3xl font-bold text-green-600">
-                {combatStats?.initiative_bonus !== undefined
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <StatCard label="Level" value={charBase?.total_level || '?'} color="primary" />
+            <StatCard
+              label="Hit Points"
+              value={`${combatStats?.current_hp || '?'}/${combatStats?.max_hp || '?'}`}
+              color="destructive"
+            />
+            <StatCard
+              label="Armor Class"
+              value={combatStats?.armor_class || '?'}
+              color="secondary"
+            />
+            <StatCard
+              label="Initiative"
+              value={
+                combatStats?.initiative_bonus !== undefined
                   ? combatStats.initiative_bonus >= 0
                     ? `+${combatStats.initiative_bonus}`
                     : combatStats.initiative_bonus
-                  : '?'}
-              </span>
-            </div>
+                  : '?'
+              }
+              color="accent"
+            />
           </div>
-          
+
           {/* Ability Scores */}
           {abilityScores && (
-            <div className="bg-white rounded-lg p-4 border border-gray-200">
-              <h4 className="font-bold text-gray-900 mb-3 text-center">Ability Scores</h4>
+            <div className="rounded-xl bg-card/50 border border-border/50 p-4">
+              <h4 className="font-semibold text-foreground mb-4 text-center">Ability Scores</h4>
               <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
                 {[
                   { label: 'STR', value: abilityScores.strength },
@@ -191,97 +192,134 @@ export function Step4_PreviewAndSave({
                   { label: 'WIS', value: abilityScores.wisdom },
                   { label: 'CHA', value: abilityScores.charisma },
                 ].map(({ label, value }) => (
-                  <div key={label} className="text-center">
-                    <span className="text-xs text-gray-600 block">{label}</span>
-                    <span className="text-xl font-bold text-gray-900">{value || '?'}</span>
+                  <div key={label} className="text-center p-3 rounded-lg bg-muted/30">
+                    <span className="text-xs text-muted-foreground block mb-1">{label}</span>
+                    <span className="text-xl font-bold text-foreground">{value || '?'}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
         </div>
-        
+
         {/* Section Summary */}
-        <div className="grid md:grid-cols-2 gap-4 mb-8">
-          {/* Inventory */}
+        <div className="grid md:grid-cols-2 gap-4 mb-10">
           {inventory && (
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">🎒</span>
-                <h4 className="font-bold text-gray-900">Inventory</h4>
-              </div>
-              <p className="text-sm text-gray-600">
-                {Object.keys(inventory.equipped_items || {}).length} equipped items,{' '}
-                {inventory.backpack?.length || 0} backpack items
-              </p>
-            </div>
+            <SummaryCard
+              icon={<Backpack className="w-5 h-5" />}
+              title="Inventory"
+              content={`${Object.keys(inventory.equipped_items || {}).length} equipped, ${inventory.backpack?.length || 0} items`}
+            />
           )}
-          
-          {/* Spells */}
           {spellList && (
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">✨</span>
-                <h4 className="font-bold text-gray-900">Spells</h4>
-              </div>
-              <p className="text-sm text-gray-600">
-                {spellList.spells?.length || 0} spells known
-              </p>
-            </div>
+            <SummaryCard
+              icon={<Sparkles className="w-5 h-5" />}
+              title="Spells"
+              content={`${spellList.spells?.length || 0} spells known`}
+            />
           )}
-          
-          {/* Backstory */}
           {backstory && (
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">📜</span>
-                <h4 className="font-bold text-gray-900">Backstory</h4>
-              </div>
-              <p className="text-sm text-gray-600 line-clamp-2">
-                {backstory.early_life || 'No backstory provided'}
-              </p>
-            </div>
+            <SummaryCard
+              icon={<ScrollText className="w-5 h-5" />}
+              title="Backstory"
+              content={backstory.early_life?.substring(0, 60) + '...' || 'No backstory'}
+            />
           )}
-          
-          {/* Personality */}
           {personality && (
-            <div className="bg-white border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">🎭</span>
-                <h4 className="font-bold text-gray-900">Personality</h4>
-              </div>
-              <p className="text-sm text-gray-600 line-clamp-2">
-                {personality.traits || 'No traits provided'}
-              </p>
-            </div>
+            <SummaryCard
+              icon={<Heart className="w-5 h-5" />}
+              title="Personality"
+              content={personality.traits?.substring(0, 60) + '...' || 'No traits'}
+            />
           )}
         </div>
-        
+
         {/* Save Button */}
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-bold text-lg transition-all transform hover:scale-105 active:scale-95 disabled:transform-none"
+          className="btn-primary w-full py-4 text-lg flex items-center justify-center gap-3"
         >
-          {isSaving ? 'Saving Character...' : 'Save Character to Database'}
+          {isSaving ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Saving Character...
+            </>
+          ) : (
+            <>
+              <Save className="w-5 h-5" />
+              Save Character to Database
+            </>
+          )}
         </button>
-        
+
         {/* Info Box */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <span className="text-blue-600 text-xl">ℹ️</span>
-            <div className="text-sm text-blue-800">
-              <p className="font-bold mb-1">What happens when you save?</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>Character data is stored in the database</li>
-                <li>You can view and edit the character anytime</li>
-                <li>Character becomes available for AI assistant queries</li>
-                <li>Original D&D Beyond data is preserved</li>
-              </ul>
-            </div>
-          </div>
+        <div className="mt-6 p-5 rounded-xl bg-muted/30 border border-border/50">
+          <h4 className="font-medium text-foreground mb-2">What happens when you save?</h4>
+          <ul className="space-y-1.5 text-sm text-muted-foreground">
+            <li className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              Character data is stored in the database
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              You can view and edit the character anytime
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              Character becomes available for AI assistant queries
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              Original D&D Beyond data is preserved
+            </li>
+          </ul>
         </div>
       </div>
+    </div>
+  )
+}
+
+interface StatCardProps {
+  label: string
+  value: string | number
+  color?: 'primary' | 'secondary' | 'accent' | 'destructive'
+}
+
+function StatCard({ label, value, color = 'primary' }: StatCardProps) {
+  const colorClasses = {
+    primary: 'text-primary',
+    secondary: 'text-secondary-foreground',
+    accent: 'text-accent',
+    destructive: 'text-destructive',
+  }
+
+  return (
+    <div className="rounded-xl bg-card/50 border border-border/50 p-4 text-center">
+      <span className="text-xs text-muted-foreground block mb-1">{label}</span>
+      <span className={cn('text-2xl md:text-3xl font-bold', colorClasses[color])}>
+        {value}
+      </span>
+    </div>
+  )
+}
+
+interface SummaryCardProps {
+  icon: React.ReactNode
+  title: string
+  content: string
+}
+
+function SummaryCard({ icon, title, content }: SummaryCardProps) {
+  return (
+    <div className="rounded-xl bg-card/50 border border-border/50 p-4">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground">
+          {icon}
+        </div>
+        <h4 className="font-medium text-foreground">{title}</h4>
+      </div>
+      <p className="text-sm text-muted-foreground line-clamp-2">{content}</p>
     </div>
   )
 }

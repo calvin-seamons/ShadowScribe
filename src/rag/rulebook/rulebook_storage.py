@@ -12,11 +12,10 @@ import hashlib
 from dataclasses import dataclass, field
 import time
 
-import openai
-
 from .rulebook_types import RulebookSection, RulebookCategory, SearchResult, RULEBOOK_CATEGORY_ASSIGNMENTS, MULTI_CATEGORY_SECTIONS
 from .categorizer import RulebookCategorizer
 from ...config import get_config
+from ...embeddings import get_embedding_provider, EmbeddingProvider
 
 # Note: dotenv is loaded in config.py
 
@@ -39,10 +38,8 @@ class RulebookStorage:
         # Initialize categorizer with the same logic as check_category_coverage.py
         self.categorizer = RulebookCategorizer()
         
-        # Initialize OpenAI with API key from config
-        openai.api_key = self.config.openai_api_key
-        if not self.config.validate_openai_key():
-            raise ValueError("Invalid or missing OpenAI API key in configuration")
+        # Initialize embedding provider (supports both OpenAI and local models)
+        self._embedding_provider: Optional[EmbeddingProvider] = None
     
     def parse_markdown(self, markdown_path: str) -> None:
         """Parse the D&D 5e rulebook markdown into sections using two-phase approach"""
@@ -170,6 +167,13 @@ class RulebookStorage:
         section_id = section_id.strip('-')  # Remove leading/trailing hyphens
         return section_id
     
+    def _get_embedding_provider(self) -> EmbeddingProvider:
+        """Get or initialize the embedding provider (lazy loading)"""
+        if self._embedding_provider is None:
+            self._embedding_provider = get_embedding_provider(self.embedding_model)
+            print(f"Using embedding model: {self._embedding_provider.model_name} ({self._embedding_provider.embedding_dim} dimensions)")
+        return self._embedding_provider
+    
     def generate_embeddings(self, batch_size: int = 50) -> None:
         """Generate embeddings for all sections that don't have them"""
         sections_to_embed = [s for s in self.sections.values() if s.vector is None]
@@ -179,6 +183,10 @@ class RulebookStorage:
             return
         
         print(f"Generating embeddings for {len(sections_to_embed)} sections...")
+        
+        # Get embedding provider
+        provider = self._get_embedding_provider()
+        is_local = self.config.is_local_model()
         
         # Process in batches
         for i in range(0, len(sections_to_embed), batch_size):
@@ -201,19 +209,17 @@ class RulebookStorage:
                 texts.append(embedding_text)
             
             try:
-                # Generate embeddings
-                response = openai.embeddings.create(
-                    model=self.embedding_model,
-                    input=texts
-                )
+                # Generate embeddings using the provider
+                embeddings = provider.embed_batch(texts, show_progress=False)
                 
                 # Store embeddings
                 for j, section in enumerate(batch):
-                    section.vector = response.data[j].embedding
+                    section.vector = embeddings[j]
                     print(f"  Generated embedding for: {section.title}")
                 
-                # Small delay to avoid rate limits
-                time.sleep(0.1)
+                # Small delay for API-based models to avoid rate limits
+                if not is_local:
+                    time.sleep(0.1)
                 
             except Exception as e:
                 print(f"Error generating embeddings for batch: {e}")

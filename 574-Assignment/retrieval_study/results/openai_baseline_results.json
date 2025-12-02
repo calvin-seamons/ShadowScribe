@@ -1,0 +1,744 @@
+{
+  "retriever_name": "OpenAI text-embedding-3-large",
+  "summary": {
+    "mrr": 0.7635416666666667,
+    "recall_at_k": {
+      "1": 0.388888888888889,
+      "3": 0.5381944444444445,
+      "5": 0.6145833333333334,
+      "10": 0.7395833333333335
+    },
+    "avg_latency_ms": 296.123083360726,
+    "total_api_calls": 24,
+    "cache_hit_rate": 0.0
+  },
+  "per_question_results": [
+    {
+      "question_id": "rule_001",
+      "query": "How does concentration work?",
+      "category": "RULE_MECHANICS",
+      "intention": "rule_mechanics",
+      "relevant_sections": [
+        "concentration"
+      ],
+      "retrieved_sections": [
+        "concentration",
+        "complex-traps",
+        "longer-casting-times",
+        "dominate-person",
+        "confusion"
+      ],
+      "latency_ms": 873.5404000617564,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 1.0,
+      "hit@1": 1.0,
+      "recall@3": 1.0,
+      "hit@3": 1.0,
+      "recall@5": 1.0,
+      "hit@5": 1.0,
+      "recall@10": 1.0,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "rule_002",
+      "query": "Explain the advantage and disadvantage system",
+      "category": "RULE_MECHANICS",
+      "intention": "rule_mechanics",
+      "relevant_sections": [
+        "section-advantage-and-disadvantage"
+      ],
+      "retrieved_sections": [
+        "section-advantage-and-disadvantage",
+        "variant-encumbrance",
+        "blinded",
+        "spellguard-shield",
+        "dodge"
+      ],
+      "latency_ms": 230.09710013866425,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 1.0,
+      "hit@1": 1.0,
+      "recall@3": 1.0,
+      "hit@3": 1.0,
+      "recall@5": 1.0,
+      "hit@5": 1.0,
+      "recall@10": 1.0,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "rule_003",
+      "query": "How do saving throws work?",
+      "category": "RULE_MECHANICS",
+      "intention": "rule_mechanics",
+      "relevant_sections": [
+        "section-saving-throws",
+        "saving-throws"
+      ],
+      "retrieved_sections": [
+        "section-saving-throws",
+        "death-saving-throws",
+        "careful-spell",
+        "stabilizing-a-creature",
+        "sculpt-spells"
+      ],
+      "latency_ms": 251.22489989735186,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.5,
+      "hit@1": 1.0,
+      "recall@3": 0.5,
+      "hit@3": 1.0,
+      "recall@5": 0.5,
+      "hit@5": 1.0,
+      "recall@10": 0.5,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "rule_004",
+      "query": "What is proficiency bonus?",
+      "category": "RULE_MECHANICS",
+      "intention": "rule_mechanics",
+      "relevant_sections": [
+        "section-proficiency-bonus",
+        "proficiency-bonus"
+      ],
+      "retrieved_sections": [
+        "section-proficiency-bonus",
+        "variant-skills-with-different-abilities",
+        "modifiers-to-the-roll",
+        "section-character-advancement",
+        "attack-rolls"
+      ],
+      "latency_ms": 215.54309991188347,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.5,
+      "hit@1": 1.0,
+      "recall@3": 0.5,
+      "hit@3": 1.0,
+      "recall@5": 0.5,
+      "hit@5": 1.0,
+      "recall@10": 0.5,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "rule_005",
+      "query": "Explain how ability checks work",
+      "category": "RULE_MECHANICS",
+      "intention": "rule_mechanics",
+      "relevant_sections": [
+        "section-ability-checks"
+      ],
+      "retrieved_sections": [
+        "section-ability-checks",
+        "group-checks",
+        "passive-checks",
+        "chapter-using-ability-scores",
+        "intelligence-checks"
+      ],
+      "latency_ms": 236.7870998568833,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 1.0,
+      "hit@1": 1.0,
+      "recall@3": 1.0,
+      "hit@3": 1.0,
+      "recall@5": 1.0,
+      "hit@5": 1.0,
+      "recall@10": 1.0,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "entity_001",
+      "query": "What are the traits of a dwarf?",
+      "category": "DESCRIBE_ENTITY",
+      "intention": "describe_entity",
+      "relevant_sections": [
+        "dwarf-traits",
+        "section-dwarf"
+      ],
+      "retrieved_sections": [
+        "dwarf-traits",
+        "halfling-traits",
+        "gnome-traits",
+        "human-traits",
+        "elf-traits"
+      ],
+      "latency_ms": 279.0995000395924,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.5,
+      "hit@1": 1.0,
+      "recall@3": 0.5,
+      "hit@3": 1.0,
+      "recall@5": 0.5,
+      "hit@5": 1.0,
+      "recall@10": 0.5,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "entity_002",
+      "query": "Describe the fireball spell",
+      "category": "DESCRIBE_ENTITY",
+      "intention": "describe_entity",
+      "relevant_sections": [
+        "fireball"
+      ],
+      "retrieved_sections": [
+        "fireball",
+        "delayed-blast-fireball",
+        "wand-of-fireballs",
+        "necklace-of-fireballs",
+        "staff-of-fire"
+      ],
+      "latency_ms": 357.79669997282326,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 1.0,
+      "hit@1": 1.0,
+      "recall@3": 1.0,
+      "hit@3": 1.0,
+      "recall@5": 1.0,
+      "hit@5": 1.0,
+      "recall@10": 1.0,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "entity_003",
+      "query": "Tell me about the fighter class",
+      "category": "DESCRIBE_ENTITY",
+      "intention": "describe_entity",
+      "relevant_sections": [
+        "section-fighter"
+      ],
+      "retrieved_sections": [
+        "section-fighter",
+        "section-backgrounds",
+        "section-multiclassing",
+        "section-martial-archetypes",
+        "hit-points-and-hit-dice"
+      ],
+      "latency_ms": 286.3073998596519,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 1.0,
+      "hit@1": 1.0,
+      "recall@3": 1.0,
+      "hit@3": 1.0,
+      "recall@5": 1.0,
+      "hit@5": 1.0,
+      "recall@10": 1.0,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "entity_004",
+      "query": "What is the poisoned condition?",
+      "category": "DESCRIBE_ENTITY",
+      "intention": "describe_entity",
+      "relevant_sections": [
+        "section-conditions",
+        "poisoned"
+      ],
+      "retrieved_sections": [
+        "sample-poisons",
+        "periapt-of-proof-against-poison",
+        "section-conditions",
+        "potion-of-poison",
+        "poison-needle"
+      ],
+      "latency_ms": 337.1791001409292,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.0,
+      "hit@1": 0.0,
+      "recall@3": 0.5,
+      "hit@3": 1.0,
+      "recall@5": 0.5,
+      "hit@5": 1.0,
+      "recall@10": 1.0,
+      "hit@10": 1.0,
+      "mrr": 0.3333333333333333
+    },
+    {
+      "question_id": "entity_005",
+      "query": "Explain what a longsword is",
+      "category": "DESCRIBE_ENTITY",
+      "intention": "describe_entity",
+      "relevant_sections": [
+        "section-weapons",
+        "martial-melee-weapons"
+      ],
+      "retrieved_sections": [
+        "sun-blade",
+        "section-weapons",
+        "actions",
+        "flying-sword",
+        "arcane-sword"
+      ],
+      "latency_ms": 299.9940998852253,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.0,
+      "hit@1": 0.0,
+      "recall@3": 0.5,
+      "hit@3": 1.0,
+      "recall@5": 0.5,
+      "hit@5": 1.0,
+      "recall@10": 0.5,
+      "hit@10": 1.0,
+      "mrr": 0.5
+    },
+    {
+      "question_id": "compare_001",
+      "query": "What's the difference between a wizard and a sorcerer?",
+      "category": "COMPARE_ENTITIES",
+      "intention": "compare_entities",
+      "relevant_sections": [
+        "section-sorcerer",
+        "section-wizard"
+      ],
+      "retrieved_sections": [
+        "section-what-is-a-spell",
+        "section-sorcerer",
+        "section-sorcerer-spells",
+        "section-sorcerous-origins",
+        "sorcery-points"
+      ],
+      "latency_ms": 273.43940013088286,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.0,
+      "hit@1": 0.0,
+      "recall@3": 0.5,
+      "hit@3": 1.0,
+      "recall@5": 0.5,
+      "hit@5": 1.0,
+      "recall@10": 0.5,
+      "hit@10": 1.0,
+      "mrr": 0.5
+    },
+    {
+      "question_id": "compare_002",
+      "query": "Compare the dwarf and elf races",
+      "category": "COMPARE_ENTITIES",
+      "intention": "compare_entities",
+      "relevant_sections": [
+        "dwarf-traits",
+        "section-dwarf",
+        "section-elf",
+        "elf-traits"
+      ],
+      "retrieved_sections": [
+        "dwarf-traits",
+        "section-dwarf",
+        "section-half-elf",
+        "elf-traits",
+        "elf-drow"
+      ],
+      "latency_ms": 283.65240013226867,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.25,
+      "hit@1": 1.0,
+      "recall@3": 0.5,
+      "hit@3": 1.0,
+      "recall@5": 0.75,
+      "hit@5": 1.0,
+      "recall@10": 1.0,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "compare_003",
+      "query": "Compare fireball and lightning bolt spells",
+      "category": "COMPARE_ENTITIES",
+      "intention": "compare_entities",
+      "relevant_sections": [
+        "lightning-bolt",
+        "fireball"
+      ],
+      "retrieved_sections": [
+        "lightning-bolt",
+        "fire-bolt",
+        "fireball",
+        "chain-lightning",
+        "wand-of-lightning-bolts"
+      ],
+      "latency_ms": 362.9942999687046,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.5,
+      "hit@1": 1.0,
+      "recall@3": 1.0,
+      "hit@3": 1.0,
+      "recall@5": 1.0,
+      "hit@5": 1.0,
+      "recall@10": 1.0,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "compare_004",
+      "query": "How do the barbarian and fighter differ?",
+      "category": "COMPARE_ENTITIES",
+      "intention": "compare_entities",
+      "relevant_sections": [
+        "section-fighter",
+        "section-barbarian"
+      ],
+      "retrieved_sections": [
+        "section-barbarian",
+        "rage",
+        "section-barbarian-paths",
+        "prerequisites",
+        "section-fighter"
+      ],
+      "latency_ms": 293.5909000225365,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.5,
+      "hit@1": 1.0,
+      "recall@3": 0.5,
+      "hit@3": 1.0,
+      "recall@5": 1.0,
+      "hit@5": 1.0,
+      "recall@10": 1.0,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "compare_005",
+      "query": "What's the difference between a short rest and long rest?",
+      "category": "COMPARE_ENTITIES",
+      "intention": "compare_entities",
+      "relevant_sections": [
+        "short-rest",
+        "section-resting",
+        "long-rest"
+      ],
+      "retrieved_sections": [
+        "short-rest",
+        "long-rest",
+        "section-resting",
+        "limited-usage",
+        "section-between-adventures"
+      ],
+      "latency_ms": 296.5184000786394,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.3333333333333333,
+      "hit@1": 1.0,
+      "recall@3": 1.0,
+      "hit@3": 1.0,
+      "recall@5": 1.0,
+      "hit@5": 1.0,
+      "recall@10": 1.0,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "calc_001",
+      "query": "How do I calculate my attack bonus?",
+      "category": "CALCULATE_VALUES",
+      "intention": "calculate_values",
+      "relevant_sections": [
+        "attack-rolls",
+        "attack-rolls-and-damage",
+        "section-making-an-attack"
+      ],
+      "retrieved_sections": [
+        "attack-rolls",
+        "modifiers-to-the-roll",
+        "section-proficiency-bonus",
+        "weapon-1-2-or-3",
+        "extra-attack"
+      ],
+      "latency_ms": 208.7427000515163,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.3333333333333333,
+      "hit@1": 1.0,
+      "recall@3": 0.3333333333333333,
+      "hit@3": 1.0,
+      "recall@5": 0.3333333333333333,
+      "hit@5": 1.0,
+      "recall@10": 1.0,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "calc_002",
+      "query": "What's my AC with chain mail and a shield?",
+      "category": "CALCULATE_VALUES",
+      "intention": "calculate_values",
+      "relevant_sections": [
+        "heavy-armor",
+        "shield",
+        "armor-class"
+      ],
+      "retrieved_sections": [
+        "elven-chain",
+        "dragon-scale-mail",
+        "shield-1-2-or-3",
+        "section-armor",
+        "medium-armor"
+      ],
+      "latency_ms": 216.92189993336797,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.0,
+      "hit@1": 0.0,
+      "recall@3": 0.0,
+      "hit@3": 0.0,
+      "recall@5": 0.0,
+      "hit@5": 0.0,
+      "recall@10": 0.3333333333333333,
+      "hit@10": 1.0,
+      "mrr": 0.16666666666666666
+    },
+    {
+      "question_id": "calc_003",
+      "query": "Calculate my spell save DC with 18 Intelligence",
+      "category": "CALCULATE_VALUES",
+      "intention": "calculate_values",
+      "relevant_sections": [
+        "spellcasting-ability",
+        "spell-save-dc"
+      ],
+      "retrieved_sections": [
+        "section-saving-throws",
+        "intelligence-checks",
+        "empowered-evocation",
+        "natures-sanctuary",
+        "spellcasting-ability"
+      ],
+      "latency_ms": 227.72060008719563,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.0,
+      "hit@1": 0.0,
+      "recall@3": 0.0,
+      "hit@3": 0.0,
+      "recall@5": 0.5,
+      "hit@5": 1.0,
+      "recall@10": 0.5,
+      "hit@10": 1.0,
+      "mrr": 0.2
+    },
+    {
+      "question_id": "calc_004",
+      "query": "What's the damage for a longsword with 16 Strength?",
+      "category": "CALCULATE_VALUES",
+      "intention": "calculate_values",
+      "relevant_sections": [
+        "section-damage-and-healing",
+        "section-weapons",
+        "attack-rolls-and-damage"
+      ],
+      "retrieved_sections": [
+        "giant-slayer",
+        "sun-blade",
+        "section-weapons",
+        "hammer-of-thunderbolts",
+        "sword-of-sharpness"
+      ],
+      "latency_ms": 264.12710011936724,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.0,
+      "hit@1": 0.0,
+      "recall@3": 0.3333333333333333,
+      "hit@3": 1.0,
+      "recall@5": 0.3333333333333333,
+      "hit@5": 1.0,
+      "recall@10": 0.3333333333333333,
+      "hit@10": 1.0,
+      "mrr": 0.3333333333333333
+    },
+    {
+      "question_id": "calc_005",
+      "query": "How much HP does a 5th level fighter with 14 Constitution have?",
+      "category": "CALCULATE_VALUES",
+      "intention": "calculate_values",
+      "relevant_sections": [
+        "hit-points",
+        "hit-points-and-hit-dice",
+        "section-fighter"
+      ],
+      "retrieved_sections": [
+        "second-wind",
+        "section-character-advancement",
+        "proficiency-bonus",
+        "constitution-checks",
+        "survivor"
+      ],
+      "latency_ms": 302.6057002134621,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.0,
+      "hit@1": 0.0,
+      "recall@3": 0.0,
+      "hit@3": 0.0,
+      "recall@5": 0.0,
+      "hit@5": 0.0,
+      "recall@10": 0.3333333333333333,
+      "hit@10": 1.0,
+      "mrr": 0.16666666666666666
+    },
+    {
+      "question_id": "combined_001",
+      "query": "Compare the fighter and barbarian at level 5, including their features and combat tactics",
+      "category": "COMBINED",
+      "intention": "rule_mechanics",
+      "relevant_sections": [
+        "extra-attack",
+        "section-fighter",
+        "section-barbarian"
+      ],
+      "retrieved_sections": [
+        "section-the-order-of-combat",
+        "section-actions-in-combat",
+        "attack",
+        "section-character-advancement",
+        "section-mounted-combat"
+      ],
+      "latency_ms": 233.51750010624528,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.0,
+      "hit@1": 0.0,
+      "recall@3": 0.0,
+      "hit@3": 0.0,
+      "recall@5": 0.0,
+      "hit@5": 0.0,
+      "recall@10": 0.3333333333333333,
+      "hit@10": 1.0,
+      "mrr": 0.125
+    },
+    {
+      "question_id": "combined_002",
+      "query": "How does the poisoned condition affect my attack rolls and saving throws?",
+      "category": "COMBINED",
+      "intention": "rule_mechanics",
+      "relevant_sections": [
+        "section-saving-throws",
+        "attack-rolls-and-damage",
+        "section-conditions",
+        "poisoned"
+      ],
+      "retrieved_sections": [
+        "poisoned",
+        "sample-poisons",
+        "protection-from-poison",
+        "unconscious",
+        "section-saving-throws"
+      ],
+      "latency_ms": 252.88499984890223,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.25,
+      "hit@1": 1.0,
+      "recall@3": 0.25,
+      "hit@3": 1.0,
+      "recall@5": 0.5,
+      "hit@5": 1.0,
+      "recall@10": 0.75,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "combined_003",
+      "query": "What's my AC with plate armor and a shield, and how does cover affect it?",
+      "category": "COMBINED",
+      "intention": "rule_mechanics",
+      "relevant_sections": [
+        "section-cover",
+        "shield",
+        "armor-class"
+      ],
+      "retrieved_sections": [
+        "section-cover",
+        "shield",
+        "spellguard-shield",
+        "mage-armor",
+        "shield-of-faith"
+      ],
+      "latency_ms": 209.83660011552274,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.3333333333333333,
+      "hit@1": 1.0,
+      "recall@3": 0.6666666666666666,
+      "hit@3": 1.0,
+      "recall@5": 0.6666666666666666,
+      "hit@5": 1.0,
+      "recall@10": 0.6666666666666666,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    },
+    {
+      "question_id": "combined_004",
+      "query": "How does invisibility interact with opportunity attacks?",
+      "category": "COMBINED",
+      "intention": "rule_mechanics",
+      "relevant_sections": [
+        "opportunity-attacks",
+        "invisibility",
+        "invisible"
+      ],
+      "retrieved_sections": [
+        "opportunity-attacks",
+        "unseen-attackers-and-targets",
+        "see-invisibility",
+        "invisibility",
+        "greater-invisibility"
+      ],
+      "latency_ms": 312.8321000840515,
+      "embedding_cache_hits": 0,
+      "embedding_cache_misses": 1,
+      "embedding_api_calls": 1,
+      "recall@1": 0.3333333333333333,
+      "hit@1": 1.0,
+      "recall@3": 0.3333333333333333,
+      "hit@3": 1.0,
+      "recall@5": 0.6666666666666666,
+      "hit@5": 1.0,
+      "recall@10": 1.0,
+      "hit@10": 1.0,
+      "mrr": 1.0
+    }
+  ]
+}

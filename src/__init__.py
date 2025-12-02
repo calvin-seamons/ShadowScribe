@@ -10,7 +10,7 @@ __author__ = "Calvin Seamons"
 
 # Import main classes for easy access
 from .rag.character.character_types import Character
-from .utils.character_manager import CharacterManager
+from .rag.character.character_manager import CharacterManager
 from .utils.character_inspector import CharacterInspector
 
 __all__ = ["Character", "CharacterManager", "CharacterInspector"]

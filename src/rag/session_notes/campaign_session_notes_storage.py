@@ -120,8 +120,12 @@ class CampaignSessionNotesStorage:
         return matching_sessions
     
     def get_entity(self, entity_name: str) -> Optional[SessionEntity]:
-        """Get a specific entity by name."""
-        return self.entities.get(entity_name)
+        """Get a specific entity by name (case-insensitive)."""
+        # Try exact match first
+        if entity_name in self.entities:
+            return self.entities[entity_name]
+        # Try lowercase match
+        return self.entities.get(entity_name.lower())
     
     def get_campaign_summary(self) -> Dict[str, Any]:
         """Get a summary of the campaign data."""

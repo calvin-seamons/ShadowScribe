@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(xargs ls:*)",
+      "Bash(dir /s /b C:UserscalviRepositoriesShadowScribe2.0)",
+      "Bash(findstr:*)",
+      "WebSearch",
+      "Bash(dir:*)",
+      "Bash(python scripts/generate_dataset.py:*)",
+      "Bash(python3:*)",
+      "Bash(uv run python:*)",
+      "Skill(frontend-design)",
+      "Skill(frontend-design:frontend-design)",
+      "Bash(find:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run lint:*)",
+      "mcp__filesystem__directory_tree"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -160,51 +160,7 @@ class JSONRepair:
             was_repaired=len(repair_details) > 0,
             repair_details=repair_details
         )
-    
-    @staticmethod
-    def repair_entity_extractor_response(response: Any) -> RepairResult:
-        """
-        Repair and validate Entity Extractor response.
-        
-        Expected schema:
-        {
-            "entities": [
-                {"name": "Eldaryth of Regret", "confidence": 1.0}
-            ]
-        }
-        """
-        repair_details = []
-        
-        # Get base data
-        base_result = JSONRepair._get_base_repair_result(response)
-        data = base_result.data
-        repair_details.extend(base_result.repair_details)
-        
-        # Ensure entities exists and is a list
-        if "entities" not in data:
-            data["entities"] = []
-            repair_details.append("Added missing 'entities' field")
-        elif not isinstance(data["entities"], list):
-            data["entities"] = []
-            repair_details.append("Fixed 'entities' field to be an array")
-        
-        # Validate each entity entry
-        validated_entities = []
-        for entity_entry in data["entities"]:
-            if isinstance(entity_entry, dict) and "name" in entity_entry:
-                # Ensure confidence exists
-                if "confidence" not in entity_entry:
-                    entity_entry["confidence"] = 0.95
-                validated_entities.append(entity_entry)
-        
-        data["entities"] = validated_entities
-        
-        return RepairResult(
-            data=data,
-            was_repaired=len(repair_details) > 0,
-            repair_details=repair_details
-        )
-    
+
     @staticmethod
     def _get_base_repair_result(response: Any) -> RepairResult:
         """

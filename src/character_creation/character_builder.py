@@ -294,7 +294,7 @@ def main():
         # Optionally save the character
         output_file = json_file.replace('.json', '_character.pkl')
         
-        from src.utils.character_manager import CharacterManager
+        from src.rag.character.character_manager import CharacterManager
         manager = CharacterManager()
         saved_path = manager.save_character(character)
         

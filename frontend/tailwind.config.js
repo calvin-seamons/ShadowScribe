@@ -55,10 +55,42 @@ module.exports = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "0.75rem",
+        "2xl": "1rem",
+        "3xl": "1.5rem",
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)"],
-        mono: ["var(--font-geist-mono)"],
+        sans: ["'Crimson Pro'", "Georgia", "serif"],
+        display: ["'Cinzel'", "'Times New Roman'", "serif"],
+        mono: ["'JetBrains Mono'", "'Fira Code'", "monospace"],
+      },
+      boxShadow: {
+        'glow': '0 0 20px hsl(var(--glow-gold) / 0.3)',
+        'glow-lg': '0 0 40px hsl(var(--glow-gold) / 0.4)',
+      },
+      animation: {
+        'fade-in-up': 'fade-in-up 0.4s ease-out',
+        'slide-in-left': 'slide-in-left 0.3s ease-out',
+        'scale-in': 'scale-in 0.2s ease-out',
+        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+      },
+      keyframes: {
+        'fade-in-up': {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'slide-in-left': {
+          '0%': { opacity: '0', transform: 'translateX(-20px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+        'scale-in': {
+          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'pulse-glow': {
+          '0%, 100%': { boxShadow: '0 0 15px hsl(var(--glow-gold) / 0.3)' },
+          '50%': { boxShadow: '0 0 25px hsl(var(--glow-gold) / 0.5), 0 0 40px hsl(var(--glow-gold) / 0.2)' },
+        },
       },
     },
   },

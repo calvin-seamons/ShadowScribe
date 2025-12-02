@@ -25,7 +25,7 @@ class SessionNotesQueryRouter:
     
     def __init__(self, campaign_storage: CampaignSessionNotesStorage):
         self.campaign_storage = campaign_storage
-        self.fuzzy_threshold = 0.6  # Lower threshold for better partial matching
+        self.fuzzy_threshold = 0.50  # Very low threshold - prefer over-matching to missing content
         
     def query(self, character_name: str, original_query: str, intention: str, 
               entities: List[Dict[str, str]], context_hints: List[str], top_k: int = 5) -> QueryEngineResult:

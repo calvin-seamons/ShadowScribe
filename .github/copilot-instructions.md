@@ -41,6 +41,26 @@ if anthropic_key:
 
 ## Critical Development Patterns
 
+### Application Management (manage.py)
+The project includes a cross-platform management script at the project root:
+```bash
+# Start/stop services
+uv run python manage.py start      # Start all Docker services
+uv run python manage.py stop       # Stop all services
+uv run python manage.py restart    # Restart all services
+
+# Monitoring
+uv run python manage.py status     # Show service status
+uv run python manage.py health     # Check service health
+uv run python manage.py logs       # View all logs
+uv run python manage.py logs -f api   # Follow specific service logs
+
+# Development
+uv run python manage.py demo -q "What is my AC?"  # Quick demo test
+uv run python manage.py shell      # Interactive Python shell
+uv run python manage.py migrate    # Run database migrations
+```
+
 ### Running Python Scripts (ESSENTIAL)
 **ALWAYS use `uv run` to execute Python scripts and modules**:
 ```bash
@@ -89,7 +109,7 @@ uv run python -m scripts.run_manager
 **Use absolute imports in all files:**
 ```python
 # Correct imports
-from src.utils.character_manager import CharacterManager
+from src.rag.character.character_manager import CharacterManager
 from src.rag.character.character_types import Character
 
 # NOT: from .character_manager import CharacterManager
@@ -162,7 +182,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 # Use absolute imports
-from src.utils.character_manager import CharacterManager
+from src.rag.character.character_manager import CharacterManager
 from src.rag.character.character_types import Character
 
 def main():
@@ -267,19 +287,82 @@ rm scripts/test_temporary_feature.py
 3. **Clean up imports** - remove unused imports after code changes
 4. **Delete dead files** - remove entire files that are no longer needed
 
+### Proactive Codebase Cleanup
+**When working on this codebase, actively identify and DELETE:**
+
+1. **Orphaned test files** - old `test_*.py` files that test deprecated functionality or were one-time experiments
+2. **Unused modules** - files that are no longer imported anywhere in the codebase
+3. **Dead code paths** - functions, classes, or methods that are never called
+4. **Outdated documentation** - docs that reference old architecture or removed features
+5. **Deprecated directories** - folders containing only legacy code (e.g., `legacy/`, `old/`, `backup/`)
+6. **Stale configuration** - config files for tools/features no longer in use
+7. **Commented-out code blocks** - any significant commented code should be deleted, not preserved
+
+**How to identify legacy code:**
+- Check if imports are used: search for `from module import` or `import module`
+- Check if functions are called: search for function names across the codebase
+- Look for `TODO: remove`, `DEPRECATED`, `OLD`, `LEGACY` comments
+- Check git blame for files untouched for months that don't align with current architecture
+- Look for patterns that contradict current architecture (e.g., old API patterns, removed features)
+
+**When you see it, delete it.** Don't ask permission, don't comment it out, don't create a backup. Just remove it cleanly.
+
 ### Backward Compatibility Rules
 **NEVER maintain backward compatibility unless:**
 - It's required for external API contracts (rare in this project)
 - The change would break critical user data persistence (character saves)
 - There's a compelling business reason documented in code
 
-### Let things fail! 
-**Don't put so many safeguards in place that you prevent failures from happening.**
-- Embrace failure as a learning opportunity
-- Simplify error handling to focus on critical issues
-- Let failures happen and learn from them
+### Let Things Fail - No Fallback Measures
+**Don't put safeguards in place that prevent failures from surfacing.**
 
-**Default approach**: Break things and fix them properly rather than maintaining legacy cruft.
+**Core Philosophy**: If something is broken, we need to know about it immediately. Silent fallbacks hide bugs and create technical debt that compounds over time.
+
+**AVOID these anti-patterns:**
+```python
+# BAD - silent fallback hides the real problem
+try:
+    result = risky_operation()
+except Exception:
+    result = default_value  # Bug is now invisible
+
+# BAD - fallback chain masks root cause
+value = primary_source() or backup_source() or hardcoded_default
+
+# BAD - defensive coding that swallows errors
+if data and hasattr(data, 'field') and data.field:
+    process(data.field)
+# What if data.field SHOULD exist but doesn't?
+```
+
+**DO these instead:**
+```python
+# GOOD - fail fast and loud
+result = risky_operation()  # Let it raise if broken
+
+# GOOD - explicit error handling for known cases only
+try:
+    result = operation()
+except SpecificExpectedException as e:
+    logger.warning(f"Expected case: {e}")
+    # Handle ONLY this specific, expected scenario
+
+# GOOD - assert preconditions
+assert data is not None, "Data must be provided"
+assert hasattr(data, 'field'), f"Data missing required field: {type(data)}"
+process(data.field)
+```
+
+**Guidelines:**
+- Embrace failure as immediate feedback
+- Only catch exceptions you explicitly expect and can handle meaningfully
+- Never use bare `except:` or `except Exception:`
+- Don't provide default values for things that should exist
+- Use assertions liberally to validate assumptions
+- If a function can fail, let the caller handle it
+- Prefer crashes during development over silent bugs in production
+
+**Default approach**: Break things and fix them properly rather than hiding problems.
 
 **Legacy Cleanup Pattern**:
 ```python
@@ -336,5 +419,12 @@ async def _execute_rag_queries(...):
 7. **Clean up test files** - remove temporary test scripts after use to avoid clutter
 8. **Delete legacy code** - never leave commented-out code or obsolete implementations
 9. **Avoid backward compatibility** - break and fix cleanly rather than maintaining cruft
-10. **Let things fail!** - Don't put so many safeguards in place that you prevent failures from happening
-11. **No "_new" suffixes** - write code as if it's the fundamental system, not a "new" version
+10. **No fallback measures** - Don't hide bugs with silent fallbacks, default values, or defensive `try/except` blocks
+11. **Let things fail loudly** - If something is broken, crash immediately so we can fix the root cause
+12. **No "_new" suffixes** - write code as if it's the fundamental system, not a "new" version
+12. **Config is the source of truth** - NEVER hardcode or override config values:
+    - All settings belong in `src/config.py` class defaults
+    - Functions/classes should read from `get_config()`, not accept override parameters
+    - Never pass config values as function parameters that could override the config
+    - Never duplicate default values in multiple places (e.g., in `from_env()` fallbacks)
+    - If you need to change a default, change it ONLY in the class definition

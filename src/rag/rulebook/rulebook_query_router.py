@@ -1,20 +1,23 @@
 """
 D&D 5e Rulebook Query Router
-Intelligent semantic search with intention-based filtering and multi-stage scoring
+Intelligent semantic search with intention-based filtering and multi-stage scoring.
+Now includes hybrid BM25 + semantic search for better keyword matching.
 """
 
 import re
 import time
 import numpy as np
 from typing import List, Dict, Tuple, Optional
-import openai
 import hashlib
+
+from rank_bm25 import BM25Okapi
 
 from .rulebook_types import (
     RulebookQueryIntent, RulebookSection, SearchResult, 
     RulebookCategory, INTENTION_CATEGORY_MAP, QueryPerformanceMetrics
 )
 from ...config import get_config
+from ...embeddings import get_embedding_provider, EmbeddingProvider
 
 # Note: dotenv is loaded in config.py
 
@@ -62,8 +65,14 @@ class EmbeddingCache:
 class RulebookQueryRouter:
     """
     Intelligent query router for D&D 5e rulebook sections.
-    Combines semantic search with entity matching and context hints.
+    Combines BM25 keyword search with semantic search using RRF fusion,
+    plus entity matching and context hints.
     """
+    
+    # BM25 parameters
+    BM25_K1 = 1.5
+    BM25_B = 0.75
+    RRF_K = 60  # Reciprocal Rank Fusion constant
     
     def __init__(self, storage):
         """Initialize with RulebookStorage instance"""
@@ -77,10 +86,36 @@ class RulebookQueryRouter:
         self.embedding_model = self.config.embedding_model
         self.embedding_cache = EmbeddingCache(max_size=self.config.embedding_cache_size)
         
-        # Initialize OpenAI with API key from config
-        openai.api_key = self.config.openai_api_key
-        if not self.config.validate_openai_key():
-            raise ValueError("Invalid or missing OpenAI API key in configuration")
+        # Initialize embedding provider (supports both OpenAI and local models)
+        self._embedding_provider: Optional[EmbeddingProvider] = None
+        
+        # Build BM25 index for all sections
+        self._build_bm25_index()
+    
+    def _tokenize(self, text: str) -> List[str]:
+        """Simple whitespace tokenization with lowercasing for BM25"""
+        # Remove punctuation, lowercase, split on whitespace
+        text = re.sub(r'[^\w\s]', ' ', text.lower())
+        return text.split()
+    
+    def _build_bm25_index(self) -> None:
+        """Build BM25 index for all sections"""
+        self._section_ids = list(self.storage.sections.keys())
+        self._section_texts = []
+        
+        for section_id in self._section_ids:
+            section = self.storage.sections[section_id]
+            # Combine title and content for BM25 indexing
+            # Weight title more by repeating it
+            text = f"{section.title} {section.title} {section.id} {section.content}"
+            self._section_texts.append(text)
+        
+        # Tokenize all documents
+        tokenized_docs = [self._tokenize(text) for text in self._section_texts]
+        
+        # Build BM25 index
+        self._bm25 = BM25Okapi(tokenized_docs, k1=self.BM25_K1, b=self.BM25_B)
+        print(f"Built BM25 index for {len(tokenized_docs)} rulebook sections")
     
     def query(
         self,
@@ -91,12 +126,18 @@ class RulebookQueryRouter:
         k: int = 5
     ) -> Tuple[List[SearchResult], QueryPerformanceMetrics]:
         """
-        Perform intelligent query against rulebook sections.
+        Perform intelligent query against rulebook sections using hybrid search.
+        
+        Combines:
+        1. BM25 keyword search on raw query
+        2. Semantic embedding search
+        3. Entity ID/title boosting from gazetteer entities
+        4. RRF fusion to combine BM25 and semantic results
         
         Args:
             intention: Query intent to determine search categories
             user_query: Original user query string
-            entities: Normalized entities extracted from query
+            entities: Normalized entities extracted from query (from gazetteer)
             context_hints: Additional phrases to enhance search
             k: Number of results to return
             
@@ -115,6 +156,7 @@ class RulebookQueryRouter:
         # 1. Filter sections by intention
         filter_start = time.perf_counter()
         candidate_sections = self._filter_sections_by_intention(intention)
+        candidate_ids = set(s.id for s in candidate_sections)
         filter_end = time.perf_counter()
         
         performance.intention_filtering_ms = (filter_end - filter_start) * 1000
@@ -124,16 +166,16 @@ class RulebookQueryRouter:
             performance.total_time_ms = (time.perf_counter() - start_time) * 1000
             return [], performance
         
-        # 2. Perform semantic search
-        semantic_start = time.perf_counter()
-        semantic_results = self._semantic_search(user_query, candidate_sections, performance)
-        semantic_end = time.perf_counter()
+        # 2. Perform HYBRID search (BM25 + Semantic with RRF fusion)
+        hybrid_start = time.perf_counter()
+        hybrid_results = self._hybrid_search(user_query, candidate_sections, candidate_ids, performance)
+        hybrid_end = time.perf_counter()
         
-        performance.semantic_search_ms = (semantic_end - semantic_start) * 1000
+        performance.semantic_search_ms = (hybrid_end - hybrid_start) * 1000
         
-        # 3. Apply entity boosting
+        # 3. Apply entity boosting (using gazetteer-resolved entities)
         entity_start = time.perf_counter()
-        entity_boosted_results = self._boost_entity_matches(semantic_results, entities)
+        entity_boosted_results = self._boost_entity_matches(hybrid_results, entities)
         entity_end = time.perf_counter()
         
         performance.entity_boosting_ms = (entity_end - entity_start) * 1000
@@ -200,6 +242,105 @@ class RulebookQueryRouter:
         
         return candidate_sections
     
+    def _bm25_search(self, query: str, candidate_ids: set) -> List[Tuple[str, float]]:
+        """
+        Perform BM25 keyword search on the raw query.
+        
+        Args:
+            query: Raw user query string
+            candidate_ids: Set of section IDs to consider (from intention filtering)
+            
+        Returns:
+            List of (section_id, bm25_score) tuples, sorted by score descending
+        """
+        tokenized_query = self._tokenize(query)
+        scores = self._bm25.get_scores(tokenized_query)
+        
+        # Pair scores with section IDs and filter to candidates
+        results = []
+        for idx, section_id in enumerate(self._section_ids):
+            if section_id in candidate_ids:
+                results.append((section_id, scores[idx]))
+        
+        # Sort by score descending
+        results.sort(key=lambda x: x[1], reverse=True)
+        return results
+    
+    def _hybrid_search(
+        self, 
+        query: str, 
+        candidate_sections: List[RulebookSection],
+        candidate_ids: set,
+        performance: QueryPerformanceMetrics
+    ) -> List[Tuple[RulebookSection, float]]:
+        """
+        Perform hybrid BM25 + semantic search with RRF fusion.
+        
+        Args:
+            query: Raw user query string
+            candidate_sections: List of sections to search (from intention filtering)
+            candidate_ids: Set of candidate section IDs for fast lookup
+            performance: Performance metrics object to update
+            
+        Returns:
+            List of (RulebookSection, fused_score) tuples, sorted by score descending
+        """
+        if not candidate_sections:
+            return []
+        
+        # Track sections with embeddings
+        performance.sections_with_embeddings = sum(1 for s in candidate_sections if s.vector is not None)
+        
+        # Get top-N candidates from each method (more than we need for fusion)
+        n_candidates = min(len(candidate_sections), 50)
+        
+        # 1. BM25 keyword search on raw query
+        bm25_results = self._bm25_search(query, candidate_ids)[:n_candidates]
+        
+        # 2. Semantic search
+        embed_start = time.perf_counter()
+        query_embedding = self._get_embedding(query, performance)
+        embed_end = time.perf_counter()
+        performance.embedding_total_ms += (embed_end - embed_start) * 1000
+        
+        semantic_results = []
+        for section in candidate_sections:
+            if section.vector is None:
+                continue
+            similarity = self._cosine_similarity(query_embedding, section.vector)
+            semantic_results.append((section.id, similarity))
+        
+        semantic_results.sort(key=lambda x: x[1], reverse=True)
+        semantic_results = semantic_results[:n_candidates]
+        
+        # 3. RRF fusion - combine rankings
+        # Weights tuned: semantic gets higher weight (0.8) since OpenAI embeddings are strong
+        # BM25 gets lower weight (0.2) but helps with exact keyword matches
+        bm25_weight = 0.2
+        semantic_weight = 0.8
+        fused_scores: Dict[str, float] = {}
+        
+        # BM25 contribution
+        for rank, (section_id, _) in enumerate(bm25_results):
+            rrf_score = bm25_weight / (self.RRF_K + rank + 1)
+            fused_scores[section_id] = fused_scores.get(section_id, 0) + rrf_score
+        
+        # Semantic contribution
+        for rank, (section_id, _) in enumerate(semantic_results):
+            rrf_score = semantic_weight / (self.RRF_K + rank + 1)
+            fused_scores[section_id] = fused_scores.get(section_id, 0) + rrf_score
+        
+        # 4. Convert back to (section, score) format
+        section_lookup = {s.id: s for s in candidate_sections}
+        results = []
+        for section_id, score in fused_scores.items():
+            if section_id in section_lookup:
+                results.append((section_lookup[section_id], score))
+        
+        # Sort by fused score descending
+        results.sort(key=lambda x: x[1], reverse=True)
+        return results
+
     def _semantic_search(self, query: str, candidate_sections: List[RulebookSection], performance: QueryPerformanceMetrics) -> List[Tuple[RulebookSection, float]]:
         """Perform semantic search using embeddings"""
         if not candidate_sections:
@@ -348,8 +489,14 @@ class RulebookQueryRouter:
         
         return matched
     
+    def _get_embedding_provider(self) -> EmbeddingProvider:
+        """Get or initialize the embedding provider (lazy loading)"""
+        if self._embedding_provider is None:
+            self._embedding_provider = get_embedding_provider(self.embedding_model)
+        return self._embedding_provider
+    
     def _get_embedding(self, text: str, performance: QueryPerformanceMetrics) -> List[float]:
-        """Get embedding for text using OpenAI API with caching"""
+        """Get embedding for text using the embedding provider with caching"""
         # Check cache first
         cached_embedding = self.embedding_cache.get(text)
         if cached_embedding is not None:
@@ -360,11 +507,8 @@ class RulebookQueryRouter:
         performance.embedding_api_calls += 1
         
         try:
-            response = openai.embeddings.create(
-                model=self.embedding_model,
-                input=text
-            )
-            embedding = response.data[0].embedding
+            provider = self._get_embedding_provider()
+            embedding = provider.embed(text)
             
             # Store in cache
             self.embedding_cache.put(text, embedding)
@@ -372,8 +516,9 @@ class RulebookQueryRouter:
             
         except Exception as e:
             print(f"Error getting embedding: {e}")
-            # Return zero vector as fallback
-            fallback = [0.0] * 3072  # text-embedding-3-large dimension
+            # Return zero vector as fallback (use provider's dimension)
+            provider = self._get_embedding_provider()
+            fallback = [0.0] * provider.embedding_dim
             self.embedding_cache.put(text, fallback)
             return fallback
     
@@ -397,18 +542,15 @@ class RulebookQueryRouter:
         
         # Batch embed uncached texts
         if texts_to_embed:
-            performance.embedding_api_calls += 1  # One batch API call
+            performance.embedding_api_calls += 1  # One batch call
                 
             try:
-                response = openai.embeddings.create(
-                    model=self.embedding_model,
-                    input=texts_to_embed
-                )
+                provider = self._get_embedding_provider()
+                batch_embeddings = provider.embed_batch(texts_to_embed)
                 
                 # Fill in the embeddings and cache them
-                for j, embedding_data in enumerate(response.data):
+                for j, embedding in enumerate(batch_embeddings):
                     text = texts_to_embed[j]
-                    embedding = embedding_data.embedding
                     index = indices_to_embed[j]
                     
                     embeddings[index] = embedding
@@ -417,7 +559,8 @@ class RulebookQueryRouter:
             except Exception as e:
                 print(f"Error getting batch embeddings: {e}")
                 # Fill with zero vectors as fallback
-                fallback = [0.0] * 3072  # text-embedding-3-large dimension
+                provider = self._get_embedding_provider()
+                fallback = [0.0] * provider.embedding_dim
                 for i in indices_to_embed:
                     embeddings[i] = fallback
                     self.embedding_cache.put(texts[i], fallback)

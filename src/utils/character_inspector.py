@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import get_type_hints, get_origin, get_args, Any, Dict, List, Optional
 
 # Always use package imports - script should be run as a module
-from src.utils.character_manager import CharacterManager
+from src.rag.character.character_manager import CharacterManager
 from src.rag.character.character_types import Character
 
 

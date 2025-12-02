@@ -1,13 +1,14 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
 import AppInitializer from '@/components/AppInitializer'
-
-const inter = Inter({ subsets: ['latin'] })
+import { ThemeProvider } from '@/components/ThemeProvider'
 
 export const metadata: Metadata = {
   title: 'ShadowScribe 2.0',
   description: 'D&D Character Management & AI Assistant',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({
@@ -16,11 +17,42 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <AppInitializer>
-          {children}
-        </AppInitializer>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* Inline script to prevent flash of wrong theme */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var stored = localStorage.getItem('shadowscribe-theme');
+                  if (stored) {
+                    var parsed = JSON.parse(stored);
+                    var theme = parsed.state && parsed.state.theme;
+                    if (theme === 'light') {
+                      document.documentElement.classList.remove('dark');
+                    } else {
+                      document.documentElement.classList.add('dark');
+                    }
+                  } else {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch (e) {
+                  document.documentElement.classList.add('dark');
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="font-sans antialiased">
+        <ThemeProvider>
+          <AppInitializer>
+            {children}
+          </AppInitializer>
+        </ThemeProvider>
       </body>
     </html>
   )
