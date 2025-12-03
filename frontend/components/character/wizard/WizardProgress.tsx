@@ -1,86 +1,145 @@
 /**
- * Wizard Progress Indicator
+ * WizardProgress - Elegant progress header for character creation wizard
  *
- * Shows current step in the wizard with visual progress bar
+ * Clean, properly aligned progress indicator with step nodes.
  */
 
 'use client'
 
-import { Check } from 'lucide-react'
+import { Check, Link2, Loader2, Swords, Backpack, Sparkles, User, ScrollText } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useWizardStore, type WizardStep } from '@/lib/stores/wizardStore'
 
 interface WizardProgressProps {
   currentStep: number
   totalSteps: number
 }
 
-const STEP_LABELS = [
-  { title: 'Import', subtitle: 'D&D Beyond URL' },
-  { title: 'Parse', subtitle: 'Processing data' },
-  { title: 'Review', subtitle: 'Edit sections' },
-  { title: 'Save', subtitle: 'Finalize character' }
-]
+const STEP_ICONS = {
+  1: Link2,
+  2: Loader2,
+  3: Swords,
+  4: Backpack,
+  5: Sparkles,
+  6: User,
+  7: ScrollText,
+} as const
+
+const STEP_LABELS = {
+  1: 'Import',
+  2: 'Parse',
+  3: 'Stats',
+  4: 'Gear',
+  5: 'Abilities',
+  6: 'Story',
+  7: 'Review',
+} as const
 
 export function WizardProgress({ currentStep, totalSteps }: WizardProgressProps) {
+  const { completedSteps, goToStep } = useWizardStore()
+
+  const handleStepClick = (step: number) => {
+    if (completedSteps.has(step as WizardStep) || step === currentStep) {
+      goToStep(step as WizardStep)
+    }
+  }
+
+  const currentLabel = STEP_LABELS[currentStep as keyof typeof STEP_LABELS]
+  const progressPercent = ((currentStep - 1) / (totalSteps - 1)) * 100
+
   return (
-    <div className="mb-10">
-      {/* Steps container */}
-      <div className="relative flex justify-between">
-        {/* Progress line background */}
-        <div className="absolute top-5 left-0 right-0 h-0.5 bg-border/50" />
+    <div className="mb-8">
+      {/* Current step badge */}
+      <div className="text-center mb-6">
+        <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-card border border-primary/20 shadow-lg shadow-primary/5">
+          <span className="text-xs uppercase tracking-[0.15em] text-muted-foreground font-medium">
+            Step {currentStep} of {totalSteps}
+          </span>
+          <span className="w-px h-4 bg-border" />
+          <span className="font-display text-sm tracking-wide text-primary">
+            {currentLabel}
+          </span>
+        </div>
+      </div>
 
-        {/* Progress line active */}
-        <div
-          className="absolute top-5 left-0 h-0.5 bg-gradient-to-r from-primary to-primary/80 transition-all duration-500"
-          style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
-        />
+      {/* Progress track with nodes */}
+      <div className="relative max-w-2xl mx-auto px-6">
+        {/* Track container - positions the line between first and last node centers */}
+        <div className="absolute top-5 left-6 right-6 h-0.5">
+          {/* Background track */}
+          <div
+            className="absolute inset-0 bg-border/40 rounded-full"
+            style={{ left: '20px', right: '20px' }}
+          />
+          {/* Progress fill */}
+          <div
+            className="absolute top-0 bottom-0 bg-gradient-to-r from-primary to-primary/80 rounded-full transition-all duration-500 ease-out"
+            style={{
+              left: '20px',
+              width: `calc(${progressPercent}% - 40px * ${progressPercent / 100})`,
+            }}
+          />
+        </div>
 
-        {/* Step indicators */}
-        {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => {
-          const isCompleted = step < currentStep
-          const isCurrent = step === currentStep
-          const isPending = step > currentStep
+        {/* Step nodes */}
+        <div className="relative flex justify-between">
+          {Array.from({ length: totalSteps }, (_, i) => i + 1).map((step) => {
+            const isCompleted = completedSteps.has(step as WizardStep)
+            const isCurrent = step === currentStep
+            const isPending = step > currentStep && !isCompleted
+            const canNavigate = isCompleted || isCurrent
+            const Icon = STEP_ICONS[step as keyof typeof STEP_ICONS]
+            const label = STEP_LABELS[step as keyof typeof STEP_LABELS]
 
-          return (
-            <div
-              key={step}
-              className="relative flex flex-col items-center z-10"
-            >
-              {/* Step circle */}
-              <div
+            return (
+              <button
+                key={step}
+                onClick={() => handleStepClick(step)}
+                disabled={!canNavigate}
                 className={cn(
-                  'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300',
-                  isCompleted && 'bg-primary text-primary-foreground shadow-lg shadow-primary/30',
-                  isCurrent && 'bg-primary text-primary-foreground ring-4 ring-primary/20 shadow-lg shadow-primary/30 scale-110',
-                  isPending && 'bg-card border-2 border-border text-muted-foreground'
+                  'group flex flex-col items-center',
+                  canNavigate ? 'cursor-pointer' : 'cursor-default'
                 )}
               >
-                {isCompleted ? (
-                  <Check className="w-5 h-5" />
-                ) : (
-                  step
-                )}
-              </div>
-
-              {/* Step labels */}
-              <div className="mt-3 text-center">
-                <p
+                {/* Node */}
+                <div
                   className={cn(
-                    'text-sm font-medium transition-colors',
+                    'relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 bg-background',
+                    isCompleted && 'bg-primary/15 border-2 border-primary text-primary',
+                    isCurrent && 'bg-primary text-primary-foreground border-2 border-primary',
+                    isPending && 'bg-card border-2 border-border text-muted-foreground/40',
+                    canNavigate && !isCurrent && 'hover:border-primary/60 hover:text-primary'
+                  )}
+                  style={isCurrent ? {
+                    boxShadow: '0 0 0 4px hsl(var(--primary) / 0.15), 0 0 20px hsl(var(--primary) / 0.3)'
+                  } : undefined}
+                >
+                  {isCompleted ? (
+                    <Check className="w-5 h-5" strokeWidth={2.5} />
+                  ) : (
+                    <Icon className={cn(
+                      'w-5 h-5',
+                      step === 2 && isCurrent && 'animate-spin'
+                    )} />
+                  )}
+                </div>
+
+                {/* Label */}
+                <span
+                  className={cn(
+                    'mt-2 text-[11px] uppercase tracking-wide font-medium transition-colors',
                     isCurrent && 'text-primary',
-                    isCompleted && 'text-foreground',
-                    isPending && 'text-muted-foreground'
+                    isCompleted && 'text-foreground/70',
+                    isPending && 'text-muted-foreground/30',
+                    canNavigate && !isCurrent && 'group-hover:text-primary'
                   )}
                 >
-                  {STEP_LABELS[step - 1]?.title}
-                </p>
-                <p className="text-xs text-muted-foreground/60 mt-0.5 hidden sm:block">
-                  {STEP_LABELS[step - 1]?.subtitle}
-                </p>
-              </div>
-            </div>
-          )
-        })}
+                  {label}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
