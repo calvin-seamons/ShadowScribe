@@ -154,7 +154,7 @@ async def test_full_workflow(url: str):
     
     if has_inventory:
         total_items = (
-            sum(len(items) for items in character.inventory.equipped_items.values()) +
+            len(character.inventory.equipped_items) +
             len(character.inventory.backpack)
         )
         print(f"   Inventory: {total_items} items")

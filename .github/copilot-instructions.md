@@ -136,9 +136,11 @@ action_economy: Optional[ActionEconomy]
 ```python
 # Always check optional fields
 spell_count = len(character.spell_list.spells) if character.spell_list else 0
+
+# equipped_items is List[InventoryItem], NOT a dict
 inventory_items = (
-    len(character.inventory.backpack) + 
-    sum(len(items) for items in character.inventory.equipped_items.values())
+    len(character.inventory.backpack) +
+    len(character.inventory.equipped_items)
 ) if character.inventory else 0
 ```
 
@@ -415,7 +417,7 @@ async def _execute_rag_queries(...):
 3. **Don't use relative imports** - always use `from src.utils.module import Class`
 4. **Check for None on optional Character fields** before accessing nested attributes
 5. **Use `character.character_base.total_level`** not `.level` for character level access
-6. **Access inventory as `character.inventory.backpack`** and `character.inventory.equipped_items`**
+6. **Inventory fields are LISTS** - `character.inventory.equipped_items` and `character.inventory.backpack` are both `List[InventoryItem]`, NOT dicts. Never call `.items()` or `.values()` on them.
 7. **Clean up test files** - remove temporary test scripts after use to avoid clutter
 8. **Delete legacy code** - never leave commented-out code or obsolete implementations
 9. **Avoid backward compatibility** - break and fix cleanly rather than maintaining cruft

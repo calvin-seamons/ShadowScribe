@@ -259,9 +259,8 @@ class CharacterBuilder:
             print(f"Attacks per Action: {character.action_economy.attacks_per_action}")
         
         if character.inventory:
-            equipped_count = sum(
-                len(items) for items in character.inventory.equipped_items.values()
-            )
+            # equipped_items is List[InventoryItem], not a dict
+            equipped_count = len(character.inventory.equipped_items)
             backpack_count = len(character.inventory.backpack)
             print(f"\nInventory Items: {equipped_count + backpack_count}")
             print(f"  Equipped: {equipped_count}")

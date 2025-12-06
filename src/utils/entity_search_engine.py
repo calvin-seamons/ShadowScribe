@@ -657,14 +657,14 @@ class EntitySearchEngine:
     def _get_all_inventory_items(self, character: 'Character') -> List[any]:
         """Get all inventory items (equipped and backpack)."""
         items = []
-        
+
+        # equipped_items is List[InventoryItem], not a dict
         if character.inventory.equipped_items:
-            for slot, slot_items in character.inventory.equipped_items.items():
-                items.extend(slot_items)
-        
+            items.extend(character.inventory.equipped_items)
+
         if character.inventory.backpack:
             items.extend(character.inventory.backpack)
-        
+
         return items
     
     def _get_all_spells(self, character: 'Character') -> List[any]:

@@ -249,31 +249,33 @@ export function Step6_Character() {
 
                     return (
                       <div key={index} className="rounded-lg border border-border overflow-hidden">
-                        <button
-                          onClick={() => setExpandedBackstorySection(isExpanded ? null : index)}
-                          className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors">
+                          <button
+                            onClick={() => setExpandedBackstorySection(isExpanded ? null : index)}
+                            className="flex-1 flex items-center gap-2 text-left"
+                          >
                             <span>📖</span>
                             <span className="font-medium text-foreground">{section.heading}</span>
-                          </div>
+                          </button>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                removeBackstorySection(index)
-                              }}
+                              onClick={() => removeBackstorySection(index)}
                               className="p-1 text-destructive hover:bg-destructive/10 rounded transition-colors"
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
-                            {isExpanded ? (
-                              <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                            )}
+                            <button
+                              onClick={() => setExpandedBackstorySection(isExpanded ? null : index)}
+                              className="p-1"
+                            >
+                              {isExpanded ? (
+                                <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                              )}
+                            </button>
                           </div>
-                        </button>
+                        </div>
 
                         {isExpanded && (
                           <div className="px-4 py-3 border-t border-border bg-muted/30 space-y-3">

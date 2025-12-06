@@ -49,13 +49,16 @@ class CentralPromptManager:
         if character and hasattr(character, 'inventory') and character.inventory:
             inventory_items = []
             
-            # Add equipped items
+            # Add equipped items (equipped_items is a List[InventoryItem], not a dict)
             if character.inventory.equipped_items:
-                for slot, items in character.inventory.equipped_items.items():
-                    for item in items:
-                        if hasattr(item, 'definition') and hasattr(item.definition, 'name'):
-                            item_type = getattr(item.definition, 'type', 'unknown')
-                            inventory_items.append(f"  - {item.definition.name} ({item_type}) [equipped]")
+                for item in character.inventory.equipped_items:
+                    if hasattr(item, 'definition') and hasattr(item.definition, 'name'):
+                        item_type = getattr(item.definition, 'type', 'unknown')
+                        inventory_items.append(f"  - {item.definition.name} ({item_type}) [equipped]")
+                    elif hasattr(item, 'name'):
+                        # Handle simplified item format (from wizard)
+                        item_type = getattr(item, 'type', 'unknown')
+                        inventory_items.append(f"  - {item.name} ({item_type}) [equipped]")
             
             # Add backpack items
             if character.inventory.backpack:
@@ -65,6 +68,12 @@ class CentralPromptManager:
                         quantity = getattr(item, 'quantity', 1)
                         qty_str = f" x{quantity}" if quantity > 1 else ""
                         inventory_items.append(f"  - {item.definition.name} ({item_type}){qty_str}")
+                    elif hasattr(item, 'name'):
+                        # Handle simplified item format (from wizard)
+                        item_type = getattr(item, 'type', 'unknown')
+                        quantity = getattr(item, 'quantity', 1)
+                        qty_str = f" x{quantity}" if quantity > 1 else ""
+                        inventory_items.append(f"  - {item.name} ({item_type}){qty_str}")
             
             if inventory_items:
                 inventory_context = f"\n\n--- CONTEXT: {character_name}'s Inventory ---\n" + "\n".join(inventory_items)

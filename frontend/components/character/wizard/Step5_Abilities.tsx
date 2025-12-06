@@ -1,24 +1,61 @@
 /**
  * Step 5: Abilities
  *
- * Edit actions/attacks and view features/traits.
+ * Edit actions/attacks and features/traits with full CRUD.
  * Uses wizard store directly with arcane-themed styling.
  */
 
 'use client'
 
 import { useState } from 'react'
-import { Sparkles, Swords, ChevronDown, ChevronUp, Plus, Trash2, Zap, Shield, Wind } from 'lucide-react'
+import { Sparkles, Swords, ChevronDown, ChevronUp, Plus, Trash2, Zap, Shield, Wind, Edit2, X, Check } from 'lucide-react'
 import { useWizardStore } from '@/lib/stores/wizardStore'
 import { StepLayout, EditorCard, DualEditorGrid, SectionDivider } from './StepLayout'
 import type { CharacterAction } from '@/lib/types/character'
 
 type FeatureSection = 'racial' | 'class' | 'feats' | null
 
+// Types for features
+interface RacialTrait {
+  name: string
+  description?: string
+  featureType?: string
+}
+
+interface ClassFeature {
+  name: string
+  description?: string
+}
+
+interface Feat {
+  name: string
+  description?: string
+  isRepeatable?: boolean
+}
+
 export function Step5_Abilities() {
   const { characterData, updateSection, prevStep, nextStep } = useWizardStore()
   const [expandedAction, setExpandedAction] = useState<number | null>(null)
   const [expandedFeatureSection, setExpandedFeatureSection] = useState<FeatureSection>(null)
+
+  // Feature editing states
+  const [editingRacialTrait, setEditingRacialTrait] = useState<number | null>(null)
+  const [editingFeat, setEditingFeat] = useState<number | null>(null)
+  const [editingClassFeature, setEditingClassFeature] = useState<{ className: string; level: string; index: number } | null>(null)
+
+  // New feature form states
+  const [showNewRacialForm, setShowNewRacialForm] = useState(false)
+  const [showNewFeatForm, setShowNewFeatForm] = useState(false)
+  const [showNewClassFeatureForm, setShowNewClassFeatureForm] = useState(false)
+
+  // Form data
+  const [newRacialTrait, setNewRacialTrait] = useState<RacialTrait>({ name: '', description: '', featureType: 'trait' })
+  const [newFeat, setNewFeat] = useState<Feat>({ name: '', description: '', isRepeatable: false })
+  const [newClassFeature, setNewClassFeature] = useState<{ className: string; level: string; feature: ClassFeature }>({
+    className: '',
+    level: '1',
+    feature: { name: '', description: '' }
+  })
 
   const actionEconomy = characterData?.action_economy || {
     attacks_per_action: 1,
@@ -70,7 +107,7 @@ export function Step5_Abilities() {
   }
 
   const removeAction = (index: number) => {
-    const updated = actionEconomy.actions.filter((_, i) => i !== index)
+    const updated = actionEconomy.actions.filter((_: any, i: number) => i !== index)
     updateSection('action_economy', { ...actionEconomy, actions: updated })
     if (expandedAction === index) setExpandedAction(null)
   }
@@ -82,10 +119,100 @@ export function Step5_Abilities() {
 
   const countClassFeatures = () => {
     if (!features.class_features) return 0
-    return Object.values(features.class_features).reduce((total, levelFeatures) =>
-      total + Object.values(levelFeatures).reduce((sum, f) => sum + f.length, 0), 0
+    return Object.values(features.class_features).reduce((total: number, levelFeatures: any) =>
+      total + Object.values(levelFeatures).reduce((sum: number, f: any) => sum + (Array.isArray(f) ? f.length : 0), 0), 0
     )
   }
+
+  // ==== RACIAL TRAITS CRUD ====
+  const addRacialTrait = () => {
+    if (!newRacialTrait.name.trim()) return
+    const racialTraits = [...(features.racial_traits || []), { ...newRacialTrait }]
+    updateSection('features_and_traits', { ...features, racial_traits: racialTraits })
+    setNewRacialTrait({ name: '', description: '', featureType: 'trait' })
+    setShowNewRacialForm(false)
+  }
+
+  const updateRacialTrait = (index: number, field: keyof RacialTrait, value: any) => {
+    const racialTraits = [...(features.racial_traits || [])]
+    racialTraits[index] = { ...racialTraits[index], [field]: value }
+    updateSection('features_and_traits', { ...features, racial_traits: racialTraits })
+  }
+
+  const removeRacialTrait = (index: number) => {
+    const racialTraits = features.racial_traits?.filter((_: any, i: number) => i !== index) || []
+    updateSection('features_and_traits', { ...features, racial_traits: racialTraits })
+    if (editingRacialTrait === index) setEditingRacialTrait(null)
+  }
+
+  // ==== FEATS CRUD ====
+  const addFeat = () => {
+    if (!newFeat.name.trim()) return
+    const feats = [...(features.feats || []), { ...newFeat }]
+    updateSection('features_and_traits', { ...features, feats })
+    setNewFeat({ name: '', description: '', isRepeatable: false })
+    setShowNewFeatForm(false)
+  }
+
+  const updateFeat = (index: number, field: keyof Feat, value: any) => {
+    const feats = [...(features.feats || [])]
+    feats[index] = { ...feats[index], [field]: value }
+    updateSection('features_and_traits', { ...features, feats })
+  }
+
+  const removeFeat = (index: number) => {
+    const feats = features.feats?.filter((_: any, i: number) => i !== index) || []
+    updateSection('features_and_traits', { ...features, feats })
+    if (editingFeat === index) setEditingFeat(null)
+  }
+
+  // ==== CLASS FEATURES CRUD ====
+  const addClassFeature = () => {
+    if (!newClassFeature.className.trim() || !newClassFeature.feature.name.trim()) return
+
+    const classFeatures = { ...(features.class_features || {}) }
+    if (!classFeatures[newClassFeature.className]) {
+      classFeatures[newClassFeature.className] = {}
+    }
+    if (!classFeatures[newClassFeature.className][newClassFeature.level]) {
+      classFeatures[newClassFeature.className][newClassFeature.level] = []
+    }
+    classFeatures[newClassFeature.className][newClassFeature.level] = [
+      ...classFeatures[newClassFeature.className][newClassFeature.level],
+      { ...newClassFeature.feature }
+    ]
+
+    updateSection('features_and_traits', { ...features, class_features: classFeatures })
+    setNewClassFeature({ className: '', level: '1', feature: { name: '', description: '' } })
+    setShowNewClassFeatureForm(false)
+  }
+
+  const updateClassFeature = (className: string, level: string, index: number, field: keyof ClassFeature, value: any) => {
+    const classFeatures = { ...(features.class_features || {}) }
+    if (classFeatures[className]?.[level]?.[index]) {
+      classFeatures[className][level][index] = { ...classFeatures[className][level][index], [field]: value }
+      updateSection('features_and_traits', { ...features, class_features: classFeatures })
+    }
+  }
+
+  const removeClassFeature = (className: string, level: string, index: number) => {
+    const classFeatures = { ...(features.class_features || {}) }
+    if (classFeatures[className]?.[level]) {
+      classFeatures[className][level] = classFeatures[className][level].filter((_: any, i: number) => i !== index)
+      // Clean up empty levels and classes
+      if (classFeatures[className][level].length === 0) {
+        delete classFeatures[className][level]
+        if (Object.keys(classFeatures[className]).length === 0) {
+          delete classFeatures[className]
+        }
+      }
+      updateSection('features_and_traits', { ...features, class_features: classFeatures })
+    }
+    setEditingClassFeature(null)
+  }
+
+  // Get existing class names for dropdown
+  const existingClassNames = Object.keys(features.class_features || {})
 
   return (
     <StepLayout
@@ -143,7 +270,7 @@ export function Step5_Abilities() {
                   <p className="text-sm">No actions configured</p>
                 </div>
               ) : (
-                actionEconomy.actions.map((action, index) => {
+                actionEconomy.actions.map((action: any, index: number) => {
                   const isExpanded = expandedAction === index
                   const style = getActionStyle(action.actionCategory)
 
@@ -228,7 +355,7 @@ export function Step5_Abilities() {
             {/* Summary */}
             <div className="grid grid-cols-4 gap-2 pt-2">
               {['action', 'bonus_action', 'reaction', 'free_action'].map((type) => {
-                const count = actionEconomy.actions?.filter(a => a.actionCategory === type).length || 0
+                const count = actionEconomy.actions?.filter((a: any) => a.actionCategory === type).length || 0
                 const style = getActionStyle(type)
                 return (
                   <div key={type} className={`p-2 rounded-lg ${style.bg} border ${style.border} text-center`}>
@@ -244,111 +371,477 @@ export function Step5_Abilities() {
         {/* Features & Traits Panel */}
         <EditorCard title="Features & Traits" icon={Sparkles} variant="magic">
           <div className="space-y-3">
-            {/* Feature Categories */}
-            {[
-              { key: 'racial', label: 'Racial Traits', icon: '🧬', count: features.racial_traits?.length || 0, color: 'emerald' },
-              { key: 'class', label: 'Class Features', icon: '⚔️', count: countClassFeatures(), color: 'violet' },
-              { key: 'feats', label: 'Feats', icon: '⭐', count: features.feats?.length || 0, color: 'amber' },
-            ].map(({ key, label, icon, count, color }) => (
-              <div
-                key={key}
-                className={`rounded-xl border overflow-hidden transition-all ${
-                  expandedFeatureSection === key
-                    ? `border-${color}-500/30 bg-${color}-500/5`
-                    : 'border-border/50 bg-card/40 hover:bg-card/60 hover:border-violet-500/20'
-                }`}
+            {/* RACIAL TRAITS */}
+            <div
+              className={`rounded-xl border overflow-hidden transition-all ${
+                expandedFeatureSection === 'racial'
+                  ? 'border-emerald-500/30 bg-emerald-500/5'
+                  : 'border-border/50 bg-card/40 hover:bg-card/60 hover:border-emerald-500/20'
+              }`}
+            >
+              <button
+                onClick={() => setExpandedFeatureSection(expandedFeatureSection === 'racial' ? null : 'racial')}
+                className="w-full px-4 py-3 flex items-center gap-3"
               >
-                <button
-                  onClick={() => setExpandedFeatureSection(expandedFeatureSection === key ? null : key as FeatureSection)}
-                  className="w-full px-4 py-3 flex items-center gap-3"
-                >
-                  <span className="text-xl">{icon}</span>
-                  <span className="flex-1 text-left font-medium text-foreground">{label}</span>
-                  <span className={`px-2.5 py-1 text-xs font-bold rounded-lg bg-violet-500/20 text-violet-400`}>
-                    {count}
-                  </span>
-                  {expandedFeatureSection === key ? (
-                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </button>
+                <span className="text-xl">🧬</span>
+                <span className="flex-1 text-left font-medium text-foreground">Racial Traits</span>
+                <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-500/20 text-emerald-400">
+                  {features.racial_traits?.length || 0}
+                </span>
+                {expandedFeatureSection === 'racial' ? (
+                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                )}
+              </button>
 
-                {/* Expanded Content */}
-                {expandedFeatureSection === key && (
-                  <div className="px-4 pb-4 pt-2 border-t border-border/30 max-h-[300px] overflow-y-auto">
-                    {key === 'racial' && (
-                      !features.racial_traits?.length ? (
-                        <p className="text-sm text-muted-foreground text-center py-6">No racial traits</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {features.racial_traits.map((trait, idx) => (
-                            <div key={idx} className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
-                              <p className="font-medium text-foreground text-sm">{trait.name}</p>
+              {expandedFeatureSection === 'racial' && (
+                <div className="px-4 pb-4 pt-2 border-t border-border/30 max-h-[300px] overflow-y-auto">
+                  {/* Add New Racial Trait */}
+                  {showNewRacialForm ? (
+                    <div className="p-3 mb-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 space-y-3">
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">Name *</label>
+                        <input
+                          type="text"
+                          value={newRacialTrait.name}
+                          onChange={(e) => setNewRacialTrait({ ...newRacialTrait, name: e.target.value })}
+                          placeholder="Trait name"
+                          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">Description</label>
+                        <textarea
+                          value={newRacialTrait.description || ''}
+                          onChange={(e) => setNewRacialTrait({ ...newRacialTrait, description: e.target.value })}
+                          placeholder="Describe this trait..."
+                          rows={3}
+                          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm resize-none"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={addRacialTrait}
+                          disabled={!newRacialTrait.name.trim()}
+                          className="flex-1 py-2 rounded-lg bg-emerald-500 text-white text-sm font-medium hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          <Check className="w-4 h-4" /> Add
+                        </button>
+                        <button
+                          onClick={() => { setShowNewRacialForm(false); setNewRacialTrait({ name: '', description: '', featureType: 'trait' }) }}
+                          className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted/50"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowNewRacialForm(true)}
+                      className="w-full mb-3 py-2 rounded-lg border border-dashed border-emerald-500/30 text-emerald-400 text-sm hover:bg-emerald-500/5 flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" /> Add Racial Trait
+                    </button>
+                  )}
+
+                  {/* Existing Racial Traits */}
+                  {!features.racial_traits?.length ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">No racial traits</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {features.racial_traits.map((trait: RacialTrait, idx: number) => (
+                        <div key={idx} className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                          {editingRacialTrait === idx ? (
+                            <div className="space-y-2">
+                              <input
+                                type="text"
+                                value={trait.name}
+                                onChange={(e) => updateRacialTrait(idx, 'name', e.target.value)}
+                                className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm"
+                              />
+                              <textarea
+                                value={trait.description || ''}
+                                onChange={(e) => updateRacialTrait(idx, 'description', e.target.value)}
+                                rows={3}
+                                className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm resize-none"
+                              />
+                              <button
+                                onClick={() => setEditingRacialTrait(null)}
+                                className="text-xs text-emerald-400 hover:underline"
+                              >
+                                Done editing
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="font-medium text-foreground text-sm">{trait.name}</p>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => setEditingRacialTrait(idx)}
+                                    className="p-1 text-muted-foreground hover:text-emerald-400 transition-colors"
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    onClick={() => removeRacialTrait(idx)}
+                                    className="p-1 text-muted-foreground hover:text-red-400 transition-colors"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
                               {trait.description && (
                                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                                   {stripHtml(trait.description)}
                                 </p>
                               )}
-                            </div>
-                          ))}
+                            </>
+                          )}
                         </div>
-                      )
-                    )}
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
-                    {key === 'class' && (
-                      !features.class_features || Object.keys(features.class_features).length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-6">No class features</p>
-                      ) : (
-                        <div className="space-y-3">
-                          {Object.entries(features.class_features).map(([className, levelFeatures]) => (
-                            <div key={className}>
-                              <p className="font-display text-sm text-violet-400 mb-2">{className}</p>
-                              <div className="space-y-1 pl-3 border-l-2 border-violet-500/30">
-                                {Object.entries(levelFeatures).map(([level, featuresList]) => (
-                                  <div key={level}>
-                                    <p className="text-xs text-violet-400/70 font-medium">Level {level}</p>
-                                    {featuresList.map((feature, idx) => (
-                                      <p key={idx} className="text-sm text-foreground/80 pl-2">{feature.name}</p>
-                                    ))}
-                                  </div>
-                                ))}
+            {/* CLASS FEATURES */}
+            <div
+              className={`rounded-xl border overflow-hidden transition-all ${
+                expandedFeatureSection === 'class'
+                  ? 'border-violet-500/30 bg-violet-500/5'
+                  : 'border-border/50 bg-card/40 hover:bg-card/60 hover:border-violet-500/20'
+              }`}
+            >
+              <button
+                onClick={() => setExpandedFeatureSection(expandedFeatureSection === 'class' ? null : 'class')}
+                className="w-full px-4 py-3 flex items-center gap-3"
+              >
+                <span className="text-xl">⚔️</span>
+                <span className="flex-1 text-left font-medium text-foreground">Class Features</span>
+                <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-violet-500/20 text-violet-400">
+                  {countClassFeatures()}
+                </span>
+                {expandedFeatureSection === 'class' ? (
+                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                )}
+              </button>
+
+              {expandedFeatureSection === 'class' && (
+                <div className="px-4 pb-4 pt-2 border-t border-border/30 max-h-[300px] overflow-y-auto">
+                  {/* Add New Class Feature */}
+                  {showNewClassFeatureForm ? (
+                    <div className="p-3 mb-3 rounded-lg bg-violet-500/10 border border-violet-500/30 space-y-3">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs text-muted-foreground mb-1">Class *</label>
+                          <input
+                            type="text"
+                            list="class-names"
+                            value={newClassFeature.className}
+                            onChange={(e) => setNewClassFeature({ ...newClassFeature, className: e.target.value })}
+                            placeholder="e.g., Fighter"
+                            className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm"
+                          />
+                          <datalist id="class-names">
+                            {existingClassNames.map(name => (
+                              <option key={name} value={name} />
+                            ))}
+                          </datalist>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-muted-foreground mb-1">Level</label>
+                          <select
+                            value={newClassFeature.level}
+                            onChange={(e) => setNewClassFeature({ ...newClassFeature, level: e.target.value })}
+                            className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm"
+                          >
+                            {[...Array(20)].map((_, i) => (
+                              <option key={i + 1} value={String(i + 1)}>{i + 1}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">Feature Name *</label>
+                        <input
+                          type="text"
+                          value={newClassFeature.feature.name}
+                          onChange={(e) => setNewClassFeature({ ...newClassFeature, feature: { ...newClassFeature.feature, name: e.target.value } })}
+                          placeholder="Feature name"
+                          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">Description</label>
+                        <textarea
+                          value={newClassFeature.feature.description || ''}
+                          onChange={(e) => setNewClassFeature({ ...newClassFeature, feature: { ...newClassFeature.feature, description: e.target.value } })}
+                          placeholder="Describe this feature..."
+                          rows={3}
+                          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm resize-none"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={addClassFeature}
+                          disabled={!newClassFeature.className.trim() || !newClassFeature.feature.name.trim()}
+                          className="flex-1 py-2 rounded-lg bg-violet-500 text-white text-sm font-medium hover:bg-violet-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          <Check className="w-4 h-4" /> Add
+                        </button>
+                        <button
+                          onClick={() => { setShowNewClassFeatureForm(false); setNewClassFeature({ className: '', level: '1', feature: { name: '', description: '' } }) }}
+                          className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted/50"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowNewClassFeatureForm(true)}
+                      className="w-full mb-3 py-2 rounded-lg border border-dashed border-violet-500/30 text-violet-400 text-sm hover:bg-violet-500/5 flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" /> Add Class Feature
+                    </button>
+                  )}
+
+                  {/* Existing Class Features */}
+                  {!features.class_features || Object.keys(features.class_features).length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">No class features</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {Object.entries(features.class_features).map(([className, levelFeatures]: [string, any]) => (
+                        <div key={className}>
+                          <p className="font-display text-sm text-violet-400 mb-2">{className}</p>
+                          <div className="space-y-1 pl-3 border-l-2 border-violet-500/30">
+                            {Object.entries(levelFeatures).map(([level, featuresList]: [string, any]) => (
+                              <div key={level}>
+                                <p className="text-xs text-violet-400/70 font-medium mb-1">Level {level}</p>
+                                {Array.isArray(featuresList) && featuresList.map((feature: ClassFeature, idx: number) => {
+                                  const isEditing = editingClassFeature?.className === className &&
+                                    editingClassFeature?.level === level &&
+                                    editingClassFeature?.index === idx
+
+                                  return (
+                                    <div key={idx} className="flex items-start justify-between pl-2 py-1 group">
+                                      {isEditing ? (
+                                        <div className="flex-1 space-y-2">
+                                          <input
+                                            type="text"
+                                            value={feature.name}
+                                            onChange={(e) => updateClassFeature(className, level, idx, 'name', e.target.value)}
+                                            className="w-full px-2 py-1 bg-card border border-border rounded text-sm"
+                                          />
+                                          <textarea
+                                            value={feature.description || ''}
+                                            onChange={(e) => updateClassFeature(className, level, idx, 'description', e.target.value)}
+                                            rows={2}
+                                            className="w-full px-2 py-1 bg-card border border-border rounded text-sm resize-none"
+                                          />
+                                          <button
+                                            onClick={() => setEditingClassFeature(null)}
+                                            className="text-xs text-violet-400 hover:underline"
+                                          >
+                                            Done
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <>
+                                          <p className="text-sm text-foreground/80">{feature.name}</p>
+                                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button
+                                              onClick={() => setEditingClassFeature({ className, level, index: idx })}
+                                              className="p-1 text-muted-foreground hover:text-violet-400 transition-colors"
+                                            >
+                                              <Edit2 className="w-3 h-3" />
+                                            </button>
+                                            <button
+                                              onClick={() => removeClassFeature(className, level, idx)}
+                                              className="p-1 text-muted-foreground hover:text-red-400 transition-colors"
+                                            >
+                                              <Trash2 className="w-3 h-3" />
+                                            </button>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                  )
+                                })}
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
-                      )
-                    )}
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
-                    {key === 'feats' && (
-                      !features.feats?.length ? (
-                        <p className="text-sm text-muted-foreground text-center py-6">No feats</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {features.feats.map((feat, idx) => (
-                            <div key={idx} className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+            {/* FEATS */}
+            <div
+              className={`rounded-xl border overflow-hidden transition-all ${
+                expandedFeatureSection === 'feats'
+                  ? 'border-amber-500/30 bg-amber-500/5'
+                  : 'border-border/50 bg-card/40 hover:bg-card/60 hover:border-amber-500/20'
+              }`}
+            >
+              <button
+                onClick={() => setExpandedFeatureSection(expandedFeatureSection === 'feats' ? null : 'feats')}
+                className="w-full px-4 py-3 flex items-center gap-3"
+              >
+                <span className="text-xl">⭐</span>
+                <span className="flex-1 text-left font-medium text-foreground">Feats</span>
+                <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-500/20 text-amber-400">
+                  {features.feats?.length || 0}
+                </span>
+                {expandedFeatureSection === 'feats' ? (
+                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                )}
+              </button>
+
+              {expandedFeatureSection === 'feats' && (
+                <div className="px-4 pb-4 pt-2 border-t border-border/30 max-h-[300px] overflow-y-auto">
+                  {/* Add New Feat */}
+                  {showNewFeatForm ? (
+                    <div className="p-3 mb-3 rounded-lg bg-amber-500/10 border border-amber-500/30 space-y-3">
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">Name *</label>
+                        <input
+                          type="text"
+                          value={newFeat.name}
+                          onChange={(e) => setNewFeat({ ...newFeat, name: e.target.value })}
+                          placeholder="Feat name"
+                          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-1">Description</label>
+                        <textarea
+                          value={newFeat.description || ''}
+                          onChange={(e) => setNewFeat({ ...newFeat, description: e.target.value })}
+                          placeholder="Describe this feat..."
+                          rows={3}
+                          className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm resize-none"
+                        />
+                      </div>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={newFeat.isRepeatable || false}
+                          onChange={(e) => setNewFeat({ ...newFeat, isRepeatable: e.target.checked })}
+                          className="rounded border-border"
+                        />
+                        <span className="text-muted-foreground">Repeatable</span>
+                      </label>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={addFeat}
+                          disabled={!newFeat.name.trim()}
+                          className="flex-1 py-2 rounded-lg bg-amber-500 text-white text-sm font-medium hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          <Check className="w-4 h-4" /> Add
+                        </button>
+                        <button
+                          onClick={() => { setShowNewFeatForm(false); setNewFeat({ name: '', description: '', isRepeatable: false }) }}
+                          className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted/50"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setShowNewFeatForm(true)}
+                      className="w-full mb-3 py-2 rounded-lg border border-dashed border-amber-500/30 text-amber-400 text-sm hover:bg-amber-500/5 flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" /> Add Feat
+                    </button>
+                  )}
+
+                  {/* Existing Feats */}
+                  {!features.feats?.length ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">No feats</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {features.feats.map((feat: Feat, idx: number) => (
+                        <div key={idx} className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                          {editingFeat === idx ? (
+                            <div className="space-y-2">
+                              <input
+                                type="text"
+                                value={feat.name}
+                                onChange={(e) => updateFeat(idx, 'name', e.target.value)}
+                                className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm"
+                              />
+                              <textarea
+                                value={feat.description || ''}
+                                onChange={(e) => updateFeat(idx, 'description', e.target.value)}
+                                rows={3}
+                                className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm resize-none"
+                              />
+                              <label className="flex items-center gap-2 text-sm">
+                                <input
+                                  type="checkbox"
+                                  checked={feat.isRepeatable || false}
+                                  onChange={(e) => updateFeat(idx, 'isRepeatable', e.target.checked)}
+                                  className="rounded border-border"
+                                />
+                                <span className="text-muted-foreground">Repeatable</span>
+                              </label>
+                              <button
+                                onClick={() => setEditingFeat(null)}
+                                className="text-xs text-amber-400 hover:underline"
+                              >
+                                Done editing
+                              </button>
+                            </div>
+                          ) : (
+                            <>
                               <div className="flex items-start justify-between gap-2">
                                 <p className="font-medium text-foreground text-sm">{feat.name}</p>
-                                {feat.isRepeatable && (
-                                  <span className="px-1.5 py-0.5 text-[10px] bg-amber-500/20 text-amber-400 rounded">
-                                    Repeatable
-                                  </span>
-                                )}
+                                <div className="flex items-center gap-1">
+                                  {feat.isRepeatable && (
+                                    <span className="px-1.5 py-0.5 text-[10px] bg-amber-500/20 text-amber-400 rounded">
+                                      Repeatable
+                                    </span>
+                                  )}
+                                  <button
+                                    onClick={() => setEditingFeat(idx)}
+                                    className="p-1 text-muted-foreground hover:text-amber-400 transition-colors"
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    onClick={() => removeFeat(idx)}
+                                    className="p-1 text-muted-foreground hover:text-red-400 transition-colors"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
                               </div>
                               {feat.description && (
                                 <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                                   {stripHtml(feat.description)}
                                 </p>
                               )}
-                            </div>
-                          ))}
+                            </>
+                          )}
                         </div>
-                      )
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             <SectionDivider />
 

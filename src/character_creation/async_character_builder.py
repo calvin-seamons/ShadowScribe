@@ -352,7 +352,7 @@ async def test_async_builder():
     
     if character.inventory:
         total_items = (
-            sum(len(items) for items in character.inventory.equipped_items.values()) +
+            len(character.inventory.equipped_items) +
             len(character.inventory.backpack)
         )
         print(f"Items: {total_items}")

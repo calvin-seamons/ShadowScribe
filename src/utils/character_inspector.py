@@ -234,8 +234,8 @@ class CharacterInspector:
             },
             "spell_count": len(character.spell_list.spells) if character.spell_list else 0,
             "inventory_count": (
-                len(character.inventory.backpack) + 
-                sum(len(items) for items in character.inventory.equipped_items.values())
+                len(character.inventory.backpack) +
+                len(character.inventory.equipped_items)
             ) if character.inventory else 0,
             "last_updated": character.last_updated.isoformat() if character.last_updated else None
         }

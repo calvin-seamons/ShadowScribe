@@ -44,7 +44,7 @@ export function Step7_Review() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(characterData),
+        body: JSON.stringify({ character: characterData }),
       })
 
       if (!response.ok) {

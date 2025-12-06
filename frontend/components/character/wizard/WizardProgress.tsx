@@ -101,13 +101,13 @@ export function WizardProgress({ currentStep, totalSteps }: WizardProgressProps)
                   canNavigate ? 'cursor-pointer' : 'cursor-default'
                 )}
               >
-                {/* Node */}
+                {/* Node - solid background to cover the track line */}
                 <div
                   className={cn(
-                    'relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 bg-background',
-                    isCompleted && 'bg-primary/15 border-2 border-primary text-primary',
+                    'relative w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300',
+                    isCompleted && 'bg-background border-2 border-primary text-primary',
                     isCurrent && 'bg-primary text-primary-foreground border-2 border-primary',
-                    isPending && 'bg-card border-2 border-border text-muted-foreground/40',
+                    isPending && 'bg-background border-2 border-border text-muted-foreground/40',
                     canNavigate && !isCurrent && 'hover:border-primary/60 hover:text-primary'
                   )}
                   style={isCurrent ? {
