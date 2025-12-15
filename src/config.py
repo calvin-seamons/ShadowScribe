@@ -117,7 +117,7 @@ class RAGConfig:
     local_model_device: str = "cpu"  # or "cuda" if GPU available
     
     # Local Classifier Settings (Joint Classifier Model)
-    local_classifier_model_path: str = "574-Assignment/models/joint_classifier"
+    local_classifier_model_path: str = "models/routing_classifier"
     local_classifier_srd_cache: str = "src/classifiers/data/srd_cache"
     local_classifier_device: str = "auto"  # auto, cuda, mps, cpu
     local_classifier_tool_threshold: float = 0.5  # Confidence threshold for tool selection

@@ -62,6 +62,11 @@ PROJECT_ROOT = Path(__file__).parent.resolve()
 LOGS_DIR = PROJECT_ROOT / "logs"
 ENV_FILE = PROJECT_ROOT / ".env"
 
+# Local classifier model paths
+MODEL_DIR = PROJECT_ROOT / "models" / "routing_classifier"
+MODEL_CHECKPOINT = MODEL_DIR / "joint_classifier.pt"
+MODEL_GDRIVE_FOLDER = "1zWZwMTjYdT5d_4UKG6sC_79qCooiyOQ4"
+
 
 def print_banner():
     """Print the ShadowScribe banner."""
@@ -161,6 +166,58 @@ def check_env_file() -> bool:
     return True
 
 
+def check_classifier_model() -> bool:
+    """Check if local classifier model exists, download if missing."""
+    if MODEL_CHECKPOINT.exists():
+        size_mb = MODEL_CHECKPOINT.stat().st_size / (1024 * 1024)
+        log(f"Local classifier model found ({size_mb:.1f} MB)", "success")
+        return True
+    
+    log("Local classifier model not found, downloading from Google Drive...", "warning")
+    
+    try:
+        import gdown
+    except ImportError:
+        log("gdown not installed. Run: uv pip install gdown", "error")
+        return False
+    
+    # Create model directory
+    MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    
+    try:
+        # Download entire folder from Google Drive
+        # URL format: https://drive.google.com/drive/folders/{FOLDER_ID}
+        folder_url = f"https://drive.google.com/drive/folders/{MODEL_GDRIVE_FOLDER}"
+        
+        log(f"Downloading from: {folder_url}", "info")
+        gdown.download_folder(
+            url=folder_url,
+            output=str(MODEL_DIR),
+            quiet=False,
+            use_cookies=False
+        )
+        
+        # Verify download
+        if MODEL_CHECKPOINT.exists():
+            size_mb = MODEL_CHECKPOINT.stat().st_size / (1024 * 1024)
+            log(f"Model downloaded successfully ({size_mb:.1f} MB)", "success")
+            return True
+        else:
+            log("Download completed but model file not found", "error")
+            log(f"Expected: {MODEL_CHECKPOINT}", "error")
+            log(f"Contents of {MODEL_DIR}:", "info")
+            for f in MODEL_DIR.iterdir():
+                print(f"   {f.name}")
+            return False
+            
+    except Exception as e:
+        log(f"Failed to download model: {e}", "error")
+        log("You can manually download from:", "info")
+        print(f"   https://drive.google.com/drive/folders/{MODEL_GDRIVE_FOLDER}")
+        print(f"   Place files in: {MODEL_DIR}")
+        return False
+
+
 def check_prerequisites() -> bool:
     """Check all prerequisites before starting."""
     log("Checking prerequisites...", "info")
@@ -169,6 +226,9 @@ def check_prerequisites() -> bool:
         return False
     
     if not check_docker():
+        return False
+    
+    if not check_classifier_model():
         return False
     
     log("All prerequisites satisfied", "success")

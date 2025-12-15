@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 # Path to the trained model's label mappings (source of truth)
-_MODEL_MAPPINGS_PATH = Path(__file__).parent.parent.parent / "574-Assignment" / "models" / "joint_classifier" / "label_mappings.json"
+_MODEL_MAPPINGS_PATH = Path(__file__).parent.parent.parent / "models" / "routing_classifier" / "label_mappings.json"
 
 # Fallback intentions used when entity-based routing adds tools
 # These are used when no specific intention is determined by the classifier

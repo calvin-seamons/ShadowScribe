@@ -213,4 +213,5 @@ poppler-binaries/**
 *.safetensors
 *.zip
 574-Assignment/models/
+models/routing_classifier/*.pt
 nul

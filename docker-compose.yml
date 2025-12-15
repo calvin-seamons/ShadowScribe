@@ -33,6 +33,7 @@ services:
       - ./api:/app/api
       - ./src:/app/src
       - ./knowledge_base:/app/knowledge_base
+      - ./models:/app/models
       - ./.env:/app/.env
     depends_on:
       mysql:
