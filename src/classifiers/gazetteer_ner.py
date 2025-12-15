@@ -174,8 +174,49 @@ class GazetteerEntityExtractor:
                     name = entity['name']
                     self.gazetteers[name.lower()] = (name, entity_type)
         
+        # Add static D&D domain knowledge not in SRD API
+        self._add_static_dnd_entities()
+        
         print(f"[GazetteerNER] Loaded {len(self.gazetteers)} entities from gazetteers")
     
+    def _add_static_dnd_entities(self) -> None:
+        """Add common D&D entities that aren't in the SRD API files."""
+        # Armor categories
+        armor_categories = [
+            "Light Armor", "Medium Armor", "Heavy Armor", 
+            "Shields", "Armor Class", "AC"
+        ]
+        for name in armor_categories:
+            self.gazetteers[name.lower()] = (name, "ITEM_CATEGORY")
+        
+        # Weapon categories
+        weapon_categories = [
+            "Simple Weapons", "Martial Weapons", 
+            "Simple Melee Weapons", "Simple Ranged Weapons",
+            "Martial Melee Weapons", "Martial Ranged Weapons",
+            "Melee Weapons", "Ranged Weapons", "Finesse Weapons"
+        ]
+        for name in weapon_categories:
+            self.gazetteers[name.lower()] = (name, "ITEM_CATEGORY")
+        
+        # Ability scores (full names for better matching)
+        ability_scores = [
+            "Strength", "Dexterity", "Constitution", 
+            "Intelligence", "Wisdom", "Charisma"
+        ]
+        for name in ability_scores:
+            self.gazetteers[name.lower()] = (name, "ABILITY")
+        
+        # Common D&D mechanics terms
+        mechanics = [
+            "Proficiency Bonus", "Spell Save DC", "Spell Attack",
+            "Attack Roll", "Damage Roll", "Saving Throw",
+            "Ability Check", "Skill Check", "Initiative",
+            "Hit Points", "Hit Dice", "Death Saving Throw"
+        ]
+        for name in mechanics:
+            self.gazetteers[name.lower()] = (name, "MECHANIC")
+
     def add_entities(
         self, 
         names: List[str], 

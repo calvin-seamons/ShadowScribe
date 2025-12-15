@@ -45,7 +45,7 @@
       "id": "rule_006",
       "question": "What is a critical hit?",
       "category": "RULE_MECHANICS",
-      "relevant_sections": ["attack-rolls", "damage-rolls"],
+      "relevant_sections": ["critical-hits", "rolling-1-or-20"],
       "notes": "Combat mechanic - critical hits double damage dice"
     },
     {
@@ -269,15 +269,15 @@
       "id": "calc_003",
       "question": "Calculate my spell save DC with 18 Intelligence",
       "category": "CALCULATE_VALUES",
-      "relevant_sections": ["spellcasting-ability", "spell-save-dc"],
-      "notes": "Spell DC calculation"
+      "relevant_sections": ["spellcasting-ability", "intelligence"],
+      "notes": "Spell DC calculation - uses Intelligence as spellcasting ability"
     },
     {
       "id": "calc_004",
       "question": "What's the damage for a longsword with 16 Strength?",
       "category": "CALCULATE_VALUES",
-      "relevant_sections": ["section-weapons", "attack-rolls-and-damage", "section-damage-and-healing"],
-      "notes": "Damage calculation"
+      "relevant_sections": ["section-weapons", "strength", "damage-rolls"],
+      "notes": "Damage calculation - Strength section explains melee damage modifier"
     },
     {
       "id": "calc_005",
@@ -500,7 +500,7 @@
       "id": "equipment_002",
       "question": "What are martial weapons?",
       "category": "EQUIPMENT",
-      "relevant_sections": ["section-weapons", "martial-melee-weapons", "martial-ranged-weapons"],
+      "relevant_sections": ["section-weapons", "weapon-proficiency"],
       "notes": "Weapon categories"
     },
     {

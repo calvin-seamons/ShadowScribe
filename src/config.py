@@ -130,6 +130,15 @@ class RAGConfig:
     #   "comparison" - Run BOTH classifiers, Haiku is primary, local shown in UI for comparison
     routing_mode: str = "comparison"  # Run both for UI comparison
     
+    # Rulebook Retrieval Settings
+    # Cross-encoder reranking for improved retrieval precision
+    rulebook_reranker_model: str = "BAAI/bge-reranker-base"  # Cross-encoder model for reranking
+    rulebook_rerank_enabled: bool = True  # Whether to use reranking
+    rulebook_rerank_top_k: int = 10  # Number of results to keep after reranking
+    rulebook_candidate_pool_size: int = 100  # Number of candidates from hybrid search before reranking
+    rulebook_bm25_weight: float = 0.4  # BM25 weight in RRF fusion (higher = more keyword matching)
+    rulebook_semantic_weight: float = 0.6  # Semantic weight in RRF fusion
+    
     def __post_init__(self):
         """Validate API keys after initialization"""
         # Only require the API key for the providers you're actually using
@@ -214,7 +223,15 @@ class RAGConfig:
             gazetteer_min_similarity=env_or_default('RAG_GAZETTEER_MIN_SIMILARITY', 'gazetteer_min_similarity', float),
 
             # Routing Mode
-            routing_mode=env_or_default('RAG_ROUTING_MODE', 'routing_mode')
+            routing_mode=env_or_default('RAG_ROUTING_MODE', 'routing_mode'),
+            
+            # Rulebook Retrieval Settings
+            rulebook_reranker_model=env_or_default('RAG_RULEBOOK_RERANKER_MODEL', 'rulebook_reranker_model'),
+            rulebook_rerank_enabled=env_or_default('RAG_RULEBOOK_RERANK_ENABLED', 'rulebook_rerank_enabled', bool),
+            rulebook_rerank_top_k=env_or_default('RAG_RULEBOOK_RERANK_TOP_K', 'rulebook_rerank_top_k', int),
+            rulebook_candidate_pool_size=env_or_default('RAG_RULEBOOK_CANDIDATE_POOL_SIZE', 'rulebook_candidate_pool_size', int),
+            rulebook_bm25_weight=env_or_default('RAG_RULEBOOK_BM25_WEIGHT', 'rulebook_bm25_weight', float),
+            rulebook_semantic_weight=env_or_default('RAG_RULEBOOK_SEMANTIC_WEIGHT', 'rulebook_semantic_weight', float)
         )
     
     @classmethod

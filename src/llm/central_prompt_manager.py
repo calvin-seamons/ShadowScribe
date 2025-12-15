@@ -109,6 +109,7 @@ TOOL SELECTION GUIDELINES:
 - For specific items, weapons, or inventory: ALWAYS use character_data
 - For NPCs or story characters: Use session_notes
 - For general D&D rules: Use rulebook
+- For CALCULATIONS (AC, spell DC, attack bonus, damage, HP, initiative): ALWAYS use rulebook with calculate_values intention
 - Queries use placeholders like {{CHARACTER}}, {{NPC}}, {{ITEM}}, {{SPELL}}, {{PARTY_MEMBER}}, {{LOCATION}}
 - Examples:
   * "What's my AC?" → character_data only
@@ -118,6 +119,8 @@ TOOL SELECTION GUIDELINES:
   * "What persuasion abilities do I have?" → character_data only
   * "Remind me about {{NPC}} and my persuasion abilities" → session_notes + character_data
   * "Tell me about {{ITEM}}" → character_data (inventory_info)
+  * "Calculate my spell save DC" → rulebook (calculate_values)
+  * "What's my initiative bonus?" → rulebook (calculate_values)
 
 CHARACTER_DATA INTENTIONS (choose ONE per tool):
 {character_intentions_text}
@@ -193,6 +196,34 @@ Query: "List all the actions {{CHARACTER}} can take"
 Response: {{
   "tools_needed": [
     {{"tool": "character_data", "intention": "combat_info", "confidence": 0.95}}
+  ]
+}}
+
+Query: "Calculate my spell save DC with 18 Intelligence"
+Response: {{
+  "tools_needed": [
+    {{"tool": "rulebook", "intention": "calculate_values", "confidence": 0.95}}
+  ]
+}}
+
+Query: "What's my initiative bonus with 14 Dexterity?"
+Response: {{
+  "tools_needed": [
+    {{"tool": "rulebook", "intention": "calculate_values", "confidence": 0.95}}
+  ]
+}}
+
+Query: "How do I calculate my attack bonus?"
+Response: {{
+  "tools_needed": [
+    {{"tool": "rulebook", "intention": "calculate_values", "confidence": 0.95}}
+  ]
+}}
+
+Query: "How many spell slots does a 3rd level wizard have?"
+Response: {{
+  "tools_needed": [
+    {{"tool": "rulebook", "intention": "class_features", "confidence": 0.95}}
   ]
 }}
 

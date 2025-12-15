@@ -2,6 +2,7 @@
 D&D 5e Rulebook Query Router
 Intelligent semantic search with intention-based filtering and multi-stage scoring.
 Now includes hybrid BM25 + semantic search for better keyword matching.
+Supports cross-encoder reranking for improved precision.
 """
 
 import re
@@ -11,6 +12,7 @@ from typing import List, Dict, Tuple, Optional
 import hashlib
 
 from rank_bm25 import BM25Okapi
+from sentence_transformers import CrossEncoder
 
 from .rulebook_types import (
     RulebookQueryIntent, RulebookSection, SearchResult, 
@@ -88,6 +90,10 @@ class RulebookQueryRouter:
         
         # Initialize embedding provider (supports both OpenAI and local models)
         self._embedding_provider: Optional[EmbeddingProvider] = None
+        
+        # Initialize cross-encoder reranker (lazy loading)
+        self._reranker: Optional[CrossEncoder] = None
+        self._reranker_model = self.config.rulebook_reranker_model
         
         # Build BM25 index for all sections
         self._build_bm25_index()
@@ -182,12 +188,15 @@ class RulebookQueryRouter:
         
         # 4. Enhance with context hints
         context_start = time.perf_counter()
-        final_results = self._enhance_with_context_hints(entity_boosted_results, context_hints, performance)
+        enhanced_results = self._enhance_with_context_hints(entity_boosted_results, context_hints, performance)
         context_end = time.perf_counter()
         
         performance.context_enhancement_ms = (context_end - context_start) * 1000
         
-        # 5. Take top-k and create SearchResult objects
+        # 5. Force-include entity-matching sections (guarantees entity sections in results)
+        final_results = self._force_include_entity_sections(enhanced_results, entities, candidate_sections)
+        
+        # 6. Take top-k and create SearchResult objects
         assembly_start = time.perf_counter()
         top_results = final_results[:k]
         search_results = []
@@ -274,7 +283,7 @@ class RulebookQueryRouter:
         performance: QueryPerformanceMetrics
     ) -> List[Tuple[RulebookSection, float]]:
         """
-        Perform hybrid BM25 + semantic search with RRF fusion.
+        Perform hybrid BM25 + semantic search with RRF fusion and optional reranking.
         
         Args:
             query: Raw user query string
@@ -291,8 +300,8 @@ class RulebookQueryRouter:
         # Track sections with embeddings
         performance.sections_with_embeddings = sum(1 for s in candidate_sections if s.vector is not None)
         
-        # Get top-N candidates from each method (more than we need for fusion)
-        n_candidates = min(len(candidate_sections), 50)
+        # Get top-N candidates from each method (use config value)
+        n_candidates = min(len(candidate_sections), self.config.rulebook_candidate_pool_size)
         
         # 1. BM25 keyword search on raw query
         bm25_results = self._bm25_search(query, candidate_ids)[:n_candidates]
@@ -313,11 +322,9 @@ class RulebookQueryRouter:
         semantic_results.sort(key=lambda x: x[1], reverse=True)
         semantic_results = semantic_results[:n_candidates]
         
-        # 3. RRF fusion - combine rankings
-        # Weights tuned: semantic gets higher weight (0.8) since OpenAI embeddings are strong
-        # BM25 gets lower weight (0.2) but helps with exact keyword matches
-        bm25_weight = 0.2
-        semantic_weight = 0.8
+        # 3. RRF fusion - combine rankings using config weights
+        bm25_weight = self.config.rulebook_bm25_weight
+        semantic_weight = self.config.rulebook_semantic_weight
         fused_scores: Dict[str, float] = {}
         
         # BM25 contribution
@@ -339,6 +346,14 @@ class RulebookQueryRouter:
         
         # Sort by fused score descending
         results.sort(key=lambda x: x[1], reverse=True)
+        
+        # 5. Apply cross-encoder reranking if enabled
+        if self.config.rulebook_rerank_enabled and len(results) > 0:
+            rerank_start = time.perf_counter()
+            results = self._rerank_results(query, results, performance)
+            rerank_end = time.perf_counter()
+            performance.reranking_ms = (rerank_end - rerank_start) * 1000
+        
         return results
 
     def _semantic_search(self, query: str, candidate_sections: List[RulebookSection], performance: QueryPerformanceMetrics) -> List[Tuple[RulebookSection, float]]:
@@ -369,6 +384,74 @@ class RulebookQueryRouter:
         # Sort by similarity (highest first)
         results.sort(key=lambda x: x[1], reverse=True)
         return results
+    
+    def _get_reranker(self) -> CrossEncoder:
+        """Get or initialize the cross-encoder reranker (lazy loading)"""
+        if self._reranker is None:
+            print(f"Loading cross-encoder reranker: {self._reranker_model}")
+            self._reranker = CrossEncoder(
+                self._reranker_model,
+                max_length=512,  # Max tokens per passage
+                device=self.config.local_model_device
+            )
+        return self._reranker
+    
+    def _rerank_results(
+        self,
+        query: str,
+        results: List[Tuple[RulebookSection, float]],
+        performance: QueryPerformanceMetrics
+    ) -> List[Tuple[RulebookSection, float]]:
+        """
+        Rerank results using a cross-encoder model for improved precision.
+        
+        Cross-encoders jointly encode query and document, providing more accurate
+        relevance scores than bi-encoder similarity. This is slower but more accurate.
+        
+        Args:
+            query: The user query string
+            results: Initial results from hybrid search [(section, score), ...]
+            performance: Performance metrics to update
+            
+        Returns:
+            Reranked results [(section, rerank_score), ...]
+        """
+        if not results:
+            return results
+        
+        # Limit to top candidates for reranking (cross-encoder is slower)
+        max_rerank_candidates = min(len(results), self.config.rulebook_candidate_pool_size)
+        candidates = results[:max_rerank_candidates]
+        
+        # Prepare query-document pairs for cross-encoder
+        # Use title + first 400 chars of content to stay within token limits
+        pairs = []
+        for section, _ in candidates:
+            # Construct document text: title + content preview
+            doc_text = f"{section.title}\n{section.content[:400]}"
+            pairs.append([query, doc_text])
+        
+        try:
+            reranker = self._get_reranker()
+            
+            # Get relevance scores from cross-encoder
+            scores = reranker.predict(pairs, show_progress_bar=False)
+            
+            # Pair sections with new scores
+            reranked = []
+            for i, (section, _) in enumerate(candidates):
+                reranked.append((section, float(scores[i])))
+            
+            # Sort by reranker score descending
+            reranked.sort(key=lambda x: x[1], reverse=True)
+            
+            # Return top-k after reranking
+            return reranked[:self.config.rulebook_rerank_top_k]
+            
+        except Exception as e:
+            print(f"Warning: Reranking failed, falling back to original results: {e}")
+            # Fall back to original results without reranking
+            return results[:self.config.rulebook_rerank_top_k]
     
     def _boost_entity_matches(self, results: List[Tuple[RulebookSection, float]], entities: List[str]) -> List[Tuple[RulebookSection, float]]:
         """Boost scores based on entity matches in section content"""
@@ -405,6 +488,97 @@ class RulebookQueryRouter:
         boosted_results.sort(key=lambda x: x[1], reverse=True)
         return boosted_results
     
+    def _force_include_entity_sections(
+        self, 
+        results: List[Tuple[RulebookSection, float]], 
+        entities: List[str],
+        candidate_sections: List[RulebookSection]
+    ) -> List[Tuple[RulebookSection, float]]:
+        """
+        Force-include sections that directly match extracted entity names.
+        
+        This ensures that when entities like "Fireball" or "Lightning Bolt" are extracted,
+        the corresponding sections are ALWAYS in the final results, regardless of how 
+        the reranker scored them. This fixes the issue where cross-encoder reranking
+        would push out exact entity matches in favor of sections that merely mention
+        the entities (like spell lists).
+        
+        Args:
+            results: Current ranked results after boosting/enhancement
+            entities: List of entity names extracted from the query
+            candidate_sections: All candidate sections from intention filtering
+            
+        Returns:
+            Results with entity-matching sections force-included at appropriate positions
+        """
+        if not entities:
+            return results
+        
+        # Build lookup of current results
+        result_ids = {section.id for section, _ in results}
+        
+        # Find entity-matching sections not already in results
+        entity_sections_to_add = []
+        
+        for entity in entities:
+            entity_normalized = self._normalize_entity_to_id(entity)
+            entity_lower = entity.lower()
+            
+            for section in candidate_sections:
+                # Skip if already in results
+                if section.id in result_ids:
+                    continue
+                
+                # Check for exact ID match (highest priority)
+                if section.id == entity_normalized:
+                    # Give a high score to ensure good placement
+                    entity_sections_to_add.append((section, 0.95, "id_match"))
+                    result_ids.add(section.id)
+                    continue
+                
+                # Check for exact title match
+                if section.title.lower() == entity_lower:
+                    entity_sections_to_add.append((section, 0.90, "title_match"))
+                    result_ids.add(section.id)
+                    continue
+                
+                # Check for title containing entity (for multi-word entities)
+                if entity_lower in section.title.lower() and len(entity_lower) > 3:
+                    # Only if the entity is a significant part of the title
+                    title_words = section.title.lower().split()
+                    if any(entity_lower == word or entity_lower in word for word in title_words):
+                        entity_sections_to_add.append((section, 0.85, "title_contains"))
+                        result_ids.add(section.id)
+        
+        if not entity_sections_to_add:
+            return results
+        
+        # Merge entity sections into results at appropriate positions
+        # Strategy: Insert based on score, but ensure entity sections are in top portion
+        merged_results = list(results)
+        
+        for section, priority_score, match_type in entity_sections_to_add:
+            # Find insertion point based on priority score
+            insert_idx = 0
+            for i, (_, score) in enumerate(merged_results):
+                if priority_score > score:
+                    insert_idx = i
+                    break
+                insert_idx = i + 1
+            
+            merged_results.insert(insert_idx, (section, priority_score))
+        
+        return merged_results
+    
+    def _normalize_entity_to_id(self, entity: str) -> str:
+        """Convert entity name to expected section ID format (lowercase, hyphenated)."""
+        # Convert to lowercase and replace spaces with hyphens
+        normalized = entity.lower().strip()
+        normalized = re.sub(r'\s+', '-', normalized)
+        # Remove any special characters except hyphens
+        normalized = re.sub(r'[^a-z0-9\-]', '', normalized)
+        return normalized
+
     def _enhance_with_context_hints(self, results: List[Tuple[RulebookSection, float]], hints: List[str], performance: QueryPerformanceMetrics) -> List[Tuple[RulebookSection, float]]:
         """Enhance scores using context hints"""
         if not hints:

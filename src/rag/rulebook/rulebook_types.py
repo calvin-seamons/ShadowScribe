@@ -72,6 +72,7 @@ class RulebookSection:
     categories: List[RulebookCategory] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
     vector: Optional[List[float]] = None  # Embedding vector
+    contextual_prefix: Optional[str] = None  # Claude-generated context for improved retrieval
     
     def get_full_content(self, include_children: bool = False, storage: Optional['RulebookStorage'] = None) -> str:
         """Get content including optional children sections"""
@@ -104,7 +105,8 @@ class RulebookSection:
             'children_ids': self.children_ids,
             'categories': [cat.value for cat in self.categories],
             'metadata': self.metadata,
-            'vector': self.vector
+            'vector': self.vector,
+            'contextual_prefix': self.contextual_prefix
         }
     
     @classmethod
@@ -119,7 +121,8 @@ class RulebookSection:
             children_ids=data.get('children_ids', []),
             categories=[RulebookCategory(cat) for cat in data.get('categories', [])],
             metadata=data.get('metadata', {}),
-            vector=data.get('vector')
+            vector=data.get('vector'),
+            contextual_prefix=data.get('contextual_prefix')
         )
     
     def generate_id(self) -> str:
@@ -182,6 +185,7 @@ class QueryPerformanceMetrics:
     context_enhancement_ms: float = 0.0
     result_assembly_ms: float = 0.0
     children_inclusion_ms: float = 0.0
+    reranking_ms: float = 0.0  # Cross-encoder reranking time
     
     # Detailed embedding performance
     embedding_cache_hits: int = 0
@@ -205,7 +209,8 @@ class QueryPerformanceMetrics:
                 'entity_boosting_ms': self.entity_boosting_ms,
                 'context_enhancement_ms': self.context_enhancement_ms,
                 'result_assembly_ms': self.result_assembly_ms,
-                'children_inclusion_ms': self.children_inclusion_ms
+                'children_inclusion_ms': self.children_inclusion_ms,
+                'reranking_ms': self.reranking_ms
             },
             'embedding_performance': {
                 'cache_hits': self.embedding_cache_hits,
@@ -254,9 +259,15 @@ class QueryResponse:
 # NOTE: Mappings are intentionally broad to avoid missing relevant sections.
 # It's better to search more sections and let ranking sort out relevance
 # than to filter out relevant content too aggressively.
+#
+# HIGH-RECALL MAPPING PHILOSOPHY (December 2024 Audit):
+# Each intent now includes ALL categories where relevant content might exist.
+# The cross-encoder reranker will filter out less relevant results, so we
+# prioritize recall over precision at this filtering stage.
+#
+# Categories are ordered by expected relevance (most relevant first).
 INTENTION_CATEGORY_MAP: Dict[RulebookQueryIntent, List[RulebookCategory]] = {
-    # DESCRIBE_ENTITY: Expanded to include CONDITIONS (for describing conditions like "poisoned"),
-    # CORE_MECHANICS (for core rules), and EXPLORATION (for resting, travel, etc.)
+    # DESCRIBE_ENTITY: Broad coverage - entities can be anything in the rulebook
     RulebookQueryIntent.DESCRIBE_ENTITY: [
         RulebookCategory.CHARACTER_CREATION,
         RulebookCategory.CLASS_FEATURES,
@@ -266,8 +277,9 @@ INTENTION_CATEGORY_MAP: Dict[RulebookQueryIntent, List[RulebookCategory]] = {
         RulebookCategory.CONDITIONS,
         RulebookCategory.CORE_MECHANICS,
         RulebookCategory.EXPLORATION,
+        RulebookCategory.WORLD_LORE,  # Added: entities include planes, deities
     ],
-    # COMPARE_ENTITIES: Same expansion as DESCRIBE_ENTITY
+    # COMPARE_ENTITIES: Same broad coverage as DESCRIBE_ENTITY
     RulebookQueryIntent.COMPARE_ENTITIES: [
         RulebookCategory.CHARACTER_CREATION,
         RulebookCategory.CLASS_FEATURES,
@@ -277,117 +289,197 @@ INTENTION_CATEGORY_MAP: Dict[RulebookQueryIntent, List[RulebookCategory]] = {
         RulebookCategory.CONDITIONS,
         RulebookCategory.CORE_MECHANICS,
         RulebookCategory.EXPLORATION,
+        RulebookCategory.WORLD_LORE,  # Added: comparing planes, deities
     ],
+    # LEVEL_PROGRESSION: Class features by level, but also multiclassing rules
     RulebookQueryIntent.LEVEL_PROGRESSION: [
-        RulebookCategory.CLASS_FEATURES
+        RulebookCategory.CLASS_FEATURES,
+        RulebookCategory.CHARACTER_CREATION,  # Added: multiclassing prerequisites, XP tables
     ],
+    # ACTION_OPTIONS: What can you do on your turn? Includes class abilities and spells
     RulebookQueryIntent.ACTION_OPTIONS: [
         RulebookCategory.COMBAT,
-        RulebookCategory.CORE_MECHANICS
+        RulebookCategory.CORE_MECHANICS,
+        RulebookCategory.CLASS_FEATURES,  # Added: class features grant bonus actions, reactions
+        RulebookCategory.SPELLCASTING,  # Added: casting as different action types
     ],
-    # RULE_MECHANICS: Expanded to include SPELLCASTING for concentration, ritual rules, etc.
-    # and COMBAT for attack/damage rules, CONDITIONS for rule interactions
+    # RULE_MECHANICS: How rules work - spans many categories
     RulebookQueryIntent.RULE_MECHANICS: [
         RulebookCategory.CORE_MECHANICS,
         RulebookCategory.SPELLCASTING,
         RulebookCategory.COMBAT,
         RulebookCategory.CONDITIONS,
         RulebookCategory.EXPLORATION,
+        RulebookCategory.CLASS_FEATURES,  # Added: class-specific rule mechanics
     ],
-    # CALCULATE_VALUES: Expanded to include EQUIPMENT for AC calculations (armor, shields)
-    # and COMBAT for attack/damage calculations
+    # CALCULATE_VALUES: Math and calculations span many systems
     RulebookQueryIntent.CALCULATE_VALUES: [
         RulebookCategory.CHARACTER_CREATION,
         RulebookCategory.CLASS_FEATURES,
         RulebookCategory.CORE_MECHANICS,
         RulebookCategory.EQUIPMENT,
         RulebookCategory.COMBAT,
+        RulebookCategory.SPELLCASTING,  # Added: spell damage calculations
     ],
+    # SPELL_DETAILS: Individual spell info - keep focused but include class spell lists
     RulebookQueryIntent.SPELL_DETAILS: [
-        RulebookCategory.SPELLCASTING
+        RulebookCategory.SPELLCASTING,
+        RulebookCategory.CLASS_FEATURES,  # Added: class spell lists, spellcasting features
     ],
+    # CLASS_SPELL_ACCESS: What spells can a class learn?
     RulebookQueryIntent.CLASS_SPELL_ACCESS: [
         RulebookCategory.CLASS_FEATURES,
-        RulebookCategory.SPELLCASTING
+        RulebookCategory.SPELLCASTING,
     ],
+    # MONSTER_STATS: Creature stat blocks - include combat for CR calculations
     RulebookQueryIntent.MONSTER_STATS: [
-        RulebookCategory.CREATURES
+        RulebookCategory.CREATURES,
+        RulebookCategory.COMBAT,  # Added: monster combat rules, CR calculations
     ],
+    # CONDITION_EFFECTS: Conditions AND things that cause/interact with conditions
     RulebookQueryIntent.CONDITION_EFFECTS: [
-        RulebookCategory.CONDITIONS
+        RulebookCategory.CONDITIONS,
+        RulebookCategory.SPELLCASTING,  # Added: spells that cause conditions (Hold Person, etc.)
+        RulebookCategory.CLASS_FEATURES,  # Added: abilities that cause conditions (Stunning Strike)
+        RulebookCategory.CREATURES,  # Added: monster abilities that cause conditions
+        RulebookCategory.COMBAT,  # Added: combat conditions like grappled, prone
     ],
+    # CHARACTER_CREATION: Building a character - include relevant class info
     RulebookQueryIntent.CHARACTER_CREATION: [
-        RulebookCategory.CHARACTER_CREATION
+        RulebookCategory.CHARACTER_CREATION,
+        RulebookCategory.CLASS_FEATURES,  # Added: class selection info
+        RulebookCategory.CORE_MECHANICS,  # Added: ability scores, proficiency
     ],
+    # MULTICLASS_RULES: Multiclassing requirements and rules
     RulebookQueryIntent.MULTICLASS_RULES: [
         RulebookCategory.CHARACTER_CREATION,
-        RulebookCategory.CLASS_FEATURES
+        RulebookCategory.CLASS_FEATURES,
+        RulebookCategory.SPELLCASTING,  # Added: multiclass spellcasting rules
     ],
+    # EQUIPMENT_PROPERTIES: Item properties - include magic items
     RulebookQueryIntent.EQUIPMENT_PROPERTIES: [
-        RulebookCategory.EQUIPMENT
+        RulebookCategory.EQUIPMENT,
+        RulebookCategory.COMBAT,  # Added: weapon properties affect combat
     ],
+    # DAMAGE_TYPES: Damage mechanics - spans spells, weapons, monsters
     RulebookQueryIntent.DAMAGE_TYPES: [
         RulebookCategory.COMBAT,
-        RulebookCategory.CORE_MECHANICS
+        RulebookCategory.CORE_MECHANICS,
+        RulebookCategory.SPELLCASTING,  # Added: spell damage types (fire, cold, etc.)
+        RulebookCategory.EQUIPMENT,  # Added: weapon damage types
+        RulebookCategory.CREATURES,  # Added: monster damage types, resistances
+        RulebookCategory.CONDITIONS,  # Added: damage from conditions (poison)
     ],
+    # REST_MECHANICS: Resting and recovery
     RulebookQueryIntent.REST_MECHANICS: [
         RulebookCategory.CORE_MECHANICS,
-        RulebookCategory.EXPLORATION
+        RulebookCategory.EXPLORATION,
+        RulebookCategory.CLASS_FEATURES,  # Added: class rest features (Arcane Recovery, etc.)
     ],
+    # SKILL_USAGE: When and how to use skills
     RulebookQueryIntent.SKILL_USAGE: [
-        RulebookCategory.CORE_MECHANICS
+        RulebookCategory.CORE_MECHANICS,
+        RulebookCategory.CLASS_FEATURES,  # Added: Expertise, Jack of All Trades, skill features
+        RulebookCategory.CHARACTER_CREATION,  # Added: backgrounds grant skills
+        RulebookCategory.EXPLORATION,  # Added: skill use during exploration
     ],
+    # FIND_BY_CRITERIA: Searching for things with specific properties - very broad
     RulebookQueryIntent.FIND_BY_CRITERIA: [
         RulebookCategory.CHARACTER_CREATION,
         RulebookCategory.CLASS_FEATURES,
         RulebookCategory.SPELLCASTING,
         RulebookCategory.EQUIPMENT,
-        RulebookCategory.CREATURES
+        RulebookCategory.CREATURES,
+        RulebookCategory.CONDITIONS,  # Added: find conditions with specific effects
+        RulebookCategory.CORE_MECHANICS,  # Added: find mechanics by property
     ],
+    # PREREQUISITE_CHECK: What do I need for X?
     RulebookQueryIntent.PREREQUISITE_CHECK: [
         RulebookCategory.CHARACTER_CREATION,
         RulebookCategory.CLASS_FEATURES,
-        RulebookCategory.EQUIPMENT
+        RulebookCategory.EQUIPMENT,
+        RulebookCategory.SPELLCASTING,  # Added: spell prerequisites (concentration, components)
     ],
+    # INTERACTION_RULES: How do rules interact? Spans everything
     RulebookQueryIntent.INTERACTION_RULES: [
         RulebookCategory.CORE_MECHANICS,
-        RulebookCategory.EXPLORATION
+        RulebookCategory.EXPLORATION,
+        RulebookCategory.SPELLCASTING,  # Added: spell interactions
+        RulebookCategory.COMBAT,  # Added: combat rule interactions
+        RulebookCategory.CLASS_FEATURES,  # Added: feature interactions
+        RulebookCategory.CONDITIONS,  # Added: condition interactions
     ],
+    # TACTICAL_USAGE: Combat tactics and strategy
     RulebookQueryIntent.TACTICAL_USAGE: [
-        RulebookCategory.COMBAT
+        RulebookCategory.COMBAT,
+        RulebookCategory.CLASS_FEATURES,  # Added: tactical class abilities
+        RulebookCategory.SPELLCASTING,  # Added: tactical spell usage
+        RulebookCategory.CONDITIONS,  # Added: tactical implications of conditions
     ],
+    # ENVIRONMENTAL_RULES: Environment effects on gameplay
     RulebookQueryIntent.ENVIRONMENTAL_RULES: [
-        RulebookCategory.EXPLORATION
+        RulebookCategory.EXPLORATION,
+        RulebookCategory.COMBAT,  # Added: environmental hazards in combat
+        RulebookCategory.SPELLCASTING,  # Added: environmental spells (Control Weather)
+        RulebookCategory.CONDITIONS,  # Added: environmental conditions (extreme cold)
     ],
+    # CREATURE_ABILITIES: Monster special abilities
     RulebookQueryIntent.CREATURE_ABILITIES: [
-        RulebookCategory.CREATURES
+        RulebookCategory.CREATURES,
+        RulebookCategory.COMBAT,  # Added: combat-relevant abilities
+        RulebookCategory.SPELLCASTING,  # Added: innate spellcasting
     ],
+    # SAVING_THROWS: When and how saves work
     RulebookQueryIntent.SAVING_THROWS: [
         RulebookCategory.COMBAT,
-        RulebookCategory.CORE_MECHANICS
+        RulebookCategory.CORE_MECHANICS,
+        RulebookCategory.SPELLCASTING,  # Added: spells require saves
+        RulebookCategory.CLASS_FEATURES,  # Added: class save proficiencies, abilities
+        RulebookCategory.CONDITIONS,  # Added: saves to end conditions
+        RulebookCategory.CREATURES,  # Added: monster saves
     ],
+    # MAGIC_ITEM_USAGE: How magic items work
     RulebookQueryIntent.MAGIC_ITEM_USAGE: [
-        RulebookCategory.EQUIPMENT
+        RulebookCategory.EQUIPMENT,
+        RulebookCategory.SPELLCASTING,  # Added: magic items cast spells
+        RulebookCategory.CLASS_FEATURES,  # Added: class interactions with magic items
     ],
+    # PLANAR_PROPERTIES: Planes of existence - include related content
     RulebookQueryIntent.PLANAR_PROPERTIES: [
-        RulebookCategory.WORLD_LORE
+        RulebookCategory.WORLD_LORE,
+        RulebookCategory.SPELLCASTING,  # Added: planar spells (Plane Shift, Banishment)
+        RulebookCategory.CREATURES,  # Added: planar creatures (fiends, celestials)
     ],
+    # DOWNTIME_ACTIVITIES: Non-adventure activities
     RulebookQueryIntent.DOWNTIME_ACTIVITIES: [
-        RulebookCategory.EXPLORATION
+        RulebookCategory.EXPLORATION,
+        RulebookCategory.CLASS_FEATURES,  # Added: class downtime abilities
+        RulebookCategory.CHARACTER_CREATION,  # Added: background features
+        RulebookCategory.EQUIPMENT,  # Added: crafting, selling
     ],
+    # SUBCLASS_FEATURES: Subclass-specific abilities
     RulebookQueryIntent.SUBCLASS_FEATURES: [
-        RulebookCategory.CLASS_FEATURES
+        RulebookCategory.CLASS_FEATURES,
+        RulebookCategory.SPELLCASTING,  # Added: subclass spell lists (domain spells)
     ],
+    # COST_LOOKUP: Item and service prices
     RulebookQueryIntent.COST_LOOKUP: [
         RulebookCategory.EQUIPMENT,
-        RulebookCategory.EXPLORATION
+        RulebookCategory.EXPLORATION,
+        RulebookCategory.SPELLCASTING,  # Added: spell component costs
     ],
+    # LEGENDARY_MECHANICS: Legendary creatures and their rules
     RulebookQueryIntent.LEGENDARY_MECHANICS: [
-        RulebookCategory.CREATURES
+        RulebookCategory.CREATURES,
+        RulebookCategory.COMBAT,  # Added: legendary actions in combat
     ],
+    # OPTIMIZATION_ADVICE: Character build optimization
     RulebookQueryIntent.OPTIMIZATION_ADVICE: [
         RulebookCategory.CHARACTER_CREATION,
-        RulebookCategory.CLASS_FEATURES
+        RulebookCategory.CLASS_FEATURES,
+        RulebookCategory.SPELLCASTING,  # Added: spell selection optimization
+        RulebookCategory.EQUIPMENT,  # Added: equipment optimization
+        RulebookCategory.COMBAT,  # Added: combat effectiveness
     ]
 }
 
