@@ -21,8 +21,8 @@ export function LoginButton() {
         return (
             <div className="flex items-center gap-3">
                 <div className="text-right">
-                    <p className="text-sm font-medium text-white">{user.displayName || 'Player'}</p>
-                    <p className="text-xs text-gray-400">{user.email}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user.displayName || 'Player'}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">{user.email}</p>
                 </div>
                 <button
                     onClick={signOut}
