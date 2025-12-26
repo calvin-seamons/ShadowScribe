@@ -80,9 +80,10 @@ DATABASE_URL="..." GOOGLE_APPLICATION_CREDENTIALS="./credentials/firebase-servic
 ## Google Cloud & Firebase
 
 ### Project Info
-- **GCP Project**: `shadowscribe-461904`
+- **GCP Project (Cloud Run)**: `shadowscribe-prod`
+- **Firebase Project**: `shadowscribe-prod-3405b`
 - **Region**: `us-central1`
-- **Artifact Registry**: `us-central1-docker.pkg.dev/shadowscribe-461904/shadowscribe-repo`
+- **Cloud Run URL**: `https://shadowscribe-api-768657256070.us-central1.run.app`
 
 ### Authentication
 - **Frontend**: Firebase Auth (Google Sign-In) via `frontend/lib/firebase.ts`
@@ -119,24 +120,11 @@ metadata/stats
 
 ### Deployment Commands
 ```bash
-# Build and push Docker image
-time docker buildx build --platform linux/amd64 -f Dockerfile.cloudrun \
-  -t us-central1-docker.pkg.dev/shadowscribe-461904/shadowscribe-repo/shadowscribe-api:latest \
-  --push .
-
-# Deploy to Cloud Run
-gcloud run deploy shadowscribe-api \
-  --image us-central1-docker.pkg.dev/shadowscribe-461904/shadowscribe-repo/shadowscribe-api:latest \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --memory 4Gi \
-  --cpu 2 \
-  --min-instances 0 \
-  --max-instances 3
+# Deploy to Cloud Run (recommended - handles secrets, env vars, etc.)
+uv run python scripts/deploy_cloudrun.py
 
 # Check Cloud Run service status
-gcloud run services describe shadowscribe-api --region us-central1
+gcloud run services describe shadowscribe-api --region us-central1 --project shadowscribe-prod
 
 # View Cloud Run logs
 gcloud run services logs read shadowscribe-api --region us-central1 --limit 100
@@ -145,10 +133,9 @@ gcloud run services logs read shadowscribe-api --region us-central1 --limit 100
 ### GCloud CLI Essentials
 ```bash
 gcloud auth list                           # Check authenticated accounts
-gcloud config set project shadowscribe-461904  # Set active project
-gcloud services enable firestore.googleapis.com  # Enable Firestore API
-gcloud firestore databases create --location=us-central1  # Create Firestore DB
-gcloud artifacts docker images list us-central1-docker.pkg.dev/shadowscribe-461904/shadowscribe-repo  # List images
+gcloud config set project shadowscribe-prod   # Set active project (Cloud Run)
+gcloud run services describe shadowscribe-api --region us-central1  # Check service
+gcloud secrets list                        # List secrets
 ```
 
 ## Critical Development Patterns
