@@ -20,10 +20,15 @@ MEMORY = "2Gi"
 CPU = "2"
 TIMEOUT = "300"
 
-# Secrets (from Google Secret Manager)
+# Secrets (from Google Secret Manager) - as environment variables
 SECRETS = {
     "OPENAI_API_KEY": "openai-api-key:latest",
     "ANTHROPIC_API_KEY": "anthropic-api-key:latest",
+}
+
+# Secrets mounted as files (path=secret:version)
+FILE_SECRETS = {
+    "/secrets/firebase-service-account.json": "firebase-service-account:latest",
 }
 
 # Environment variables
@@ -77,13 +82,17 @@ def main():
         f"--timeout={TIMEOUT}",
     ]
 
-    # Add secrets
+    # Add secrets as environment variables
     secrets_str = ",".join(f"{k}={v}" for k, v in SECRETS.items())
-    cmd.append(f"--set-secrets={secrets_str}")
+    # Add file-mounted secrets
+    file_secrets_str = ",".join(f"{path}={secret}" for path, secret in FILE_SECRETS.items())
+    all_secrets = f"{secrets_str},{file_secrets_str}"
+    cmd.append(f"--set-secrets={all_secrets}")
 
     # Add environment variables (use ^@^ delimiter for values with commas)
     cors_str = ",".join(CORS_ORIGINS)
-    cmd.append(f"--set-env-vars=^@^CORS_ORIGINS={cors_str}")
+    # GOOGLE_APPLICATION_CREDENTIALS points to the mounted Firebase service account
+    cmd.append(f"--set-env-vars=^@^CORS_ORIGINS={cors_str}@GOOGLE_APPLICATION_CREDENTIALS=/secrets/firebase-service-account.json")
 
     # Run deployment
     print("📦 Building and deploying...")
