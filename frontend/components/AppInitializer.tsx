@@ -29,9 +29,9 @@ export default function AppInitializer({ children }: AppInitializerProps) {
 
         console.log(`Checking backend connection at: ${apiUrl}`)
         
-        // Test backend connection with timeout
+        // Test backend connection with timeout (30s for Cloud Run cold starts)
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 5000)
+        const timeoutId = setTimeout(() => controller.abort(), 30000)
 
         const response = await fetch(`${apiUrl}/docs`, {
           signal: controller.signal,
@@ -123,11 +123,11 @@ export default function AppInitializer({ children }: AppInitializerProps) {
                 {errorMessage || 'Unable to connect to the backend server'}
               </p>
               <div className="space-y-2 text-sm text-purple-300/80">
-                <p>Please ensure:</p>
+                <p>This may be due to:</p>
                 <ul className="list-disc list-inside text-left space-y-1">
-                  <li>Backend server is running (port 8000)</li>
-                  <li>Network connection is stable</li>
-                  <li>Firewall allows connections</li>
+                  <li>Backend service is starting up (cold start)</li>
+                  <li>Network connection issues</li>
+                  <li>Service temporarily unavailable</li>
                 </ul>
               </div>
             </div>
