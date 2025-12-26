@@ -35,6 +35,5 @@ pdf2image>=1.16.3
 pillow>=10.0.0
 poppler-utils  # System dependency note - see README
 
-# OCR and API requests
+# API requests
 requests>=2.31.0
-sqlalchemy[asyncio]>=2.0.0

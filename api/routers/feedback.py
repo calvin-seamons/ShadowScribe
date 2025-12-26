@@ -1,16 +1,11 @@
 """API router for routing feedback collection and export."""
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
+from google.cloud.firestore_v1 import AsyncClient
 from typing import List
-import sys
-from pathlib import Path
+import uuid
 
-# Add project root to path
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
-
-from api.database.connection import get_db
-from api.database.feedback_models import RoutingFeedback
+from api.database.firestore_client import get_db
+from api.database.firestore_models import RoutingFeedbackDocument
 from api.database.repositories.feedback_repo import FeedbackRepository
 from api.schemas.feedback import (
     RoutingRecord, RoutingRecordResponse, FeedbackSubmission,
@@ -31,17 +26,18 @@ async def get_tool_intentions():
 @router.post("/record", response_model=RoutingRecordResponse)
 async def create_routing_record(
     record: RoutingRecord,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncClient = Depends(get_db)
 ):
     """
     Record a routing decision for later review.
-    
+
     This is called automatically when a query is processed.
     Returns the record ID for associating feedback later.
     """
     repo = FeedbackRepository(db)
-    
-    feedback = RoutingFeedback(
+
+    feedback = RoutingFeedbackDocument(
+        id=str(uuid.uuid4()),
         user_query=record.user_query,
         character_name=record.character_name,
         campaign_id=record.campaign_id,
@@ -50,71 +46,70 @@ async def create_routing_record(
         classifier_backend=record.classifier_backend,
         classifier_inference_time_ms=record.classifier_inference_time_ms
     )
-    
+
     created = await repo.create(feedback)
-    await db.commit()
-    
-    return RoutingRecordResponse(**created.to_dict())
+
+    return RoutingRecordResponse(**created.to_response())
 
 
 @router.get("/pending", response_model=List[RoutingRecordResponse])
 async def get_pending_feedback(
     limit: int = 50,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncClient = Depends(get_db)
 ):
     """Get routing records pending user review."""
     repo = FeedbackRepository(db)
     records = await repo.get_pending_review(limit=limit)
-    return [RoutingRecordResponse(**r.to_dict()) for r in records]
+    return [RoutingRecordResponse(**r.to_response()) for r in records]
 
 
 @router.get("/recent", response_model=List[RoutingRecordResponse])
 async def get_recent_records(
     limit: int = 100,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncClient = Depends(get_db)
 ):
     """Get most recent routing records."""
     repo = FeedbackRepository(db)
     records = await repo.get_recent(limit=limit)
-    return [RoutingRecordResponse(**r.to_dict()) for r in records]
+    return [RoutingRecordResponse(**r.to_response()) for r in records]
 
 
 @router.get("/record/{feedback_id}", response_model=RoutingRecordResponse)
 async def get_routing_record(
     feedback_id: str,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncClient = Depends(get_db)
 ):
     """Get a specific routing record by ID."""
     repo = FeedbackRepository(db)
     record = await repo.get_by_id(feedback_id)
-    
+
     if not record:
         raise HTTPException(status_code=404, detail="Routing record not found")
-    
-    return RoutingRecordResponse(**record.to_dict())
+
+    return RoutingRecordResponse(**record.to_response())
 
 
 @router.post("/record/{feedback_id}/submit", response_model=RoutingRecordResponse)
 async def submit_feedback(
     feedback_id: str,
     submission: FeedbackSubmission,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncClient = Depends(get_db)
 ):
     """
     Submit user feedback on a routing decision.
-    
+
     - If is_correct=True: The routing was correct, no corrections needed
     - If is_correct=False: Provide corrected_tools with the correct routing
     """
     repo = FeedbackRepository(db)
-    
+
     # Validate that correction is provided if marking as incorrect
     if not submission.is_correct and not submission.corrected_tools:
         raise HTTPException(
             status_code=400,
             detail="corrected_tools is required when is_correct=False"
         )
-    
+
     # Validate tool/intention combinations if corrections provided
     if submission.corrected_tools:
         for correction in submission.corrected_tools:
@@ -128,23 +123,22 @@ async def submit_feedback(
                     status_code=400,
                     detail=f"Invalid intention '{correction.intention}' for tool '{correction.tool}'. Valid intentions: {TOOL_INTENTIONS[correction.tool]}"
                 )
-    
+
     updated = await repo.submit_feedback(
         feedback_id=feedback_id,
         is_correct=submission.is_correct,
         corrected_tools=[c.model_dump() for c in submission.corrected_tools] if submission.corrected_tools else None,
         feedback_notes=submission.feedback_notes
     )
-    
+
     if not updated:
         raise HTTPException(status_code=404, detail="Routing record not found")
-    
-    await db.commit()
-    return RoutingRecordResponse(**updated.to_dict())
+
+    return RoutingRecordResponse(**updated.to_response())
 
 
 @router.get("/stats", response_model=FeedbackStats)
-async def get_feedback_stats(db: AsyncSession = Depends(get_db)):
+async def get_feedback_stats(db: AsyncClient = Depends(get_db)):
     """Get statistics about collected feedback."""
     repo = FeedbackRepository(db)
     stats = await repo.get_stats()
@@ -154,44 +148,43 @@ async def get_feedback_stats(db: AsyncSession = Depends(get_db)):
 @router.post("/export", response_model=TrainingExportResponse)
 async def export_training_data(
     request: TrainingExportRequest,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncClient = Depends(get_db)
 ):
     """
     Export feedback data in training format for fine-tuning.
-    
+
     Returns examples in the format expected by the joint classifier training.
     """
     repo = FeedbackRepository(db)
-    
+
     records = await repo.get_for_training_export(
         include_corrections_only=request.include_corrections_only,
         include_confirmed_correct=request.include_confirmed_correct,
         unexported_only=True  # Only get unexported records
     )
-    
+
     # Convert to training examples
     examples = []
     corrections_count = 0
     confirmed_count = 0
     exported_ids = []
-    
+
     for record in records:
         training_examples = record.to_training_example()
         for ex in training_examples:
             examples.append(TrainingExample(**ex))
-        
+
         if record.corrected_tools:
             corrections_count += 1
         else:
             confirmed_count += 1
-        
+
         exported_ids.append(record.id)
-    
+
     # Mark as exported if requested
     if request.mark_as_exported and exported_ids:
         await repo.mark_as_exported(exported_ids)
-        await db.commit()
-    
+
     return TrainingExportResponse(
         examples=examples,
         total_records=len(records),

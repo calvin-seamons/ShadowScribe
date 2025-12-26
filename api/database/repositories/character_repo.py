@@ -1,169 +1,172 @@
-"""Character repository for database operations."""
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete
+"""Character repository for Firestore operations."""
+from google.cloud.firestore_v1 import AsyncClient
 from typing import List, Optional
 from dataclasses import asdict
 from datetime import datetime
 import re
 import json
+import uuid
 
-from api.database.models import Character as CharacterModel
+from api.database.firestore_client import CHARACTERS_COLLECTION
+from api.database.firestore_models import CharacterDocument
 from src.rag.character.character_types import Character as CharacterDataclass
 
 
-def default_json_serializer(obj):
-    """JSON serializer for objects not serializable by default json code."""
+def _json_serialize(obj):
+    """JSON serializer for objects not serializable by default."""
     if isinstance(obj, datetime):
         return obj.isoformat()
     raise TypeError(f"Type {type(obj)} not serializable")
 
 
 class CharacterRepository:
-    """Repository for character CRUD operations."""
-    
-    def __init__(self, session: AsyncSession):
-        self.session = session
-    
-    async def create(self, character: CharacterDataclass) -> CharacterModel:
-        """Create a new character in the database."""
+    """Repository for character CRUD operations using Firestore."""
+
+    def __init__(self, db: AsyncClient):
+        self.db = db
+        self.collection = db.collection(CHARACTERS_COLLECTION)
+
+    async def create(self, character: CharacterDataclass, user_id: str, campaign_id: Optional[str] = None) -> CharacterDocument:
+        """Create a new character in Firestore."""
         character_data = asdict(character)
-        
-        # Convert to JSON string then back to dict to handle datetime serialization
-        character_data_json = json.dumps(character_data, default=default_json_serializer)
+
+        # Handle datetime serialization
+        character_data_json = json.dumps(character_data, default=_json_serialize)
         character_data = json.loads(character_data_json)
-        
-        db_character = CharacterModel(
-            id=self._generate_id(character.character_base.name),
+
+        doc_id = self._generate_id(character.character_base.name)
+
+        doc = CharacterDocument(
+            id=doc_id,
+            user_id=user_id,
+            campaign_id=campaign_id,
             name=character.character_base.name,
             race=character.character_base.race,
             character_class=character.character_base.character_class,
             level=character.character_base.total_level,
             data=character_data
         )
-        
-        self.session.add(db_character)
-        await self.session.flush()
-        return db_character
-    
-    async def get_by_id(self, character_id: str) -> Optional[CharacterModel]:
+
+        await self.collection.document(doc_id).set(doc.to_dict())
+        return doc
+
+    async def get_by_id(self, character_id: str) -> Optional[CharacterDocument]:
         """Get character by ID."""
-        result = await self.session.execute(
-            select(CharacterModel).where(CharacterModel.id == character_id)
-        )
-        return result.scalar_one_or_none()
-    
-    async def get_by_name(self, name: str) -> Optional[CharacterModel]:
+        doc_ref = self.collection.document(character_id)
+        doc = await doc_ref.get()
+
+        if not doc.exists:
+            return None
+
+        return CharacterDocument.from_firestore(doc.id, doc.to_dict())
+
+    async def get_by_name(self, name: str) -> Optional[CharacterDocument]:
         """Get character by name."""
-        result = await self.session.execute(
-            select(CharacterModel).where(CharacterModel.name == name)
-        )
-        return result.scalar_one_or_none()
-    
-    async def get_all(self) -> List[CharacterModel]:
+        query = self.collection.where('name', '==', name).limit(1)
+        docs = await query.get()
+
+        for doc in docs:
+            return CharacterDocument.from_firestore(doc.id, doc.to_dict())
+
+        return None
+
+    async def get_all(self) -> List[CharacterDocument]:
         """Get all characters."""
-        result = await self.session.execute(select(CharacterModel))
-        return list(result.scalars().all())
-    
-    async def update(self, character_id: str, character: CharacterDataclass) -> Optional[CharacterModel]:
+        docs = await self.collection.get()
+        return [CharacterDocument.from_firestore(doc.id, doc.to_dict()) for doc in docs]
+
+    async def get_all_by_user(self, user_id: str) -> List[CharacterDocument]:
+        """Get all characters belonging to a specific user."""
+        query = self.collection.where('user_id', '==', user_id)
+        docs = await query.get()
+        # Sort in Python to avoid needing composite index
+        characters = [CharacterDocument.from_firestore(doc.id, doc.to_dict()) for doc in docs]
+        return sorted(characters, key=lambda c: c.created_at or datetime.min)
+
+    async def update(self, character_id: str, character: CharacterDataclass) -> Optional[CharacterDocument]:
         """Update character."""
+        doc_ref = self.collection.document(character_id)
+        doc = await doc_ref.get()
+
+        if not doc.exists:
+            return None
+
         character_data = asdict(character)
-        
-        # Convert to JSON string then back to dict to handle datetime serialization
-        character_data_json = json.dumps(character_data, default=default_json_serializer)
+        character_data_json = json.dumps(character_data, default=_json_serialize)
         character_data = json.loads(character_data_json)
-        
-        await self.session.execute(
-            update(CharacterModel)
-            .where(CharacterModel.id == character_id)
-            .values(
-                name=character.character_base.name,
-                race=character.character_base.race,
-                character_class=character.character_base.character_class,
-                level=character.character_base.total_level,
-                data=character_data,
-                updated_at=datetime.utcnow()
-            )
-        )
-        
+
+        update_data = {
+            'name': character.character_base.name,
+            'race': character.character_base.race,
+            'character_class': character.character_base.character_class,
+            'level': character.character_base.total_level,
+            'data': character_data,
+            'updated_at': datetime.utcnow()
+        }
+
+        await doc_ref.update(update_data)
         return await self.get_by_id(character_id)
-    
+
     async def delete(self, character_id: str) -> bool:
         """Delete character."""
-        result = await self.session.execute(
-            delete(CharacterModel).where(CharacterModel.id == character_id)
-        )
-        return result.rowcount > 0
-    
-    async def update_section(self, character_id: str, section: str, data: dict) -> Optional[CharacterModel]:
+        doc_ref = self.collection.document(character_id)
+        doc = await doc_ref.get()
+
+        if not doc.exists:
+            return False
+
+        await doc_ref.delete()
+        return True
+
+    async def update_section(self, character_id: str, section: str, data: dict) -> Optional[CharacterDocument]:
         """
         Update a specific section of a character.
-        
+
         Args:
             character_id: Character ID to update
             section: Section name (e.g., 'ability_scores', 'inventory', 'spell_list')
             data: Dictionary containing the updated section data
-            
+
         Returns:
-            Updated CharacterModel or None if character not found
-            
+            Updated CharacterDocument or None if character not found
+
         Raises:
             ValueError: If section name is invalid
         """
-        # Valid section names based on Character dataclass
         valid_sections = {
-            'character_base',
-            'characteristics',
-            'ability_scores',
-            'combat_stats',
-            'background_info',
-            'personality',
-            'backstory',
-            'organizations',
-            'allies',
-            'enemies',
-            'proficiencies',
-            'damage_modifiers',
-            'passive_scores',
-            'senses',
-            'action_economy',
-            'features_and_traits',
-            'inventory',
-            'spell_list',
-            'objectives_and_contracts',
-            'notes'
+            'character_base', 'characteristics', 'ability_scores', 'combat_stats',
+            'background_info', 'personality', 'backstory', 'organizations',
+            'allies', 'enemies', 'proficiencies', 'damage_modifiers',
+            'passive_scores', 'senses', 'action_economy', 'features_and_traits',
+            'inventory', 'spell_list', 'objectives_and_contracts', 'notes'
         }
-        
+
         if section not in valid_sections:
             raise ValueError(
                 f"Invalid section '{section}'. "
                 f"Valid sections: {', '.join(sorted(valid_sections))}"
             )
-        
-        # Get current character
+
         character = await self.get_by_id(character_id)
         if not character:
             return None
-        
-        # Update the specific section in the data JSON
+
+        # Update the specific section in the data
         character_data = character.data.copy()
         character_data[section] = data
-        
-        # Handle serialization of datetime objects
-        character_data_json = json.dumps(character_data, default=default_json_serializer)
+
+        # Handle datetime serialization
+        character_data_json = json.dumps(character_data, default=_json_serialize)
         character_data = json.loads(character_data_json)
-        
-        # Update database record
-        await self.session.execute(
-            update(CharacterModel)
-            .where(CharacterModel.id == character_id)
-            .values(
-                data=character_data,
-                updated_at=datetime.utcnow()
-            )
-        )
-        
+
+        doc_ref = self.collection.document(character_id)
+        await doc_ref.update({
+            'data': character_data,
+            'updated_at': datetime.utcnow()
+        })
+
         return await self.get_by_id(character_id)
-    
+
     @staticmethod
     def _generate_id(name: str) -> str:
         """Generate URL-safe ID from character name."""

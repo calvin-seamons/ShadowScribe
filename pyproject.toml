@@ -15,7 +15,6 @@ dependencies = [
     "pillow>=10.0.0",
     "requests>=2.31.0",
     "numpy>=1.24.0",
-    "sqlalchemy[asyncio]>=2.0.0",
     # Local classifier dependencies
     "torch>=2.0.0",
     "transformers>=4.30.0",
@@ -26,6 +25,13 @@ dependencies = [
     "rank-bm25>=0.2.2",
     # Model download from Google Drive
     "gdown>=5.0.0",
+    "firebase-admin>=7.1.0",
+    "google-cloud-storage>=3.7.0",
+    "google-cloud-firestore>=2.19.0",
+    "pymysql>=1.1.2",  # Keep for migration script
+    "uvicorn>=0.40.0",
+    "fastapi>=0.127.0",
+    "websockets>=15.0.1",
 ]
 
 [build-system]

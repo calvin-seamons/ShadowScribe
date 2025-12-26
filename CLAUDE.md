@@ -11,8 +11,15 @@ ShadowScribe 2.0 is a D&D character management system with RAG (Retrieval-Augmen
 ```
 Frontend (Next.js 14)     →  WebSocket/HTTP  →  API (FastAPI)  →  CentralEngine (Python)
     ↓                                              ↓                     ↓
-Zustand stores                              MySQL 8.0            RAG Routers (Character,
-React components                            Characters              Rulebook, Session Notes)
+Zustand stores                              Firestore           RAG Routers (Character,
+React components                            (NoSQL)                Rulebook, Session Notes)
+Firebase Auth                                  ↓
+                                         Collections:
+                                         - users
+                                         - characters
+                                         - campaigns
+                                         - routing_feedback
+                                         - metadata/stats
 ```
 
 **Core RAG Engine**: `src/central_engine.py` pipeline:
@@ -63,6 +70,87 @@ uv run python -m scripts.run_inspector --list         # List characters
 uv run python -m scripts.run_inspector "Name" --format text  # Inspect character
 ```
 
+### Local API Development
+```bash
+# Start API server locally (requires environment variables)
+DATABASE_URL="..." GOOGLE_APPLICATION_CREDENTIALS="./credentials/firebase-service-account.json" \
+  uv run uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+## Google Cloud & Firebase
+
+### Project Info
+- **GCP Project**: `shadowscribe-461904`
+- **Region**: `us-central1`
+- **Artifact Registry**: `us-central1-docker.pkg.dev/shadowscribe-461904/shadowscribe-repo`
+
+### Authentication
+- **Frontend**: Firebase Auth (Google Sign-In) via `frontend/lib/firebase.ts`
+- **Backend**: Firebase Admin SDK verifies ID tokens in `api/auth.py`
+- **Credentials**: Service account JSON at `credentials/firebase-service-account.json`
+
+### Firestore Database
+The app uses Firestore (NoSQL) instead of SQL. Collections:
+
+```
+users/{firebase_uid}
+  - email, display_name, created_at
+
+characters/{character_id}
+  - user_id, campaign_id, name, race, character_class, level, data (nested JSON)
+
+campaigns/{campaign_id}
+  - user_id, name, description, created_at
+
+campaigns/{campaign_id}/notes/{note_id}
+  - user_id, content, processed_content, created_at
+
+routing_feedback/{feedback_id}
+  - user_query, predicted_tools, is_correct, corrected_tools, etc.
+
+metadata/stats
+  - Counter document for efficient stats (avoids expensive COUNT queries)
+```
+
+**Important Firestore Patterns:**
+- Avoid `order_by()` on queries with `where()` - requires composite indexes. Sort in Python instead.
+- Use counter documents for aggregations (metadata/stats pattern)
+- Nested JSON is fine in documents - Firestore handles it natively
+
+### Deployment Commands
+```bash
+# Build and push Docker image
+time docker buildx build --platform linux/amd64 -f Dockerfile.cloudrun \
+  -t us-central1-docker.pkg.dev/shadowscribe-461904/shadowscribe-repo/shadowscribe-api:latest \
+  --push .
+
+# Deploy to Cloud Run
+gcloud run deploy shadowscribe-api \
+  --image us-central1-docker.pkg.dev/shadowscribe-461904/shadowscribe-repo/shadowscribe-api:latest \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --memory 4Gi \
+  --cpu 2 \
+  --min-instances 0 \
+  --max-instances 3
+
+# Check Cloud Run service status
+gcloud run services describe shadowscribe-api --region us-central1
+
+# View Cloud Run logs
+gcloud run services logs read shadowscribe-api --region us-central1 --limit 100
+```
+
+### GCloud CLI Essentials
+```bash
+gcloud auth list                           # Check authenticated accounts
+gcloud config set project shadowscribe-461904  # Set active project
+gcloud services enable firestore.googleapis.com  # Enable Firestore API
+gcloud firestore databases create --location=us-central1  # Create Firestore DB
+gcloud artifacts docker images list us-central1-docker.pkg.dev/shadowscribe-461904/shadowscribe-repo  # List images
+```
+
 ## Critical Development Patterns
 
 ### Python Execution
@@ -101,11 +189,23 @@ if character.spell_list:
     spells = character.spell_list.spells
 ```
 
-### API Keys
-Use real API integrations - never mock. Keys in `.env`:
+### Firestore Async Pattern
+```python
+from api.database.firestore_client import get_firestore_client
+
+db = get_firestore_client()  # Singleton, returns AsyncClient
+doc_ref = db.collection('characters').document(char_id)
+doc = await doc_ref.get()
+if doc.exists:
+    data = doc.to_dict()
+```
+
+### API Keys & Environment Variables
+Keys in `.env` (local) or Cloud Run secrets (production):
 ```
 OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
+GOOGLE_APPLICATION_CREDENTIALS=./credentials/firebase-service-account.json
 ```
 
 ## Key Files
@@ -116,14 +216,27 @@ ANTHROPIC_API_KEY=sk-ant-...
 | `src/rag/character/character_types.py` | 20+ dataclasses for D&D characters |
 | `src/config.py` | RAG configuration (models, temperatures) |
 | `api/main.py` | FastAPI entry point |
+| `api/auth.py` | Firebase token verification |
+| `api/database/firestore_client.py` | Firestore async client singleton |
+| `api/database/firestore_models.py` | Document dataclasses |
 | `api/routers/websocket.py` | WebSocket `/ws/chat` endpoint |
 | `demo_central_engine.py` | Primary testing tool for RAG system |
+| `Dockerfile.cloudrun` | Production Docker image for Cloud Run |
 
 ## API Endpoints
 
-- `GET /api/characters` - List characters
+### REST
+- `GET /api/characters` - List user's characters (requires auth)
 - `GET /api/characters/{id}` - Character details
-- `ws://localhost:8000/ws/chat` - Streaming chat (WebSocket)
+- `POST /api/characters` - Create character
+- `PUT /api/characters/{id}` - Update character
+- `DELETE /api/characters/{id}` - Delete character
+- `GET /api/feedback/stats` - Routing feedback statistics
+- `POST /api/feedback/{id}` - Submit feedback correction
+
+### WebSocket
+- `ws://localhost:8000/ws/chat` - Streaming chat
+- `ws://localhost:8000/ws/character/create` - Character creation with progress
 
 ## Code Philosophy
 
@@ -152,6 +265,17 @@ ANTHROPIC_API_KEY=sk-ant-...
 ## Frontend Architecture
 
 - **State**: Zustand stores (`chatStore`, `characterStore`, `metadataStore`)
+- **Auth**: Firebase Auth with React context (`lib/auth-context.tsx`)
 - **Streaming**: WebSocket connection for real-time responses
 - **Styling**: Tailwind CSS with dark mode support
 - **Path alias**: `@/*` maps to `frontend/*`
+
+## Current Project Status
+
+**Database**: Firestore (migrated from Cloud SQL in Dec 2024 to save ~$10/month)
+
+**Conversation History**: Currently in-memory only (per-session). Not persisted to database.
+
+**Known Limitations**:
+- Firestore composite indexes: Avoid `where()` + `order_by()` combinations. Sort in Python instead.
+- Cold starts: Local classifier model takes ~2-3 seconds to load on first query

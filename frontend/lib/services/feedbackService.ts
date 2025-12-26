@@ -11,15 +11,23 @@ import type {
   EntityExtraction
 } from '../types/feedback';
 
-// Get API base URL dynamically (same logic as websocket)
+// API URL configuration (same logic as api.ts)
 function getApiUrl(): string {
-  if (typeof window !== 'undefined') {
-    const protocol = window.location.protocol;
-    const host = window.location.hostname;
-    const port = '8000';
-    return `${protocol}//${host}:${port}`;
+  // Check for explicit API URL first (production)
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
   }
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+  // Development: use localhost with backend port
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return `http://${host}:8000`;
+    }
+    return `${window.location.protocol}//${host}:8000`;
+  }
+
+  return 'http://localhost:8000';
 }
 
 export class FeedbackService {

@@ -11,6 +11,8 @@ import { useCharacterStore } from '@/lib/stores/characterStore'
 import { fetchCharacters } from '@/lib/services/api'
 import { Eye, EyeOff, Plus, Sparkles, BookOpen, Scroll, MessageSquare, Users, ArrowLeft, Loader2, ChevronRight } from 'lucide-react'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { LoginButton } from '@/components/auth/LoginButton'
+import { useAuth } from '@/lib/auth-context'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
@@ -90,6 +92,7 @@ export default function Home() {
               </button>
             )}
             <ThemeToggle />
+            <LoginButton />
           </div>
         </div>
       </header>
@@ -219,13 +222,14 @@ interface CharacterSelectViewProps {
 
 function CharacterSelectView({ onSelect, onBack }: CharacterSelectViewProps) {
   const { characters, setCharacters, isLoading: loading, setLoading, error, setError } = useCharacterStore()
+  const { isAuthenticated, signIn } = useAuth()
   const [loadAttempted, setLoadAttempted] = useState(false)
 
   useEffect(() => {
-    if (!loadAttempted) {
+    if (!loadAttempted && isAuthenticated) {
       loadCharacters()
     }
-  }, [loadAttempted])
+  }, [loadAttempted, isAuthenticated])
 
   const loadCharacters = async () => {
     setLoading(true)
@@ -270,7 +274,20 @@ function CharacterSelectView({ onSelect, onBack }: CharacterSelectViewProps) {
 
         {/* Character list */}
         <div className="card-elevated p-6">
-          {loading ? (
+          {!isAuthenticated ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-primary" />
+              </div>
+              <p className="text-foreground font-medium mb-2">Sign In Required</p>
+              <p className="text-sm text-muted-foreground mb-6">
+                Please sign in to view and manage your characters.
+              </p>
+              <button onClick={signIn} className="btn-primary inline-flex items-center gap-2">
+                Sign in with Google
+              </button>
+            </div>
+          ) : loading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
               <p className="text-muted-foreground">Loading characters...</p>

@@ -6,6 +6,8 @@ from typing import List, Optional, Dict, Any
 class CharacterResponse(BaseModel):
     """Character response schema."""
     id: str
+    user_id: Optional[str] = None
+    campaign_id: Optional[str] = None
     name: str
     race: Optional[str] = None
     character_class: Optional[str] = None
@@ -44,10 +46,15 @@ class CharacterCreateRequest(BaseModel):
         ...,
         description="Complete Character dataclass as JSON dictionary"
     )
+    campaign_id: Optional[str] = Field(
+        None,
+        description="ID of the campaign to assign this character to"
+    )
     
     class Config:
         json_schema_extra = {
             "example": {
+                "campaign_id": "abc123-uuid",
                 "character": {
                     "character_base": {
                         "name": "Duskryn Nightwarden",

@@ -1,2 +1,2 @@
 # Routers package
-from . import websocket, characters, feedback
+from . import websocket, characters, feedback, campaigns, notes

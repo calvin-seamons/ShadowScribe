@@ -1,20 +1,38 @@
 import type { RoutingMetadata, EntitiesMetadata, ContextSources, PerformanceMetrics } from '../types/metadata'
 import type { CharacterCreationEvent, CharacterSummary } from '../types/character'
 
-// Use dynamic host for Docker/network access
-// In browser: Use current hostname (works for localhost, LAN IP, etc.)
-// Fallback to env var if available
+// WebSocket URL configuration
+// - Production: Derives from NEXT_PUBLIC_API_URL (https -> wss)
+// - Development (localhost): Uses localhost:8000
 function getWsUrl(): string {
+  // Check for explicit API URL first (production)
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL
+  if (apiUrl) {
+    // Convert http(s) to ws(s)
+    const wsUrl = apiUrl.replace(/^http/, 'ws')
+    console.log(`WebSocket URL configured: ${wsUrl} (from NEXT_PUBLIC_API_URL)`)
+    return wsUrl
+  }
+
+  // Development: use localhost with backend port
   if (typeof window !== 'undefined') {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.hostname
-    const port = '8000' // Backend port
-    const url = `${protocol}//${host}:${port}`
-    console.log(`WebSocket URL configured: ${url} (from hostname: ${host})`)
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+
+    // If on localhost, use local backend
+    if (host === 'localhost' || host === '127.0.0.1') {
+      const url = `ws://${host}:8000`
+      console.log(`WebSocket URL configured: ${url} (localhost dev)`)
+      return url
+    }
+
+    // For LAN access during development
+    const url = `${protocol}//${host}:8000`
+    console.log(`WebSocket URL configured: ${url} (LAN dev)`)
     return url
   }
-  // Server-side fallback (shouldn't be used for WebSocket)
-  return process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000'
+
+  return 'ws://localhost:8000'
 }
 
 export type WebSocketMessageHandler = (chunk: string) => void

@@ -4,25 +4,25 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from api.database.connection import init_db, close_db
-from api.routers import websocket, characters, feedback
+from api.config import config
+from api.routers import websocket, characters, feedback, campaigns, notes
 
 
 def warmup_local_classifier():
     """Preload the local classifier model to avoid cold start delays.
-    
+
     Uses the singleton pattern from central_engine to ensure the model
     is loaded once and shared across all engine instances.
     """
     try:
         print("[Warmup] Loading local classifier model...")
         start = time.time()
-        
+
         # Import and trigger singleton initialization
         from src.central_engine import get_local_classifier
-        
+
         classifier = get_local_classifier()
-        
+
         if classifier:
             # Run a warmup inference to fully initialize CUDA/MPS kernels
             _ = classifier.classify_single("What is my AC?")
@@ -37,15 +37,16 @@ def warmup_local_classifier():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager."""
-    # Startup
-    await init_db()
-    
+    # Startup - Firestore client is initialized on first use (singleton)
+    print("[Startup] Initializing Firestore client...")
+
     # Warmup: preload local classifier to avoid cold start on first query
     warmup_local_classifier()
-    
+
     yield
-    # Shutdown
-    await close_db()
+
+    # Shutdown - Firestore client handles cleanup automatically
+    print("[Shutdown] Application shutting down...")
 
 
 app = FastAPI(
@@ -58,7 +59,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=config.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -68,6 +69,8 @@ app.add_middleware(
 app.include_router(websocket.router, tags=["WebSocket"])
 app.include_router(characters.router, prefix="/api", tags=["Characters"])
 app.include_router(feedback.router, prefix="/api", tags=["Feedback"])
+app.include_router(campaigns.router, prefix="/api", tags=["Campaigns"])
+app.include_router(notes.router, prefix="/api", tags=["Notes"])
 
 
 @app.get("/")

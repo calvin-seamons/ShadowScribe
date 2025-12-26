@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import AppInitializer from '@/components/AppInitializer'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { AuthProvider } from '@/lib/auth-context'
 
 export const metadata: Metadata = {
   title: 'ShadowScribe 2.0',
@@ -48,12 +49,15 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans antialiased">
-        <ThemeProvider>
-          <AppInitializer>
-            {children}
-          </AppInitializer>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <AppInitializer>
+              {children}
+            </AppInitializer>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   )
 }
+

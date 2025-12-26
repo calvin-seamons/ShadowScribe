@@ -170,7 +170,7 @@ export function Step5_Abilities() {
   const addClassFeature = () => {
     if (!newClassFeature.className.trim() || !newClassFeature.feature.name.trim()) return
 
-    const classFeatures = { ...(features.class_features || {}) }
+    const classFeatures = { ...(features.class_features || {}) } as Record<string, Record<string, ClassFeature[]>>
     if (!classFeatures[newClassFeature.className]) {
       classFeatures[newClassFeature.className] = {}
     }
@@ -188,7 +188,7 @@ export function Step5_Abilities() {
   }
 
   const updateClassFeature = (className: string, level: string, index: number, field: keyof ClassFeature, value: any) => {
-    const classFeatures = { ...(features.class_features || {}) }
+    const classFeatures = { ...(features.class_features || {}) } as Record<string, Record<string, ClassFeature[]>>
     if (classFeatures[className]?.[level]?.[index]) {
       classFeatures[className][level][index] = { ...classFeatures[className][level][index], [field]: value }
       updateSection('features_and_traits', { ...features, class_features: classFeatures })
@@ -196,7 +196,7 @@ export function Step5_Abilities() {
   }
 
   const removeClassFeature = (className: string, level: string, index: number) => {
-    const classFeatures = { ...(features.class_features || {}) }
+    const classFeatures = { ...(features.class_features || {}) } as Record<string, Record<string, ClassFeature[]>>
     if (classFeatures[className]?.[level]) {
       classFeatures[className][level] = classFeatures[className][level].filter((_: any, i: number) => i !== index)
       // Clean up empty levels and classes
@@ -450,7 +450,7 @@ export function Step5_Abilities() {
                     <p className="text-sm text-muted-foreground text-center py-4">No racial traits</p>
                   ) : (
                     <div className="space-y-2">
-                      {features.racial_traits.map((trait: RacialTrait, idx: number) => (
+                      {features.racial_traits.map((trait, idx) => (
                         <div key={idx} className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
                           {editingRacialTrait === idx ? (
                             <div className="space-y-2">
@@ -772,7 +772,7 @@ export function Step5_Abilities() {
                     <p className="text-sm text-muted-foreground text-center py-4">No feats</p>
                   ) : (
                     <div className="space-y-2">
-                      {features.feats.map((feat: Feat, idx: number) => (
+                      {features.feats.map((feat, idx) => (
                         <div key={idx} className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
                           {editingFeat === idx ? (
                             <div className="space-y-2">

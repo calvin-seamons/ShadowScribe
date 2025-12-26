@@ -1,13 +1,13 @@
-# FastAPI Backend Dockerfile
+# Cloud Run Production Dockerfile for ShadowScribe API
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (no MySQL needed - using Firestore)
 RUN apt-get update && apt-get install -y \
     gcc \
-    default-libmysqlclient-dev \
     pkg-config \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
@@ -17,6 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Install PyTorch (CPU version for smaller image) and transformers for local classifier
 RUN pip install --no-cache-dir \
     torch --index-url https://download.pytorch.org/whl/cpu
+
 RUN pip install --no-cache-dir \
     transformers==4.36.0 \
     sentence-transformers \
@@ -24,20 +25,16 @@ RUN pip install --no-cache-dir \
     sentencepiece \
     protobuf
 
-# Install FastAPI-specific dependencies
+# Install FastAPI and Google Cloud dependencies
 RUN pip install --no-cache-dir \
     fastapi==0.104.1 \
     uvicorn[standard]==0.24.0 \
     websockets==12.0 \
-    sqlalchemy[asyncio]==2.0.23 \
-    aiomysql==0.2.0 \
-    alembic==1.12.1 \
     pydantic==2.5.0 \
     pydantic-settings==2.1.0 \
     numpy \
     scikit-learn \
     cryptography \
-    pymysql \
     httpx==0.25.2 \
     dacite==1.8.1 \
     rank_bm25==0.2.2 \
@@ -45,11 +42,26 @@ RUN pip install --no-cache-dir \
     openai \
     anthropic
 
-# Copy application code
-COPY . .
+# Install Firebase Admin SDK and Google Cloud packages
+RUN pip install --no-cache-dir \
+    firebase-admin>=6.0.0 \
+    google-cloud-storage>=2.0.0 \
+    google-cloud-firestore>=2.19.0
 
-# Expose port
-EXPOSE 8000
+# Copy models and knowledge base FIRST (changes rarely, cached)
+COPY models/ ./models/
+COPY knowledge_base/ ./knowledge_base/
+COPY credentials/ ./credentials/
 
-# Run the application
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Copy application code LAST (changes frequently)
+COPY api/ ./api/
+COPY src/ ./src/
+
+# Cloud Run sets PORT environment variable
+ENV PORT=8080
+
+# Expose the port (informational)
+EXPOSE 8080
+
+# Run the application - Cloud Run requires listening on $PORT
+CMD exec uvicorn api.main:app --host 0.0.0.0 --port ${PORT}
