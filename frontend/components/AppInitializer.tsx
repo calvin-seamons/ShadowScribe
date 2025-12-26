@@ -15,11 +15,17 @@ export default function AppInitializer({ children }: AppInitializerProps) {
   useEffect(() => {
     const checkConnection = async () => {
       try {
-        // Get dynamic API URL
-        const protocol = window.location.protocol
-        const host = window.location.hostname
-        const port = '8000'
-        const apiUrl = `${protocol}//${host}:${port}`
+        // Get API URL from environment or construct for local dev
+        let apiUrl: string
+        if (process.env.NEXT_PUBLIC_API_URL) {
+          apiUrl = process.env.NEXT_PUBLIC_API_URL
+        } else {
+          // Development fallback: use localhost
+          const protocol = window.location.protocol
+          const host = window.location.hostname
+          const port = '8000'
+          apiUrl = `${protocol}//${host}:${port}`
+        }
 
         console.log(`Checking backend connection at: ${apiUrl}`)
         
