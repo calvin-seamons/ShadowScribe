@@ -40,7 +40,15 @@
       "Bash(gcloud artifacts docker images list:*)",
       "Bash(gcloud secrets list:*)",
       "Bash(ls:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(vercel:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: Use NEXT_PUBLIC_API_URL env var in AppInitializer\n\nThe AppInitializer was hardcoding the API URL construction using\nwindow.location.hostname:8000, which broke production deployments\non Vercel. Now correctly uses NEXT_PUBLIC_API_URL when available.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git commit:*)",
+      "Bash(printf:*)",
+      "Bash(gcloud secrets create:*)",
+      "Bash(gcloud projects list:*)",
+      "Bash(gcloud secrets add-iam-policy-binding:*)"
     ],
     "deny": [],
     "ask": []
