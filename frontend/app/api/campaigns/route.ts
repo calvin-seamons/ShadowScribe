@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
         console.log(`[API Route] Forwarding GET to: ${apiUrl}/api/campaigns`)
 
         // Forward auth header if present
-        const authHeader = request.headers.get('authorization')
+        const authHeader = request.headers.get('Authorization')
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
         }
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         console.log(`[API Route] Forwarding POST to: ${apiUrl}/api/campaigns`)
 
         // Forward auth header if present
-        const authHeader = request.headers.get('authorization')
+        const authHeader = request.headers.get('Authorization')
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
         }

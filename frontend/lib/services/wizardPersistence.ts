@@ -25,6 +25,7 @@ export interface WizardDraft {
   dndbeyondUrl: string
   characterData: CharacterData | null
   characterSummary: CharacterSummary | null
+  selectedCampaignId: string | null
   timestamp: number
 }
 

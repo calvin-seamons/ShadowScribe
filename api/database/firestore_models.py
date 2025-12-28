@@ -188,7 +188,7 @@ class CharacterDocument:
         return cls(
             id=doc_id,
             user_id=data.get('user_id', ''),
-            campaign_id=data.get('campaign_id'),
+            campaign_id=data.get('campaign_id', ''),  # Empty string for legacy docs without campaign
             name=data.get('name', ''),
             race=data.get('race'),
             character_class=data.get('character_class'),

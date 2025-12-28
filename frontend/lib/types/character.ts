@@ -592,9 +592,6 @@ export type SectionName =
   | 'spell_list'
   | 'objectives_and_contracts'
 
-// Wizard step type
-export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6 | 7
-
 // ============================================================================
 // WebSocket Event Types
 // ============================================================================

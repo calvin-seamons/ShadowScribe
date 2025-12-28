@@ -221,3 +221,6 @@ credentials/
 cloud-sql-proxy
 frontend/.env.production
 .env.production
+
+# Claude Code local settings (contains machine-specific permissions)
+.claude/

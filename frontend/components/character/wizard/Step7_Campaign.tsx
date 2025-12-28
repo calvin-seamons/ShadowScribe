@@ -7,8 +7,9 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Users, Loader2 } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
+import { Users, Loader2, Plus } from 'lucide-react'
 import { useWizardStore } from '@/lib/stores/wizardStore'
 import { StepLayout, EditorCard } from './StepLayout'
 import { useAuth } from '@/lib/auth-context'
@@ -27,11 +28,7 @@ export function Step7_Campaign() {
     const [error, setError] = useState<string | null>(null)
     const { token } = useAuth()
 
-    useEffect(() => {
-        fetchCampaigns()
-    }, [])
-
-    const fetchCampaigns = async () => {
+    const fetchCampaigns = useCallback(async () => {
         setLoading(true)
         setError(null)
 
@@ -58,7 +55,11 @@ export function Step7_Campaign() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [token])
+
+    useEffect(() => {
+        fetchCampaigns()
+    }, [fetchCampaigns])
 
     const handleContinue = () => {
         if (!selectedCampaignId) {
@@ -101,9 +102,16 @@ export function Step7_Campaign() {
                         <div className="text-center py-12">
                             <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
                             <p className="text-muted-foreground mb-2">No campaigns available</p>
-                            <p className="text-sm text-muted-foreground/70">
-                                Please create a campaign before creating a character.
+                            <p className="text-sm text-muted-foreground/70 mb-4">
+                                Create a campaign first to organize your characters.
                             </p>
+                            <Link
+                                href="/campaigns/new"
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Create Campaign
+                            </Link>
                         </div>
                     ) : (
                         <div className="space-y-3">

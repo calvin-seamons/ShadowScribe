@@ -90,7 +90,7 @@ class ChatService:
     async def _get_or_create_engine(
         self,
         character_name: str,
-        campaign_id: str = "main_campaign"
+        default_campaign_id: str = "main_campaign"
     ) -> CentralEngine:
         """Get or create CentralEngine for character and campaign.
 
@@ -100,7 +100,7 @@ class ChatService:
 
         Args:
             character_name: Name of the character to use
-            campaign_id: Campaign ID for session notes context (may be overridden by character's campaign)
+            default_campaign_id: Fallback campaign ID for local characters; Firestore characters use their stored campaign_id
 
         Returns:
             Configured CentralEngine instance
@@ -120,8 +120,8 @@ class ChatService:
             character = char_manager.load_character(character_name)
             if not character:
                 raise ValueError(f"Character '{character_name}' not found")
-            # Local characters use the passed campaign_id
-            actual_campaign_id = campaign_id
+            # Local characters use the passed default_campaign_id
+            actual_campaign_id = default_campaign_id
         else:
             # Convert Firestore data to Character dataclass
             character = from_dict(

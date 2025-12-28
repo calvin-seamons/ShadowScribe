@@ -16,6 +16,7 @@ import type { InventoryItem, Spell } from '@/lib/types/character'
 /**
  * Clean HTML entities and tags from text for display.
  * Handles &nbsp;, &amp;, etc. and removes any remaining HTML tags.
+ * Note: Descriptions are sanitized to plain text on first edit.
  */
 function cleanHtmlText(text: string | null | undefined): string {
   if (!text) return ''

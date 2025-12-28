@@ -175,7 +175,7 @@ def clean_html(text: str) -> str:
     - Cleans up excessive whitespace while preserving paragraph structure
     """
     if not text:
-        return text
+        return ''
     
     # First, decode HTML entities (e.g., &nbsp; -> space, &amp; -> &)
     text = html.unescape(text)

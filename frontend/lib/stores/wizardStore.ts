@@ -305,6 +305,7 @@ export const useWizardStore = create<WizardState>()(
           dndbeyondUrl: state.dndbeyondUrl,
           characterData: state.characterData,
           characterSummary: state.characterSummary,
+          selectedCampaignId: state.selectedCampaignId,
           timestamp: Date.now(),
         })
         set({ hasDraft: true })
@@ -321,6 +322,7 @@ export const useWizardStore = create<WizardState>()(
         dndbeyondUrl: draft.dndbeyondUrl,
         characterData: draft.characterData,
         characterSummary: draft.characterSummary,
+        selectedCampaignId: draft.selectedCampaignId ?? null,
         hasDraft: true,
       })
 
