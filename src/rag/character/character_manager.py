@@ -25,11 +25,11 @@ class CharacterManager:
         db_session: Optional[Any] = None
     ):
         """
-        Initialize the character manager.
+        Create a CharacterManager that persists Character objects to disk and optionally to a database.
         
-        Args:
-            save_directory: Directory for pickle file storage
-            db_session: Optional database session for database operations
+        Parameters:
+            save_directory (str): Filesystem path where pickle files will be stored; the directory is created if it does not exist.
+            db_session (Optional[Any]): Optional database session; if provided a CharacterRepository is instantiated for database operations.
         """
         self.save_directory = Path(save_directory)
         self.save_directory.mkdir(parents=True, exist_ok=True)

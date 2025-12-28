@@ -117,7 +117,24 @@ class DNDBeyondActionsParser:
         return usage
     
     def parse_range(self, range_data: Dict[str, Any]) -> Optional[ActionRange]:
-        """Parse range information."""
+        """
+        Create an ActionRange object from raw range data extracted from D&D Beyond JSON.
+        
+        Parameters:
+            range_data (Dict[str, Any]): Raw range-related fields from the export. Expected keys include
+                "range" (numeric distance in feet), "longRange" (numeric long range in feet),
+                "aoeSize" (numeric area size in feet), and "aoeType" (numeric code for AOE shape).
+        
+        Returns:
+            ActionRange | None: An ActionRange with any of these fields populated:
+                - range: nominal range in feet
+                - longRange: long range in feet
+                - aoeSize: area of effect size in feet
+                - aoeType: one of "sphere", "cube", "cone", "line" when applicable
+                - rangeDescription: human-readable description (e.g., "60 feet", "30-foot cone", or
+                  "60 feet (long: 120 feet)")
+            Returns None when the input contains no meaningful range or AOE information.
+        """
         if not range_data:
             return None
             
@@ -148,7 +165,17 @@ class DNDBeyondActionsParser:
         return action_range if any(getattr(action_range, f) for f in ActionRange.model_fields) else None
     
     def parse_damage(self, dice_data: Dict[str, Any], damage_type_id: int, fixed_value: int) -> Optional[ActionDamage]:
-        """Parse damage information."""
+        """
+        Parse damage information from provided dice data or a fixed value and map the numeric damage type ID to a damage type name.
+        
+        Parameters:
+        	dice_data (Dict[str, Any]): Damage descriptor that may contain a "diceString" entry.
+        	damage_type_id (int): Numeric ID representing the damage type (mapped to names like "bludgeoning", "fire", etc.).
+        	fixed_value (int): Fixed damage value to use when no dice string is present.
+        
+        Returns:
+        	ActionDamage or None: An ActionDamage with `diceNotation`, `fixedDamage`, and/or `damageType` set when any damage information exists; `None` if no damage fields were populated.
+        """
         damage = ActionDamage()
         
         if dice_data and dice_data.get("diceString"):
@@ -169,7 +196,18 @@ class DNDBeyondActionsParser:
         return damage if any(getattr(damage, f) for f in ActionDamage.model_fields) else None
     
     def parse_save(self, save_dc: int, save_stat_id: int, success_desc: str, fail_desc: str) -> Optional[ActionSave]:
-        """Parse saving throw information."""
+        """
+        Create an ActionSave object from provided save details.
+        
+        Parameters:
+            save_dc (int): The save DC value to assign to the ActionSave.
+            save_stat_id (int): Numeric ability identifier; mapped to an ability name when present in ABILITY_MAP.
+            success_desc (str): HTML or rich-text description for successful saves; will be cleaned.
+            fail_desc (str): HTML or rich-text description for failed saves; will be cleaned.
+        
+        Returns:
+            Optional[ActionSave]: An ActionSave with `saveDC`, `saveAbility` (when mapped), `onSuccess`, and `onFailure` populated with cleaned text, or `None` if all inputs are empty or falsy.
+        """
         if not any([save_dc, save_stat_id, success_desc, fail_desc]):
             return None
             
@@ -696,4 +734,3 @@ Example output:
                     parts.append(f"({action.actionRange.rangeDescription})")
                 
                 print("  " + " ".join(parts))
-

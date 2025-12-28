@@ -9,12 +9,28 @@ from typing import Optional, Any, List, Dict
 
 
 def _serialize_datetime(dt: Optional[datetime]) -> Optional[str]:
-    """Convert datetime to ISO string for JSON serialization."""
+    """
+    Serialize a datetime to an ISO 8601 string suitable for JSON responses.
+    
+    Parameters:
+        dt (Optional[datetime]): The datetime to serialize; may be timezone-aware or naive.
+    
+    Returns:
+        Optional[str]: ISO 8601 string representation of `dt`, or `None` if `dt` is `None`.
+    """
     return dt.isoformat() if dt else None
 
 
 def _parse_datetime(value: Any) -> Optional[datetime]:
-    """Parse datetime from Firestore timestamp or ISO string."""
+    """
+    Convert a Firestore Timestamp, ISO 8601 string, or datetime object to a timezone-naive datetime.
+    
+    Parameters:
+        value (Any): A value that may be a datetime, a Firestore-like Timestamp (object with a `timestamp()` method), an ISO 8601 string, or None.
+    
+    Returns:
+        Optional[datetime]: A timezone-naive `datetime` parsed from `value`, or `None` if `value` is `None` or cannot be parsed.
+    """
     if value is None:
         return None
     if isinstance(value, datetime):
@@ -52,7 +68,16 @@ class UserDocument(BaseModel):
 
     @classmethod
     def from_firestore(cls, doc_id: str, data: dict) -> 'UserDocument':
-        """Create from Firestore document."""
+        """
+        Construct a UserDocument from Firestore document data.
+        
+        Parameters:
+            doc_id (str): Firestore document ID to use as the user's `id`.
+            data (dict): Firestore document fields; expected keys include 'email', 'display_name', and 'created_at'.
+        
+        Returns:
+            UserDocument: Instance populated from the provided Firestore data.
+        """
         return cls(
             id=doc_id,
             email=data.get('email', ''),
@@ -87,7 +112,16 @@ class CampaignDocument(BaseModel):
 
     @classmethod
     def from_firestore(cls, doc_id: str, data: dict) -> 'CampaignDocument':
-        """Create from Firestore document."""
+        """
+        Create a CampaignDocument from Firestore document data.
+        
+        Parameters:
+            doc_id (str): Firestore document ID.
+            data (dict): Raw Firestore document data; may omit fields like `name`, `description`, or `created_at`.
+        
+        Returns:
+            CampaignDocument: Instance populated from the provided Firestore fields.
+        """
         return cls(
             id=doc_id,
             name=data.get('name', ''),
@@ -217,7 +251,19 @@ class SessionDocument(BaseModel):
 
     @classmethod
     def from_firestore(cls, doc_id: str, campaign_id: str, data: dict) -> 'SessionDocument':
-        """Create from Firestore document."""
+        """
+        Create a SessionDocument instance from Firestore document data.
+        
+        Constructs a SessionDocument with id set to `doc_id` and campaign_id set to `campaign_id`, populating all session fields from `data`. Missing keys are filled with sensible defaults (empty strings, empty lists/dicts, or zeros) and the `date`, `created_at`, and `updated_at` fields are converted using _parse_datetime.
+        
+        Parameters:
+            doc_id (str): Firestore document identifier to use as the session `id`.
+            campaign_id (str): Campaign identifier to associate with the session.
+            data (dict): Firestore document data containing session fields.
+        
+        Returns:
+            SessionDocument: A populated SessionDocument instance.
+        """
         return cls(
             id=doc_id,
             campaign_id=campaign_id,
@@ -308,7 +354,16 @@ class CharacterDocument(BaseModel):
 
     @classmethod
     def from_firestore(cls, doc_id: str, data: dict) -> 'CharacterDocument':
-        """Create from Firestore document."""
+        """
+        Constructs a CharacterDocument instance from Firestore document data.
+        
+        Parameters:
+            doc_id (str): Firestore document ID to use as the CharacterDocument.id.
+            data (dict): Firestore document fields; missing keys fall back to defaults.
+        
+        Returns:
+            CharacterDocument: Instance populated from `data`. `created_at` and `updated_at` are parsed into datetimes; `campaign_id` is set to an empty string when missing (for legacy documents).
+        """
         return cls(
             id=doc_id,
             user_id=data.get('user_id', ''),
@@ -395,7 +450,16 @@ class RoutingFeedbackDocument(BaseModel):
 
     @classmethod
     def from_firestore(cls, doc_id: str, data: dict) -> 'RoutingFeedbackDocument':
-        """Create from Firestore document."""
+        """
+        Constructs a RoutingFeedbackDocument from a Firestore document.
+        
+        Parameters:
+            doc_id (str): Firestore document ID to use as the model's `id`.
+            data (dict): Firestore document data mapping used to populate fields; missing keys are replaced by the model's defaults or parsed where applicable (`created_at`, `feedback_at`, `exported_at`).
+        
+        Returns:
+            RoutingFeedbackDocument: Instance populated from the provided Firestore data.
+        """
         return cls(
             id=doc_id,
             user_query=data.get('user_query', ''),

@@ -33,6 +33,13 @@ interface Feat {
   isRepeatable?: boolean
 }
 
+/**
+ * Render the "Actions & Features" wizard step UI for reviewing and editing combat actions, racial traits, class features, and feats.
+ *
+ * The component provides full create, read, update, and delete functionality for the action economy and features/traits and updates the wizard store when changes are made.
+ *
+ * @returns The JSX element for step 5 of the character wizard containing editors for action economy, racial traits, class features, and feats.
+ */
 export function Step5_Abilities() {
   const { characterData, updateSection, prevStep, nextStep } = useWizardStore()
   const [expandedAction, setExpandedAction] = useState<number | null>(null)

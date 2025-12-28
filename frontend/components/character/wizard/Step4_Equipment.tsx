@@ -115,6 +115,15 @@ const RANGES = [
   'Special',
 ]
 
+/**
+ * Renders the "Equipment & Spells" step UI for editing a character's inventory and spellbook.
+ *
+ * Provides interfaces to add, edit, move, and remove equipped items and backpack items, manage total weight,
+ * and add, list, and remove spells across spell levels. User actions update the shared wizard store's
+ * `inventory` and `spell_list` sections.
+ *
+ * @returns The React element for step 4 of the wizard (inventory and spellbook editors).
+ */
 export function Step4_Equipment() {
   const { characterData, updateSection, prevStep, nextStep } = useWizardStore()
   const [expandedSpellLevel, setExpandedSpellLevel] = useState<number | null>(null)

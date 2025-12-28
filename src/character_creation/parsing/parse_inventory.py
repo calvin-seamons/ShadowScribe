@@ -64,7 +64,21 @@ def load_json_file(file_path: str) -> Dict[str, Any]:
 
 
 def extract_inventory_items(data: Dict[str, Any]) -> List[InventoryItem]:
-    """Extract and clean inventory items from the JSON data."""
+    """
+    Parse a D&D Beyond JSON export and produce a cleaned, deduplicated list of InventoryItem objects.
+    
+    Description:
+    - Extracts item definitions from data['data']['inventory'] (returns an empty list if the key is missing or not a list).
+    - Cleans HTML in item descriptions to plain text.
+    - Removes granted modifiers and limited-use entries that contain no meaningful fields.
+    - Merges items with the same name and description by summing their quantities; other fields are preserved from the first occurrence.
+    
+    Parameters:
+        data (Dict[str, Any]): Parsed JSON dictionary from a D&D Beyond export.
+    
+    Returns:
+        List[InventoryItem]: A list of cleaned InventoryItem objects with duplicate items (same name and description) combined and their quantities summed.
+    """
     items = []
     
     # Access inventory under data key
@@ -237,4 +251,3 @@ def should_include_field(key: str, value: Any) -> bool:
         return False
     
     return True
-

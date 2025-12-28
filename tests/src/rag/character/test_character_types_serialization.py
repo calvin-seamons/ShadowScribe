@@ -72,8 +72,13 @@ from src.rag.character.character_types import (
 
 def serialize(obj):
     """
-    Serialize an object to dict.
-    Works with both dataclasses (asdict) and Pydantic (model_dump).
+    Convert a dataclass or Pydantic model instance into its dictionary representation.
+    
+    Parameters:
+        obj (Any): A dataclass instance or a Pydantic model instance to serialize.
+    
+    Returns:
+        dict: A dictionary containing the serialized fields of `obj`.
     """
     if hasattr(obj, 'model_dump'):
         # Pydantic model
@@ -305,6 +310,11 @@ class TestActionTypes:
         assert result['activationTime'] == 1
 
     def test_action_usage(self):
+        """
+        Verify ActionUsage serializes to a dict preserving `maxUses` and `resetType`.
+        
+        Creates an ActionUsage with `maxUses=3`, `resetType='long_rest'`, and `usesPerActivation=1`, then asserts the serialized dictionary contains the expected `maxUses` and `resetType` values.
+        """
         usage = ActionUsage(
             maxUses=3,
             resetType="long_rest",
@@ -553,6 +563,11 @@ class TestSpellTypes:
         assert result == {'name': 'Rite of Flame', 'effect': 'Adds 1d6 fire damage'}
 
     def test_spell(self):
+        """
+        Create a Spell instance and assert its serialized fields match expected values.
+        
+        Constructs a Spell named "Fireball" (level 3, school "Evocation") with verbal, somatic, and material components, serializes it, and asserts that the serialized dict contains the expected 'name', 'level', that components.verbal is True, and the 'area' value.
+        """
         spell = Spell(
             name="Fireball",
             level=3,
@@ -591,6 +606,11 @@ class TestSpellTypes:
         assert result['spell_slots'][1] == 4
 
     def test_spell_list(self):
+        """
+        Verify that a SpellList containing spellcasting info and spells for a class serializes with the expected keys and counts.
+        
+        Asserts that the "Wizard" entry appears in both `spellcasting` and `spells`, and that the Wizard's `cantrip` list contains exactly one spell.
+        """
         spell_list = SpellList(
             spellcasting={
                 "Wizard": SpellcastingInfo(
@@ -627,6 +647,11 @@ class TestObjectiveTypes:
     """Test objective type serialization."""
 
     def test_base_objective(self):
+        """
+        Verifies that a BaseObjective instance serializes to a dictionary containing the expected id, status, and two objectives.
+        
+        The test constructs a BaseObjective with id "quest-001", status "Active", and two objectives, then asserts those fields are present and correct in the serialized output.
+        """
         obj = BaseObjective(
             id="quest-001",
             name="Rescue the Princess",
@@ -644,6 +669,11 @@ class TestObjectiveTypes:
         assert len(result['objectives']) == 2
 
     def test_quest(self):
+        """
+        Validate that a Quest instance serializes with its `quest_giver` and `deity` fields preserved.
+        
+        Asserts that the serialized representation contains the expected `quest_giver` and `deity` values.
+        """
         quest = Quest(
             id="quest-002",
             name="Divine Mission",

@@ -225,24 +225,12 @@ async def websocket_endpoint(websocket: WebSocket):
 @router.websocket("/ws/character/create")
 async def character_creation_websocket(websocket: WebSocket):
     """
-    WebSocket endpoint for character creation with real-time progress updates.
-
-    Message Types (Client -> Server):
-        - create_character: Start character creation
-          {
-            "type": "create_character",
-            "url": "https://dndbeyond.com/characters/152248393"
-          }
-        - ping: Keep-alive ping
-
-    Message Types (Server -> Client):
-        - parser_started: Parser has begun execution
-        - parser_complete: Parser has finished
-        - parser_error: Parser encountered an error
-        - assembly_started: Character object assembly begun
-        - creation_complete: Character creation finished
-        - creation_error: Character creation failed
-        - pong: Keep-alive response
+    Handle the WebSocket endpoint for creating characters and sending real-time progress events and final character data.
+    
+    Accepts client messages to start creation (either a D&D Beyond URL or raw JSON) and responds with progress events (fetch_started, fetch_complete, parser/assembly events forwarded from the builder), a final creation_complete containing full serialized character data and a brief summary, or creation_error on failure.
+    
+    Parameters:
+        websocket (WebSocket): Active WebSocket connection to the client.
     """
     await websocket.accept()
 
@@ -319,7 +307,18 @@ async def character_creation_websocket(websocket: WebSocket):
                     import json as json_lib
 
                     def serialize_datetime(obj):
-                        """Custom JSON encoder for datetime objects."""
+                        """
+                        Encode a datetime object to an ISO 8601 string suitable for JSON serialization.
+                        
+                        Parameters:
+                        	obj (datetime): The datetime instance to encode.
+                        
+                        Returns:
+                        	iso_string (str): The ISO 8601 formatted representation of `obj`.
+                        
+                        Raises:
+                        	TypeError: If `obj` is not an instance of `datetime`.
+                        """
                         if isinstance(obj, datetime):
                             return obj.isoformat()
                         raise TypeError(f"Object of type {type(obj)} is not JSON serializable")

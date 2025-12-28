@@ -33,7 +33,12 @@ SOURCES = [
 
 
 def find_json2ts():
-    """Find the json2ts executable."""
+    """
+    Locate the `json2ts` executable by checking the project's frontend local node_modules first, then the system PATH.
+    
+    Returns:
+        str | None: Path to the `json2ts` executable as a string if found, otherwise `None`.
+    """
     # Check if it's in frontend node_modules
     local_json2ts = FRONTEND_DIR / "node_modules" / ".bin" / "json2ts"
     if local_json2ts.exists():
@@ -48,7 +53,11 @@ def find_json2ts():
 
 
 def main():
-    """Generate TypeScript types from all configured Pydantic modules."""
+    """
+    Generate TypeScript type definitions from the configured Pydantic modules and create a barrel export.
+    
+    Runs pydantic2ts for each module listed in SOURCES, writes generated .ts files into GENERATED_DIR, and if at least one file is produced writes an index.ts that re-exports the generated modules (excluding firestore.ts). Prints progress and error output for each module. Exits the process with status 1 if json2ts cannot be found or if not all sources were successfully generated.
+    """
     # Find json2ts
     json2ts_cmd = find_json2ts()
     if not json2ts_cmd:
