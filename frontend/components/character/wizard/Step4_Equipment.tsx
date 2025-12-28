@@ -8,10 +8,28 @@
 'use client'
 
 import { useState } from 'react'
-import { Backpack, Sparkles, ChevronDown, ChevronUp, Plus, Trash2, X } from 'lucide-react'
+import { Backpack, Sparkles, ChevronDown, ChevronUp, Plus, Trash2, X, Edit2 } from 'lucide-react'
 import { useWizardStore } from '@/lib/stores/wizardStore'
 import { StepLayout, EditorCard, DualEditorGrid, SectionDivider } from './StepLayout'
 import type { InventoryItem, Spell } from '@/lib/types/character'
+
+/**
+ * Clean HTML entities and tags from text for display.
+ * Handles &nbsp;, &amp;, etc. and removes any remaining HTML tags.
+ * Note: Descriptions are sanitized to plain text on first edit.
+ */
+function cleanHtmlText(text: string | null | undefined): string {
+  if (!text) return ''
+
+  // Create a temporary element to decode HTML entities
+  const doc = new DOMParser().parseFromString(text, 'text/html')
+  let decoded = doc.body.textContent || ''
+
+  // Clean up excessive whitespace while preserving some structure
+  decoded = decoded.replace(/\s+/g, ' ').trim()
+
+  return decoded
+}
 
 const SPELL_LEVELS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
@@ -99,6 +117,8 @@ export function Step4_Equipment() {
   const [expandedSpellLevel, setExpandedSpellLevel] = useState<number | null>(null)
   const [showAddItem, setShowAddItem] = useState(false)
   const [showAddSpell, setShowAddSpell] = useState(false)
+  const [expandedEquipItem, setExpandedEquipItem] = useState<number | null>(null)
+  const [expandedBackpackItem, setExpandedBackpackItem] = useState<number | null>(null)
 
   // Item form state
   const [newItem, setNewItem] = useState({
@@ -228,6 +248,18 @@ export function Step4_Equipment() {
     updateSection('inventory', { ...inventory, [type]: items })
   }
 
+  const updateItemDescription = (type: 'equipped_items' | 'backpack', index: number, description: string) => {
+    const items = [...inventory[type]]
+    items[index] = {
+      ...items[index],
+      definition: {
+        ...items[index].definition,
+        description: description.trim() || undefined,
+      },
+    }
+    updateSection('inventory', { ...inventory, [type]: items })
+  }
+
   const totalWeight = () => {
     let total = 0
     inventory.backpack?.forEach(item => {
@@ -333,7 +365,7 @@ export function Step4_Equipment() {
           )
         }
       })
-      ;(currentSpells as any)[className] = classSpells
+        ; (currentSpells as any)[className] = classSpells
     })
 
     updateSection('spell_list', {
@@ -523,29 +555,54 @@ export function Step4_Equipment() {
               </div>
             ) : (
               <div className="space-y-2">
-                {inventory.equipped_items.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{getItemName(item)}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {getItemWeight(item)} lbs × {item.quantity}
-                        {item.definition?.magic && ' · Magic'}
-                      </p>
+                {inventory.equipped_items.map((item, index) => {
+                  const isExpanded = expandedEquipItem === index
+                  return (
+                    <div key={index} className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 overflow-hidden">
+                      <div className="flex items-center gap-2 p-3">
+                        <button
+                          onClick={() => setExpandedEquipItem(isExpanded ? null : index)}
+                          className="p-1.5 text-muted-foreground hover:bg-emerald-500/20 rounded-lg transition-colors"
+                          title="View/edit description"
+                        >
+                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate">{getItemName(item)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {getItemWeight(item)} lbs × {item.quantity}
+                            {item.definition?.magic && ' · Magic'}
+                            {item.definition?.description && !isExpanded && ' · Has description'}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => moveToBackpack(index)}
+                          className="px-2 py-1 text-xs bg-muted hover:bg-muted/80 rounded-lg transition-colors"
+                        >
+                          Unequip
+                        </button>
+                        <button
+                          onClick={() => removeItem('equipped_items', index)}
+                          className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {isExpanded && (
+                        <div className="px-3 pb-3 pt-1 border-t border-emerald-500/20">
+                          <label className="block text-xs text-muted-foreground mb-1.5">Description</label>
+                          <textarea
+                            value={cleanHtmlText(item.definition?.description)}
+                            onChange={(e) => updateItemDescription('equipped_items', index, e.target.value)}
+                            placeholder="Item description, properties, or notes..."
+                            rows={3}
+                            className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm resize-none focus:outline-none focus:border-emerald-500/50"
+                          />
+                        </div>
+                      )}
                     </div>
-                    <button
-                      onClick={() => moveToBackpack(index)}
-                      className="px-2 py-1 text-xs bg-muted hover:bg-muted/80 rounded-lg transition-colors"
-                    >
-                      Unequip
-                    </button>
-                    <button
-                      onClick={() => removeItem('equipped_items', index)}
-                      className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
 
@@ -557,37 +614,62 @@ export function Step4_Equipment() {
                 No items in backpack
               </div>
             ) : (
-              <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
-                {inventory.backpack.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 p-3 rounded-xl bg-card/50 border border-border/50">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{getItemName(item)}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {getItemWeight(item)} lbs
-                        {item.definition?.rarity && item.definition.rarity !== 'Common' && ` · ${item.definition.rarity}`}
-                      </p>
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                {inventory.backpack.map((item, index) => {
+                  const isExpanded = expandedBackpackItem === index
+                  return (
+                    <div key={index} className="rounded-xl bg-card/50 border border-border/50 overflow-hidden">
+                      <div className="flex items-center gap-2 p-3">
+                        <button
+                          onClick={() => setExpandedBackpackItem(isExpanded ? null : index)}
+                          className="p-1.5 text-muted-foreground hover:bg-muted rounded-lg transition-colors"
+                          title="View/edit description"
+                        >
+                          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground truncate">{getItemName(item)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {getItemWeight(item)} lbs
+                            {item.definition?.rarity && item.definition.rarity !== 'Common' && ` · ${item.definition.rarity}`}
+                            {item.definition?.description && !isExpanded && ' · Has description'}
+                          </p>
+                        </div>
+                        <input
+                          type="number"
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => updateItemQuantity('backpack', index, parseInt(e.target.value) || 1)}
+                          className="w-14 px-2 py-1 text-center text-sm bg-muted border border-border rounded-lg"
+                        />
+                        <button
+                          onClick={() => moveToEquipped(index)}
+                          className="px-2 py-1 text-xs bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30 rounded-lg transition-colors"
+                        >
+                          Equip
+                        </button>
+                        <button
+                          onClick={() => removeItem('backpack', index)}
+                          className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {isExpanded && (
+                        <div className="px-3 pb-3 pt-1 border-t border-border/30">
+                          <label className="block text-xs text-muted-foreground mb-1.5">Description</label>
+                          <textarea
+                            value={cleanHtmlText(item.definition?.description)}
+                            onChange={(e) => updateItemDescription('backpack', index, e.target.value)}
+                            placeholder="Item description, properties, or notes..."
+                            rows={3}
+                            className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm resize-none focus:outline-none focus:border-primary/50"
+                          />
+                        </div>
+                      )}
                     </div>
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => updateItemQuantity('backpack', index, parseInt(e.target.value) || 1)}
-                      className="w-14 px-2 py-1 text-center text-sm bg-muted border border-border rounded-lg"
-                    />
-                    <button
-                      onClick={() => moveToEquipped(index)}
-                      className="px-2 py-1 text-xs bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30 rounded-lg transition-colors"
-                    >
-                      Equip
-                    </button>
-                    <button
-                      onClick={() => removeItem('backpack', index)}
-                      className="p-1.5 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
 
@@ -645,7 +727,7 @@ export function Step4_Equipment() {
                       className="w-full px-3 py-2 bg-card border border-border rounded-lg text-sm focus:outline-none focus:border-violet-500/50"
                     >
                       <option value={0}>Cantrip</option>
-                      {[1,2,3,4,5,6,7,8,9].map(l => (
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(l => (
                         <option key={l} value={l}>{getLevelName(l)}</option>
                       ))}
                     </select>

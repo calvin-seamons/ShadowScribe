@@ -28,7 +28,7 @@ import {
 // Types
 // ============================================================================
 
-export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6 | 7
+export type WizardStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
 
 export type ParserStatus = 'idle' | 'started' | 'in_progress' | 'complete' | 'error'
 
@@ -47,10 +47,11 @@ export const STEP_CONFIG = {
   4: { name: 'Equipment', label: 'Equipment', icon: 'Backpack' },
   5: { name: 'Abilities', label: 'Abilities', icon: 'Sparkles' },
   6: { name: 'Character', label: 'Character', icon: 'User' },
-  7: { name: 'Review', label: 'Review & Save', icon: 'Check' },
+  7: { name: 'Campaign', label: 'Campaign', icon: 'Users' },
+  8: { name: 'Review', label: 'Review & Save', icon: 'Check' },
 } as const
 
-export const TOTAL_STEPS = 7
+export const TOTAL_STEPS = 8
 
 // ============================================================================
 // Store Interface
@@ -68,6 +69,9 @@ interface WizardState {
   // Parsed character (single source of truth)
   characterData: CharacterData | null
   characterSummary: CharacterSummary | null
+
+  // Campaign selection
+  selectedCampaignId: string | null
 
   // Parser progress (WebSocket)
   parsers: Record<ParserName, ParserProgress>
@@ -97,6 +101,9 @@ interface WizardState {
   setCharacterData: (data: CharacterData) => void
   setCharacterSummary: (summary: CharacterSummary) => void
   updateSection: <T extends SectionName>(section: T, data: CharacterData[T]) => void
+
+  // Actions - Campaign
+  setSelectedCampaignId: (id: string | null) => void
 
   // Actions - Parser progress
   setParserStatus: (parser: ParserName, progress: ParserProgress) => void
@@ -144,6 +151,9 @@ const getInitialState = () => ({
   // Parsed character
   characterData: null,
   characterSummary: null,
+
+  // Campaign selection
+  selectedCampaignId: null,
 
   // Parser progress
   parsers: { ...INITIAL_PARSERS },
@@ -242,6 +252,12 @@ export const useWizardStore = create<WizardState>()(
     },
 
     // ========================================================================
+    // Campaign Actions
+    // ========================================================================
+
+    setSelectedCampaignId: (id) => set({ selectedCampaignId: id }),
+
+    // ========================================================================
     // Parser Progress Actions
     // ========================================================================
 
@@ -289,6 +305,7 @@ export const useWizardStore = create<WizardState>()(
           dndbeyondUrl: state.dndbeyondUrl,
           characterData: state.characterData,
           characterSummary: state.characterSummary,
+          selectedCampaignId: state.selectedCampaignId,
           timestamp: Date.now(),
         })
         set({ hasDraft: true })
@@ -305,6 +322,7 @@ export const useWizardStore = create<WizardState>()(
         dndbeyondUrl: draft.dndbeyondUrl,
         characterData: draft.characterData,
         characterSummary: draft.characterSummary,
+        selectedCampaignId: draft.selectedCampaignId ?? null,
         hasDraft: true,
       })
 

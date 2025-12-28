@@ -5,6 +5,7 @@ Script to extract inventory items from D&D Beyond JSON export.
 This script creates InventoryItem objects from the character JSON and outputs them to a JSON file.
 """
 
+import html
 import json
 import re
 from typing import Dict, List, Optional, Any, Union
@@ -165,19 +166,51 @@ def extract_inventory_items(data: Dict[str, Any]) -> List[InventoryItem]:
 
 
 def clean_html(text: str) -> str:
-    """Clean HTML tags and formatting from text."""
-    if not text:
-        return text
+    """Clean HTML tags and formatting from text.
     
-    # Remove HTML tags
+    Converts HTML to clean, readable plain text:
+    - Decodes HTML entities (&nbsp;, &amp;, etc.)
+    - Converts block elements (p, br, div) to newlines
+    - Removes all HTML tags
+    - Cleans up excessive whitespace while preserving paragraph structure
+    """
+    if not text:
+        return ''
+    
+    # First, decode HTML entities (e.g., &nbsp; -> space, &amp; -> &)
+    text = html.unescape(text)
+    
+    # Convert block-level elements to double newlines (paragraph breaks)
+    text = re.sub(r'</p>\s*<p[^>]*>', '\n\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</?p[^>]*>', '\n\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</?div[^>]*>', '\n\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'<h[1-6][^>]*>', '\n\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</h[1-6]>', '\n\n', text, flags=re.IGNORECASE)
+    
+    # Convert br tags to single newlines
+    text = re.sub(r'<br\s*/?>', '\n', text, flags=re.IGNORECASE)
+    
+    # Remove all remaining HTML tags
     text = re.sub(r'<[^>]+>', '', text)
     
-    # Clean up extra whitespace and line breaks
-    text = re.sub(r'\r\n', ' ', text)
-    text = re.sub(r'\n', ' ', text)
-    text = re.sub(r'\s+', ' ', text)
+    # Clean up whitespace:
+    # - Replace \r\n and \r with \n
+    text = re.sub(r'\r\n?', '\n', text)
     
-    return text.strip()
+    # - Collapse multiple spaces (but not newlines) into single space
+    text = re.sub(r'[^\S\n]+', ' ', text)
+    
+    # - Collapse 3+ newlines into 2 (preserve paragraph breaks)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    
+    # - Remove leading/trailing whitespace from each line
+    lines = [line.strip() for line in text.split('\n')]
+    text = '\n'.join(lines)
+    
+    # - Remove empty lines at start and end
+    text = text.strip()
+    
+    return text
 
 
 def should_include_field(key: str, value: Any) -> bool:

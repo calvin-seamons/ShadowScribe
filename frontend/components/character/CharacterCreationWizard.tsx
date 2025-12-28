@@ -1,14 +1,15 @@
 /**
  * Character Creation Wizard
  *
- * 7-step wizard for importing and creating D&D characters:
+ * 8-step wizard for importing and creating D&D characters:
  * 1. URL Input - Fetch character from D&D Beyond
  * 2. Parsing Progress - Real-time parser status
  * 3. Stats - Edit ability scores and combat stats
  * 4. Equipment - Edit inventory and spells
  * 5. Abilities - Edit actions and features
  * 6. Character - Edit personality and backstory
- * 7. Review & Save - Final preview and database save
+ * 7. Campaign - Select campaign assignment
+ * 8. Review & Save - Final preview and database save
  *
  * Uses Zustand store as single source of truth.
  */
@@ -27,7 +28,8 @@ import { Step3_Stats } from './wizard/Step3_Stats'
 import { Step4_Equipment } from './wizard/Step4_Equipment'
 import { Step5_Abilities } from './wizard/Step5_Abilities'
 import { Step6_Character } from './wizard/Step6_Character'
-import { Step7_Review } from './wizard/Step7_Review'
+import { Step7_Campaign } from './wizard/Step7_Campaign'
+import { Step8_Review } from './wizard/Step8_Review'
 
 export function CharacterCreationWizard() {
   const {
@@ -82,7 +84,9 @@ export function CharacterCreationWizard() {
       case 6:
         return <Step6_Character />
       case 7:
-        return <Step7_Review />
+        return <Step7_Campaign />
+      case 8:
+        return <Step8_Review />
       default:
         return <Step1_UrlInput />
     }

@@ -90,7 +90,7 @@ class ChatService:
     async def _get_or_create_engine(
         self,
         character_name: str,
-        campaign_id: str = "main_campaign"
+        default_campaign_id: str = "main_campaign"
     ) -> CentralEngine:
         """Get or create CentralEngine for character and campaign.
 
@@ -100,23 +100,18 @@ class ChatService:
 
         Args:
             character_name: Name of the character to use
-            campaign_id: Campaign ID for session notes context
+            default_campaign_id: Fallback campaign ID for local characters; Firestore characters use their stored campaign_id
 
         Returns:
             Configured CentralEngine instance
         """
-        # Key engines by both character and campaign
-        engine_key = f"{character_name}::{campaign_id}"
-
-        if engine_key in self._engines:
-            return self._engines[engine_key]
-
-        # Get Firestore client and load character
+        # Get Firestore client and load character first to check their campaign_id
         db = get_firestore_client()
         repo = CharacterRepository(db)
 
         # Try to load from Firestore by name
         char_doc = await repo.get_by_name(character_name)
+        actual_campaign_id = None
 
         if not char_doc:
             # Fallback: try loading from local pickle files
@@ -125,6 +120,8 @@ class ChatService:
             character = char_manager.load_character(character_name)
             if not character:
                 raise ValueError(f"Character '{character_name}' not found")
+            # Local characters use the passed default_campaign_id
+            actual_campaign_id = default_campaign_id
         else:
             # Convert Firestore data to Character dataclass
             character = from_dict(
@@ -132,9 +129,23 @@ class ChatService:
                 data=char_doc.data,
                 config=dacite.Config(strict=False, check_types=False)
             )
+            # Use the character's actual campaign_id from Firestore
+            # If character has no campaign, don't load any session notes
+            actual_campaign_id = char_doc.campaign_id
 
-        # Get campaign session notes
-        campaign_session_notes = self._get_campaign_session_notes(campaign_id)
+        # Key engines by both character and their actual campaign
+        engine_key = f"{character_name}::{actual_campaign_id or 'no_campaign'}"
+
+        if engine_key in self._engines:
+            return self._engines[engine_key]
+
+        # Get campaign session notes only if character has a campaign
+        campaign_session_notes = None
+        if actual_campaign_id:
+            campaign_session_notes = self._get_campaign_session_notes(actual_campaign_id)
+            print(f"[ChatService] Character '{character_name}' belongs to campaign '{actual_campaign_id}'")
+        else:
+            print(f"[ChatService] Character '{character_name}' has no campaign association")
 
         # Create engine components
         context_assembler = ContextAssembler()
@@ -156,7 +167,8 @@ class ChatService:
             "comparison": "COMPARISON (Haiku + Local)"
         }
         routing_label = routing_labels.get(config.routing_mode, config.routing_mode.upper())
-        print(f"[ChatService] Created engine for {character_name} in {campaign_id}")
+        campaign_label = actual_campaign_id or "no campaign"
+        print(f"[ChatService] Created engine for {character_name} in {campaign_label}")
         print(f"[ChatService] Routing: {routing_label}, Entity extraction: GAZETTEER NER")
 
         self._engines[engine_key] = engine

@@ -50,9 +50,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="ShadowScribe 2.0 API",
+    title="ShadowScribe API",
     description="D&D Character Management and RAG Query System",
-    version="2.0.0",
+    version="1.0.0",
     lifespan=lifespan
 )
 
@@ -77,8 +77,8 @@ app.include_router(notes.router, prefix="/api", tags=["Notes"])
 async def root():
     """Root endpoint."""
     return {
-        "message": "ShadowScribe 2.0 API",
-        "version": "2.0.0",
+        "message": "ShadowScribe API",
+        "version": "1.0.0",
         "docs": "/docs"
     }
 
