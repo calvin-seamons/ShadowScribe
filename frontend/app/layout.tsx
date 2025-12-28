@@ -5,10 +5,10 @@ import { ThemeProvider } from '@/components/ThemeProvider'
 import { AuthProvider } from '@/lib/auth-context'
 
 export const metadata: Metadata = {
-  title: 'ShadowScribe 2.0',
+  title: 'ShadowScribe',
   description: 'D&D Character Management & AI Assistant',
   icons: {
-    icon: '/favicon.ico',
+    icon: '/icon.svg',
   },
 }
 

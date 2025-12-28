@@ -1,5 +1,5 @@
 /**
- * Step 7: Review & Save
+ * Step 8: Review & Save
  *
  * Final character preview and database save.
  * Uses wizard store directly.
@@ -12,11 +12,12 @@ import { useRouter } from 'next/navigation'
 import { ScrollText, Check, Loader2, AlertTriangle, Swords, Backpack, Sparkles, User } from 'lucide-react'
 import { useWizardStore } from '@/lib/stores/wizardStore'
 
-export function Step7_Review() {
+export function Step8_Review() {
   const router = useRouter()
   const {
     characterData,
     characterSummary,
+    selectedCampaignId,
     prevStep,
     setIsSaving,
     setSavedCharacterId,
@@ -35,16 +36,31 @@ export function Step7_Review() {
       return
     }
 
+    if (!selectedCampaignId) {
+      setError('No campaign selected')
+      return
+    }
+
     setIsSaving(true)
     setError(null)
 
     try {
+      // Get auth token from localStorage
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      }
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+
       const response = await fetch('/api/characters', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ character: characterData }),
+        headers,
+        body: JSON.stringify({
+          character: characterData,
+          campaign_id: selectedCampaignId,
+        }),
       })
 
       if (!response.ok) {
@@ -154,7 +170,7 @@ export function Step7_Review() {
           <span>←</span>
           <span className="text-sm font-display">Back</span>
         </button>
-        <span className="text-sm text-muted-foreground font-display">Step 7 of 7</span>
+        <span className="text-sm text-muted-foreground font-display">Step 8 of 8</span>
       </div>
 
       {/* Title */}
@@ -289,8 +305,8 @@ export function Step7_Review() {
               <p className="text-xl font-bold text-foreground">
                 {features?.class_features
                   ? Object.values(features.class_features).reduce((total, levelFeatures) =>
-                      total + Object.values(levelFeatures).reduce((sum, f) => sum + f.length, 0), 0
-                    )
+                    total + Object.values(levelFeatures).reduce((sum, f) => sum + f.length, 0), 0
+                  )
                   : 0}
               </p>
             </div>

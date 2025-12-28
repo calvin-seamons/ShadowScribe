@@ -1,4 +1,4 @@
-# ShadowScribe 2.0 Requirements
+# ShadowScribe Requirements
 # Core Python packages for RPG character management
 
 # Type checking and development

@@ -11,13 +11,19 @@ export async function GET(request: NextRequest) {
     // Falls back to localhost for local development
     const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
     
+    // Forward auth header from client
+    const authHeader = request.headers.get('Authorization')
+    
     console.log(`[API Route] Forwarding GET to: ${apiUrl}/api/characters`)
+    
+    const headers: HeadersInit = { 'Content-Type': 'application/json' }
+    if (authHeader) {
+      headers['Authorization'] = authHeader
+    }
     
     const response = await fetch(`${apiUrl}/api/characters`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
     })
     
     if (!response.ok) {
@@ -47,14 +53,20 @@ export async function POST(request: NextRequest) {
     // Falls back to localhost for local development
     const apiUrl = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
     
+    // Forward auth header from client
+    const authHeader = request.headers.get('Authorization')
+    
     console.log(`[API Route] Forwarding POST to: ${apiUrl}/api/characters`)
     console.log('[API Route] Body keys:', Object.keys(body))
     
+    const headers: HeadersInit = { 'Content-Type': 'application/json' }
+    if (authHeader) {
+      headers['Authorization'] = authHeader
+    }
+    
     const response = await fetch(`${apiUrl}/api/characters`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(body),
     })
     

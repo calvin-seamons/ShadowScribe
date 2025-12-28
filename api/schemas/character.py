@@ -46,9 +46,9 @@ class CharacterCreateRequest(BaseModel):
         ...,
         description="Complete Character dataclass as JSON dictionary"
     )
-    campaign_id: Optional[str] = Field(
-        None,
-        description="ID of the campaign to assign this character to"
+    campaign_id: str = Field(
+        ...,
+        description="ID of the campaign to assign this character to (required)"
     )
     
     class Config:

@@ -48,7 +48,8 @@
       "Bash(printf:*)",
       "Bash(gcloud secrets create:*)",
       "Bash(gcloud projects list:*)",
-      "Bash(gcloud secrets add-iam-policy-binding:*)"
+      "Bash(gcloud secrets add-iam-policy-binding:*)",
+      "Bash(GOOGLE_APPLICATION_CREDENTIALS=\"./credentials/firebase-service-account.json\" uv run python:*)"
     ],
     "deny": [],
     "ask": []

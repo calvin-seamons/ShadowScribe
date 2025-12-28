@@ -145,7 +145,7 @@ class CharacterDocument:
     user_id: str
     name: str
     data: dict  # Full character dataclass serialized
-    campaign_id: Optional[str] = None
+    campaign_id: str  # Required - all characters belong to a campaign
     race: Optional[str] = None
     character_class: Optional[str] = None
     level: Optional[int] = None

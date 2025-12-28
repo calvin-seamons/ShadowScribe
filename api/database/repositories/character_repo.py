@@ -26,7 +26,7 @@ class CharacterRepository:
         self.db = db
         self.collection = db.collection(CHARACTERS_COLLECTION)
 
-    async def create(self, character: CharacterDataclass, user_id: str, campaign_id: Optional[str] = None) -> CharacterDocument:
+    async def create(self, character: CharacterDataclass, user_id: str, campaign_id: str) -> CharacterDocument:
         """Create a new character in Firestore."""
         character_data = asdict(character)
 
