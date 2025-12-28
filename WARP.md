@@ -47,7 +47,7 @@ ShadowScribe is a D&D character management system with RAG (Retrieval-Augmented 
 
 ### Project Configuration
 - **GCP Project ID**: `shadowscribe-prod`
-- **Firebase Project**: `shadowscribe-prod` (same project)
+- **Firebase Project**: `shadowscribe-prod-3405b`
 - **Region**: `us-central1`
 - **Cloud Run Service**: `shadowscribe-api`
 - **Cloud Run URL**: `https://shadowscribe-api-768657256070.us-central1.run.app`
@@ -81,11 +81,26 @@ campaigns/{campaign_id}
 ├── name: string
 ├── description: string
 ├── created_at: timestamp
-└── notes/{note_id}  (subcollection)
+└── sessions/{session_id}  (subcollection - unified SessionDocument)
     ├── user_id: string
-    ├── content: string
-    ├── processed_content: object
-    └── created_at: timestamp
+    ├── session_number: int
+    ├── session_name: string
+    ├── raw_content: string (original transcript)
+    ├── processed_markdown: string (LLM-structured text)
+    ├── title, summary: string
+    ├── player_characters, npcs, locations, items: List[dict]
+    ├── key_events, combat_encounters, character_decisions: List[dict]
+    ├── character_statuses: dict {name: status_dict}
+    ├── memories_visions, quest_updates, spells_abilities_used: List[dict]
+    ├── loot_obtained, puzzles_encountered: dict
+    ├── deaths, revivals, party_conflicts, party_bonds: List
+    ├── quotes, funny_moments, mysteries_revealed: List
+    ├── unresolved_questions, divine_interventions, religious_elements: List
+    ├── rules_clarifications, dice_rolls, dm_notes: List
+    ├── cliffhanger, next_session_hook: Optional[str]
+    ├── raw_sections: dict {section_name: text}
+    ├── date: timestamp (in-game or real session date)
+    └── created_at, updated_at: timestamp
 
 routing_feedback/{feedback_id}
 ├── user_query: string
@@ -207,10 +222,12 @@ gcloud auth list
 | `src/central_engine.py` | Main RAG query orchestrator with streaming |
 | `src/config.py` | RAG configuration (models, temperatures) |
 | `src/rag/character/character_types.py` | 20+ dataclasses for D&D characters |
+| `src/rag/session_notes/session_notes_storage.py` | Async Firestore session loading with caching |
+| `src/rag/session_notes/session_notes_query_router.py` | Session notes RAG query routing |
 | `api/main.py` | FastAPI entry point |
 | `api/auth.py` | Firebase token verification |
 | `api/database/firestore_client.py` | Firestore async client singleton |
-| `api/database/firestore_models.py` | Document dataclasses (UserDocument, CharacterDocument, etc.) |
+| `api/database/firestore_models.py` | Document dataclasses (SessionDocument is unified Firestore+RAG model) |
 | `api/routers/websocket.py` | WebSocket `/ws/chat` endpoint |
 | `api/routers/characters.py` | Character CRUD REST endpoints |
 | `frontend/lib/firebase.ts` | Firebase client initialization |
@@ -218,6 +235,8 @@ gcloud auth list
 | `frontend/lib/services/api.ts` | API client with auth headers |
 | `frontend/lib/stores/wizardStore.ts` | 8-step character creation wizard state |
 | `scripts/deploy_cloudrun.py` | Automated Cloud Run deployment |
+| `scripts/interactive_test.py` | Interactive backend/RAG testing CLI |
+| `scripts/migrate_session_notes.py` | One-time migration: notes/ → sessions/ |
 | `Dockerfile` | Production Docker image for Cloud Run |
 | `tests/` | Pytest test suite |
 
@@ -244,8 +263,11 @@ gcloud auth list
 # Always use uv run for Python
 uv run python manage.py start          # Start all services
 uv run python manage.py stop           # Stop services
-uv run python demo_central_engine.py   # Test RAG system
 uv run uvicorn api.main:app --reload   # Local API server
+
+# Interactive RAG testing (tests full backend pipeline locally)
+uv run python scripts/interactive_test.py
+uv run python scripts/interactive_test.py --character "Duskryn Nightwarden"
 
 # Run tests
 uv run pytest tests/ -v                # Run all tests
@@ -374,3 +396,37 @@ Update `CORS_ORIGINS` in Cloud Run env vars to include the frontend domain, then
 
 ### Frontend not using new API URL
 `NEXT_PUBLIC_*` vars are embedded at build time. Trigger a new Vercel deployment after changing them.
+
+## Session Notes Architecture
+
+Session notes use a unified `SessionDocument` model that serves both Firestore storage AND in-memory RAG queries (no serialization layer).
+
+### Data Flow
+```text
+Firestore: campaigns/{id}/sessions/{id}
+    └── SessionDocument (all 30+ fields)
+              │
+              ▼ (async load)
+RAG Layer: CampaignSessionNotesStorage
+    └── sessions: Dict[str, SessionDocument]
+              │
+              ▼ (query)
+SessionNotesQueryRouter
+    └── Returns SessionNotesContext with relevant_sections
+```
+
+### Per-Session Entities (Chronological Context)
+Entities are stored per-session (not campaign-wide) to preserve chronological context:
+```python
+# Each SessionDocument has its own entity lists:
+session.npcs        # [{name, entity_type, aliases, description}]
+session.locations   # [{name, entity_type, ...}]
+session.items       # [{name, entity_type, ...}]
+```
+
+This allows the RAG system to answer "When did we first meet Ghul'Vor?" by finding the earliest session where that NPC appears.
+
+### Key Types
+- `SessionDocument` (`api/database/firestore_models.py`) - Unified model for storage + RAG
+- `SessionNotesContext` (`src/rag/session_notes/session_types.py`) - Query result context
+- `QueryEngineResult` - Aggregated results from query router

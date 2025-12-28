@@ -1226,14 +1226,10 @@ class CentralEngine:
             }
             
             raw_section_key = section_key_map.get(section_key, 'Summary')
-            
-            # ProcessedSession stores raw_sections under raw_notes.raw_sections
-            raw_sections = None
-            if hasattr(session, 'raw_notes') and hasattr(session.raw_notes, 'raw_sections'):
-                raw_sections = session.raw_notes.raw_sections
-            elif hasattr(session, 'raw_sections'):
-                raw_sections = session.raw_sections
-            
+
+            # SessionDocument has raw_sections directly
+            raw_sections = getattr(session, 'raw_sections', {})
+
             if raw_sections and raw_section_key in raw_sections:
                 section_content = raw_sections[raw_section_key]
                 # Only include parts that mention this entity
