@@ -68,7 +68,7 @@ users/{firebase_uid}
 
 characters/{character_id}
 ├── user_id: string (FK to users)
-├── campaign_id: string (FK to campaigns)
+├── campaign_id: string (FK to campaigns, required)
 ├── name: string
 ├── race: string
 ├── character_class: string
@@ -216,8 +216,10 @@ gcloud auth list
 | `frontend/lib/firebase.ts` | Firebase client initialization |
 | `frontend/lib/auth-context.tsx` | React auth context with sign in/out |
 | `frontend/lib/services/api.ts` | API client with auth headers |
+| `frontend/lib/stores/wizardStore.ts` | 8-step character creation wizard state |
 | `scripts/deploy_cloudrun.py` | Automated Cloud Run deployment |
 | `Dockerfile` | Production Docker image for Cloud Run |
+| `tests/` | Pytest test suite |
 
 ## API Endpoints
 
@@ -244,6 +246,10 @@ uv run python manage.py start          # Start all services
 uv run python manage.py stop           # Stop services
 uv run python demo_central_engine.py   # Test RAG system
 uv run uvicorn api.main:app --reload   # Local API server
+
+# Run tests
+uv run pytest tests/ -v                # Run all tests
+uv run pytest tests/ -v -k "clean_html"  # Run specific tests
 ```
 
 ### Frontend (Next.js)
@@ -300,6 +306,43 @@ if character.inventory:
     items = character.inventory.backpack
 ```
 
+## Character Creation Wizard
+
+The frontend uses an 8-step wizard for character creation:
+1. **Import** - Enter D&D Beyond URL
+2. **Parse** - Fetch and parse character data
+3. **Stats** - Review/edit ability scores and combat stats
+4. **Gear** - Edit inventory and equipment
+5. **Abilities** - Review features and traits
+6. **Story** - Edit background and personality
+7. **Campaign** - Select campaign (required)
+8. **Review** - Final review and save
+
+Campaign association is mandatory - characters cannot be saved without selecting a campaign.
+
+## Testing
+
+Tests are located in `tests/` and use pytest:
+```bash
+uv run pytest tests/ -v                           # Run all tests
+uv run pytest tests/ -v -k "test_name"            # Run specific test
+uv run pytest tests/src/character_creation/ -v    # Run module tests
+```
+
+Test structure mirrors source:
+```
+tests/
+├── src/
+│   └── character_creation/
+│       └── parsing/
+│           └── test_parse_inventory.py
+├── api/
+│   ├── routers/
+│   ├── database/
+│   └── services/
+└── __init__.py
+```
+
 ## Code Philosophy
 
 1. **Delete obsolete code** - no commented-out code or legacy cruft
@@ -307,6 +350,7 @@ if character.inventory:
 3. **Let things fail loudly** - crash immediately so we can fix root causes
 4. **Config is the source of truth** - settings belong in `src/config.py`
 5. **Always use `uv run`** for Python - it manages the virtual environment
+6. **Write tests** - new parsing/utility code should have tests in `tests/`
 
 ## Troubleshooting
 

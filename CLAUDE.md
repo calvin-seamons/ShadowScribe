@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ShadowScribe 2.0 is a D&D character management system with RAG (Retrieval-Augmented Generation) capabilities. It combines character data, rulebook embeddings, and session notes with AI chat through a Next.js frontend and FastAPI backend.
+ShadowScribe is a D&D character management system with RAG (Retrieval-Augmented Generation) capabilities. It combines character data, rulebook embeddings, and session notes with AI chat through a Next.js frontend and FastAPI backend.
 
 ## Architecture
 
@@ -68,6 +68,10 @@ uv run python demo_central_engine.py                  # Interactive RAG testing 
 uv run python demo_central_engine.py -q "What is my AC?"  # Single query test
 uv run python -m scripts.run_inspector --list         # List characters
 uv run python -m scripts.run_inspector "Name" --format text  # Inspect character
+
+# Testing
+uv run pytest tests/ -v                               # Run all tests
+uv run pytest tests/ -v -k "clean_html"               # Run specific tests
 ```
 
 ### Local API Development
@@ -98,7 +102,7 @@ users/{firebase_uid}
   - email, display_name, created_at
 
 characters/{character_id}
-  - user_id, campaign_id, name, race, character_class, level, data (nested JSON)
+  - user_id, campaign_id (required), name, race, character_class, level, data (nested JSON)
 
 campaigns/{campaign_id}
   - user_id, name, description, created_at
@@ -207,8 +211,10 @@ GOOGLE_APPLICATION_CREDENTIALS=./credentials/firebase-service-account.json
 | `api/database/firestore_client.py` | Firestore async client singleton |
 | `api/database/firestore_models.py` | Document dataclasses |
 | `api/routers/websocket.py` | WebSocket `/ws/chat` endpoint |
+| `frontend/lib/stores/wizardStore.ts` | 8-step character creation wizard |
 | `demo_central_engine.py` | Primary testing tool for RAG system |
-| `Dockerfile.cloudrun` | Production Docker image for Cloud Run |
+| `tests/` | Pytest test suite |
+| `Dockerfile` | Production Docker image for Cloud Run |
 
 ## API Endpoints
 
@@ -248,14 +254,33 @@ GOOGLE_APPLICATION_CREDENTIALS=./credentials/firebase-service-account.json
    - Functions/classes should read from `get_config()`, not accept override parameters
    - Environment variables can override config, but class defaults are authoritative
    - Never duplicate default values in multiple places
+9. **Write tests** - new parsing/utility code should have tests in `tests/`
 
 ## Frontend Architecture
 
-- **State**: Zustand stores (`chatStore`, `characterStore`, `metadataStore`)
+- **State**: Zustand stores (`chatStore`, `characterStore`, `wizardStore`)
 - **Auth**: Firebase Auth with React context (`lib/auth-context.tsx`)
 - **Streaming**: WebSocket connection for real-time responses
 - **Styling**: Tailwind CSS with dark mode support
 - **Path alias**: `@/*` maps to `frontend/*`
+- **Character Wizard**: 8-step creation flow with campaign selection (mandatory)
+
+## Testing
+
+Tests are in `tests/` directory, mirroring source structure:
+```
+tests/
+├── src/character_creation/parsing/test_parse_inventory.py
+├── api/routers/
+├── api/database/
+└── api/services/
+```
+
+Run tests:
+```bash
+uv run pytest tests/ -v                    # All tests
+uv run pytest tests/ -v -k "test_name"     # Specific test
+```
 
 ## Current Project Status
 
