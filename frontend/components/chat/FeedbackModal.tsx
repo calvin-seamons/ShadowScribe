@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useFeedbackStore } from '@/lib/stores/feedbackStore'
 import { feedbackService } from '@/lib/services/feedbackService'
-import type { ToolCorrection } from '@/lib/types/feedback'
+import type { ToolCorrection, ToolPrediction } from '@/lib/types/feedback'
 
 interface FeedbackModalProps {
   onClose?: () => void;
@@ -116,14 +116,14 @@ export default function FeedbackModal({ onClose, onSubmit }: FeedbackModalProps)
           <div className="mb-4">
             <label className="text-sm font-medium text-muted-foreground">Model's Routing</label>
             <div className="mt-1 space-y-2">
-              {selectedRecord.predicted_tools.map((tool, index) => (
+              {(selectedRecord.predicted_tools as unknown as ToolPrediction[]).map((tool, index) => (
                 <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
                   <span className="px-2 py-1 bg-primary/20 text-primary rounded text-xs font-medium">
                     {tool.tool}
                   </span>
                   <span className="text-sm">{tool.intention}</span>
                   <span className="text-xs text-muted-foreground ml-auto">
-                    {(tool.confidence * 100).toFixed(0)}%
+                    {((tool.confidence ?? 1) * 100).toFixed(0)}%
                   </span>
                 </div>
               ))}

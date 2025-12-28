@@ -5,7 +5,6 @@ import pickle
 import json
 import requests
 from pathlib import Path
-from dataclasses import asdict
 from datetime import datetime
 
 
@@ -28,7 +27,7 @@ def import_character(pkl_path: Path, api_url: str = "http://localhost:8000") -> 
         character = pickle.load(f)
     
     # Convert to dict and handle datetime serialization
-    char_dict = serialize_for_json(asdict(character))
+    char_dict = serialize_for_json(character.model_dump())
     
     # Send to API
     response = requests.post(

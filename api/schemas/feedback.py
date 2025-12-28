@@ -1,5 +1,5 @@
 """Pydantic schemas for routing feedback API."""
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
@@ -45,9 +45,8 @@ class RoutingRecordResponse(BaseModel):
     feedback_notes: Optional[str]
     created_at: Optional[str]
     feedback_at: Optional[str]
-    
-    class Config:
-        from_attributes = True
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ToolCorrection(BaseModel):

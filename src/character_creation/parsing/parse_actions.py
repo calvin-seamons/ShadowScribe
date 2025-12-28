@@ -145,7 +145,7 @@ class DNDBeyondActionsParser:
         elif action_range.aoeType and action_range.aoeSize:
             action_range.rangeDescription = f"{action_range.aoeSize}-foot {action_range.aoeType}"
         
-        return action_range if any(getattr(action_range, f) for f in action_range.__dataclass_fields__) else None
+        return action_range if any(getattr(action_range, f) for f in ActionRange.model_fields) else None
     
     def parse_damage(self, dice_data: Dict[str, Any], damage_type_id: int, fixed_value: int) -> Optional[ActionDamage]:
         """Parse damage information."""
@@ -166,7 +166,7 @@ class DNDBeyondActionsParser:
         if damage_type_id in damage_types:
             damage.damageType = damage_types[damage_type_id]
         
-        return damage if any(getattr(damage, f) for f in damage.__dataclass_fields__) else None
+        return damage if any(getattr(damage, f) for f in ActionDamage.model_fields) else None
     
     def parse_save(self, save_dc: int, save_stat_id: int, success_desc: str, fail_desc: str) -> Optional[ActionSave]:
         """Parse saving throw information."""

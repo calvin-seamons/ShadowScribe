@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useFeedbackStore } from '@/lib/stores/feedbackStore'
 import { feedbackService } from '@/lib/services/feedbackService'
-import type { RoutingRecord, ToolPrediction } from '@/lib/types/feedback'
+import type { ToolPrediction } from '@/lib/types/feedback'
 
 interface FeedbackButtonProps {
   feedbackId: string;

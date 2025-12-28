@@ -97,7 +97,7 @@ def extract_inventory_items(data: Dict[str, Any]) -> List[InventoryItem]:
                     diceString=dice.get('diceString') if dice else None
                 )
                 # Only add if it has meaningful data
-                if any(getattr(cleaned_mod, field) is not None for field in cleaned_mod.__dataclass_fields__):
+                if any(getattr(cleaned_mod, field) is not None for field in ItemModifier.model_fields):
                     granted_modifiers.append(cleaned_mod)
         
         # Clean description
@@ -138,7 +138,7 @@ def extract_inventory_items(data: Dict[str, Any]) -> List[InventoryItem]:
                 resetTypeDescription=lu.get('resetTypeDescription')
             )
             # Only keep if it has meaningful data
-            if not any(getattr(limited_use, field) is not None for field in limited_use.__dataclass_fields__):
+            if not any(getattr(limited_use, field) is not None for field in LimitedUse.model_fields):
                 limited_use = None
         
         # Create InventoryItem

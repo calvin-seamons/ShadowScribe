@@ -107,7 +107,7 @@ export function Step5_Abilities() {
   }
 
   const removeAction = (index: number) => {
-    const updated = actionEconomy.actions.filter((_: any, i: number) => i !== index)
+    const updated = (actionEconomy.actions ?? []).filter((_: any, i: number) => i !== index)
     updateSection('action_economy', { ...actionEconomy, actions: updated })
     if (expandedAction === index) setExpandedAction(null)
   }

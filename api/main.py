@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from api.config import config
-from api.routers import websocket, characters, feedback, campaigns, notes
+from api.routers import websocket, characters, feedback, campaigns
 
 
 def warmup_local_classifier():
@@ -70,7 +70,6 @@ app.include_router(websocket.router, tags=["WebSocket"])
 app.include_router(characters.router, prefix="/api", tags=["Characters"])
 app.include_router(feedback.router, prefix="/api", tags=["Feedback"])
 app.include_router(campaigns.router, prefix="/api", tags=["Campaigns"])
-app.include_router(notes.router, prefix="/api", tags=["Notes"])
 
 
 @app.get("/")

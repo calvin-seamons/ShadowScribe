@@ -315,7 +315,6 @@ async def character_creation_websocket(websocket: WebSocket):
                     character = await builder.build_async(progress_callback=progress_callback)
 
                     # Step 3: Serialize character for response
-                    from dataclasses import asdict
                     from datetime import datetime
                     import json as json_lib
 
@@ -325,7 +324,7 @@ async def character_creation_websocket(websocket: WebSocket):
                             return obj.isoformat()
                         raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
-                    character_dict = asdict(character)
+                    character_dict = character.model_dump()
 
                     # Pre-serialize character_data to handle datetime objects
                     character_data_json = json_lib.loads(

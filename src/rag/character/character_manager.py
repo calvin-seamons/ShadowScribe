@@ -8,10 +8,8 @@ Supports both database (primary) and pickle file (fallback) storage.
 import json
 import pickle
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 from datetime import datetime
-from dataclasses import asdict
-from sqlalchemy.ext.asyncio import AsyncSession
 
 import dacite
 
@@ -22,9 +20,9 @@ class CharacterManager:
     """Manager for saving and loading Character objects from database or files."""
     
     def __init__(
-        self, 
+        self,
         save_directory: str = "knowledge_base/saved_characters",
-        db_session: Optional[AsyncSession] = None
+        db_session: Optional[Any] = None
     ):
         """
         Initialize the character manager.

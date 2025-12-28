@@ -1,8 +1,11 @@
-"""Firestore document models and helpers."""
-from dataclasses import dataclass, field, asdict
+"""Firestore document models and helpers.
+
+These are Pydantic models that serve as the single source of truth for Firestore documents.
+TypeScript types are auto-generated from these models using pydantic-to-typescript.
+"""
+from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, Any, List
-import uuid
+from typing import Optional, Any, List, Dict
 
 
 def _serialize_datetime(dt: Optional[datetime]) -> Optional[str]:
@@ -23,8 +26,7 @@ def _parse_datetime(value: Any) -> Optional[datetime]:
     return None
 
 
-@dataclass
-class UserDocument:
+class UserDocument(BaseModel):
     """User document for Firestore."""
     id: str  # Firebase UID (document ID)
     email: str
@@ -59,8 +61,7 @@ class UserDocument:
         )
 
 
-@dataclass
-class CampaignDocument:
+class CampaignDocument(BaseModel):
     """Campaign document for Firestore."""
     id: str
     name: str
@@ -95,8 +96,7 @@ class CampaignDocument:
         )
 
 
-@dataclass
-class SessionDocument:
+class SessionDocument(BaseModel):
     """Session document for Firestore AND RAG queries.
 
     Stored at: campaigns/{campaign_id}/sessions/{session_id}
@@ -118,37 +118,37 @@ class SessionDocument:
     summary: str = ''
 
     # Entities (per-session for chronological context)
-    player_characters: List[dict] = field(default_factory=list)  # [{name, entity_type, aliases, description, ...}]
-    npcs: List[dict] = field(default_factory=list)
-    locations: List[dict] = field(default_factory=list)
-    items: List[dict] = field(default_factory=list)
+    player_characters: List[Dict[str, Any]] = Field(default_factory=list)  # [{name, entity_type, aliases, description, ...}]
+    npcs: List[Dict[str, Any]] = Field(default_factory=list)
+    locations: List[Dict[str, Any]] = Field(default_factory=list)
+    items: List[Dict[str, Any]] = Field(default_factory=list)
 
     # Structured RAG fields
-    key_events: List[dict] = field(default_factory=list)
-    combat_encounters: List[dict] = field(default_factory=list)
-    spells_abilities_used: List[dict] = field(default_factory=list)
-    character_decisions: List[dict] = field(default_factory=list)
-    character_statuses: dict = field(default_factory=dict)  # {character_name: status_dict}
-    memories_visions: List[dict] = field(default_factory=list)
-    quest_updates: List[dict] = field(default_factory=list)
-    loot_obtained: dict = field(default_factory=dict)  # {character: [items]}
-    deaths: List[dict] = field(default_factory=list)
-    revivals: List[dict] = field(default_factory=list)
-    party_conflicts: List[str] = field(default_factory=list)
-    party_bonds: List[str] = field(default_factory=list)
-    quotes: List[dict] = field(default_factory=list)  # [{speaker, quote, context}]
-    funny_moments: List[str] = field(default_factory=list)
-    puzzles_encountered: dict = field(default_factory=dict)  # {puzzle: solution/status}
-    mysteries_revealed: List[str] = field(default_factory=list)
-    unresolved_questions: List[str] = field(default_factory=list)
-    divine_interventions: List[str] = field(default_factory=list)
-    religious_elements: List[str] = field(default_factory=list)
-    rules_clarifications: List[str] = field(default_factory=list)
-    dice_rolls: List[dict] = field(default_factory=list)
+    key_events: List[Dict[str, Any]] = Field(default_factory=list)
+    combat_encounters: List[Dict[str, Any]] = Field(default_factory=list)
+    spells_abilities_used: List[Dict[str, Any]] = Field(default_factory=list)
+    character_decisions: List[Dict[str, Any]] = Field(default_factory=list)
+    character_statuses: Dict[str, Any] = Field(default_factory=dict)  # {character_name: status_dict}
+    memories_visions: List[Dict[str, Any]] = Field(default_factory=list)
+    quest_updates: List[Dict[str, Any]] = Field(default_factory=list)
+    loot_obtained: Dict[str, Any] = Field(default_factory=dict)  # {character: [items]}
+    deaths: List[Dict[str, Any]] = Field(default_factory=list)
+    revivals: List[Dict[str, Any]] = Field(default_factory=list)
+    party_conflicts: List[str] = Field(default_factory=list)
+    party_bonds: List[str] = Field(default_factory=list)
+    quotes: List[Dict[str, Any]] = Field(default_factory=list)  # [{speaker, quote, context}]
+    funny_moments: List[str] = Field(default_factory=list)
+    puzzles_encountered: Dict[str, Any] = Field(default_factory=dict)  # {puzzle: solution/status}
+    mysteries_revealed: List[str] = Field(default_factory=list)
+    unresolved_questions: List[str] = Field(default_factory=list)
+    divine_interventions: List[str] = Field(default_factory=list)
+    religious_elements: List[str] = Field(default_factory=list)
+    rules_clarifications: List[str] = Field(default_factory=list)
+    dice_rolls: List[Dict[str, Any]] = Field(default_factory=list)
     cliffhanger: Optional[str] = None
     next_session_hook: Optional[str] = None
-    dm_notes: List[str] = field(default_factory=list)
-    raw_sections: dict = field(default_factory=dict)  # {section_name: text}
+    dm_notes: List[str] = Field(default_factory=list)
+    raw_sections: Dict[str, Any] = Field(default_factory=dict)  # {section_name: text}
 
     # Timestamps
     date: Optional[datetime] = None  # In-game or real session date
@@ -263,13 +263,12 @@ class SessionDocument:
         )
 
 
-@dataclass
-class CharacterDocument:
+class CharacterDocument(BaseModel):
     """Character document for Firestore."""
     id: str
     user_id: str
     name: str
-    data: dict  # Full character dataclass serialized
+    data: Dict[str, Any]  # Full character dataclass serialized
     campaign_id: str  # Required - all characters belong to a campaign
     race: Optional[str] = None
     character_class: Optional[str] = None
@@ -324,19 +323,18 @@ class CharacterDocument:
         )
 
 
-@dataclass
-class RoutingFeedbackDocument:
+class RoutingFeedbackDocument(BaseModel):
     """Routing feedback document for Firestore."""
     id: str
     user_query: str
     character_name: str
-    predicted_tools: list  # List of {tool, intention, confidence}
+    predicted_tools: List[Dict[str, Any]]  # List of {tool, intention, confidence}
     campaign_id: str = 'main_campaign'
-    predicted_entities: Optional[list] = None
+    predicted_entities: Optional[List[Dict[str, Any]]] = None
     classifier_backend: str = 'local'
     classifier_inference_time_ms: Optional[float] = None
     is_correct: Optional[bool] = None
-    corrected_tools: Optional[list] = None
+    corrected_tools: Optional[List[Dict[str, Any]]] = None
     feedback_notes: Optional[str] = None
     created_at: Optional[datetime] = None
     feedback_at: Optional[datetime] = None
@@ -417,8 +415,7 @@ class RoutingFeedbackDocument:
         )
 
 
-@dataclass
-class FeedbackStats:
+class FeedbackStats(BaseModel):
     """Statistics for routing feedback."""
     total_records: int = 0
     pending_review: int = 0

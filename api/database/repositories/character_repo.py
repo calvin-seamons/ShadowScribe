@@ -1,7 +1,6 @@
 """Character repository for Firestore operations."""
 from google.cloud.firestore_v1 import AsyncClient
 from typing import List, Optional
-from dataclasses import asdict
 from datetime import datetime
 import re
 import json
@@ -28,7 +27,7 @@ class CharacterRepository:
 
     async def create(self, character: CharacterDataclass, user_id: str, campaign_id: str) -> CharacterDocument:
         """Create a new character in Firestore."""
-        character_data = asdict(character)
+        character_data = character.model_dump()
 
         # Handle datetime serialization
         character_data_json = json.dumps(character_data, default=_json_serialize)
@@ -91,7 +90,7 @@ class CharacterRepository:
         if not doc.exists:
             return None
 
-        character_data = asdict(character)
+        character_data = character.model_dump()
         character_data_json = json.dumps(character_data, default=_json_serialize)
         character_data = json.loads(character_data_json)
 

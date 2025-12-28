@@ -44,4 +44,5 @@ packages = ["src"]
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+    "pydantic-to-typescript>=1.0.10",
 ]

@@ -1193,6 +1193,22 @@ asyncio.run(main())
         sys.exit(1)
 
 
+def cmd_generate_types(args):
+    """Generate TypeScript types from Pydantic models."""
+    log("Generating TypeScript types from Pydantic models...", "info")
+
+    result = run_command([
+        sys.executable,
+        str(PROJECT_ROOT / "scripts" / "generate_types.py")
+    ])
+
+    if result.returncode == 0:
+        log("TypeScript types generated successfully", "success")
+    else:
+        log("Type generation failed", "error")
+        sys.exit(1)
+
+
 # ============================================================================
 # Main
 # ============================================================================
@@ -1279,7 +1295,14 @@ Examples:
     feedback_parser.add_argument("--web", action="store_true", help="Open in browser (HTML view)")
     feedback_parser.add_argument("--reprocess", action="store_true", help="Re-extract entities and apply placeholders to all records")
     feedback_parser.set_defaults(func=cmd_feedback)
-    
+
+    # generate-types
+    generate_types_parser = subparsers.add_parser(
+        "generate-types",
+        help="Generate TypeScript types from Pydantic models"
+    )
+    generate_types_parser.set_defaults(func=cmd_generate_types)
+
     args = parser.parse_args()
     
     if not args.command:
