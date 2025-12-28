@@ -65,6 +65,7 @@ export function WizardProgress({ currentStep, totalSteps }: WizardProgressProps)
 
         {/* Restart button */}
         <button
+          type="button"
           onClick={() => {
             if (confirm('Are you sure you want to restart? All progress will be lost.')) {
               reset()

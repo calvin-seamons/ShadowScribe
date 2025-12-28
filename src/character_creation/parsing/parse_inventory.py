@@ -169,6 +169,7 @@ def clean_html(text: str) -> str:
     """Clean HTML tags and formatting from text.
     
     Converts HTML to clean, readable plain text:
+    - Removes script and style blocks entirely
     - Decodes HTML entities (&nbsp;, &amp;, etc.)
     - Converts block elements (p, br, div) to newlines
     - Removes all HTML tags
@@ -177,7 +178,11 @@ def clean_html(text: str) -> str:
     if not text:
         return ''
     
-    # First, decode HTML entities (e.g., &nbsp; -> space, &amp; -> &)
+    # Remove script and style blocks entirely (before any other processing)
+    text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(r'<style[^>]*>.*?</style>', '', text, flags=re.IGNORECASE | re.DOTALL)
+    
+    # Decode HTML entities (e.g., &nbsp; -> space, &amp; -> &)
     text = html.unescape(text)
     
     # Convert block-level elements to double newlines (paragraph breaks)

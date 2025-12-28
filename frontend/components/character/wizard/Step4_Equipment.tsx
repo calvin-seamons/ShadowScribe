@@ -21,6 +21,9 @@ import type { InventoryItem, Spell } from '@/lib/types/character'
 function cleanHtmlText(text: string | null | undefined): string {
   if (!text) return ''
 
+  // Guard against SSR - DOMParser is browser-only
+  if (typeof window === 'undefined') return text
+
   // Create a temporary element to decode HTML entities
   const doc = new DOMParser().parseFromString(text, 'text/html')
   let decoded = doc.body.textContent || ''
@@ -590,8 +593,9 @@ export function Step4_Equipment() {
                       </div>
                       {isExpanded && (
                         <div className="px-3 pb-3 pt-1 border-t border-emerald-500/20">
-                          <label className="block text-xs text-muted-foreground mb-1.5">Description</label>
+                          <label htmlFor={`description-equipped-${index}`} className="block text-xs text-muted-foreground mb-1.5">Description</label>
                           <textarea
+                            id={`description-equipped-${index}`}
                             value={cleanHtmlText(item.definition?.description)}
                             onChange={(e) => updateItemDescription('equipped_items', index, e.target.value)}
                             placeholder="Item description, properties, or notes..."
@@ -657,8 +661,9 @@ export function Step4_Equipment() {
                       </div>
                       {isExpanded && (
                         <div className="px-3 pb-3 pt-1 border-t border-border/30">
-                          <label className="block text-xs text-muted-foreground mb-1.5">Description</label>
+                          <label htmlFor={`description-backpack-${index}`} className="block text-xs text-muted-foreground mb-1.5">Description</label>
                           <textarea
+                            id={`description-backpack-${index}`}
                             value={cleanHtmlText(item.definition?.description)}
                             onChange={(e) => updateItemDescription('backpack', index, e.target.value)}
                             placeholder="Item description, properties, or notes..."
