@@ -1194,7 +1194,14 @@ asyncio.run(main())
 
 
 def cmd_generate_types(args):
-    """Generate TypeScript types from Pydantic models."""
+    """
+    Generate TypeScript type definitions from the project's Pydantic models.
+    
+    Runs the project's scripts/generate_types.py script, logs the outcome, and exits the process with code 1 on failure.
+    
+    Parameters:
+    	args (argparse.Namespace): CLI arguments namespace (unused).
+    """
     log("Generating TypeScript types from Pydantic models...", "info")
 
     result = run_command([
@@ -1214,6 +1221,11 @@ def cmd_generate_types(args):
 # ============================================================================
 
 def main():
+    """
+    Entry point for the management CLI that parses command-line arguments and dispatches subcommands.
+    
+    Parses available subcommands (start, stop, restart, status, logs, health, migrate, shell, demo, build, clean, feedback, generate-types, etc.), invokes the selected command handler, and exits with an appropriate status code. If no command is provided the help is printed and the process exits with code 0. On keyboard interrupt the process exits with code 130; unhandled exceptions cause an exit with code 1.
+    """
     parser = argparse.ArgumentParser(
         description="ShadowScribe 2.0 Management Script",
         formatter_class=argparse.RawDescriptionHelpFormatter,

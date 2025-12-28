@@ -26,7 +26,12 @@ class CharacterRepository:
         self.collection = db.collection(CHARACTERS_COLLECTION)
 
     async def create(self, character: CharacterDataclass, user_id: str, campaign_id: str) -> CharacterDocument:
-        """Create a new character in Firestore."""
+        """
+        Create a new character document in the characters collection.
+        
+        Returns:
+            CharacterDocument: The created character document containing the generated document id, provided user and campaign ids, and the stored character data.
+        """
         character_data = character.model_dump()
 
         # Handle datetime serialization
@@ -83,7 +88,16 @@ class CharacterRepository:
         return sorted(characters, key=lambda c: c.created_at or datetime.min)
 
     async def update(self, character_id: str, character: CharacterDataclass) -> Optional[CharacterDocument]:
-        """Update character."""
+        """
+        Apply updates from a CharacterDataclass to an existing character document.
+        
+        Parameters:
+            character_id (str): Firestore document ID of the character to update.
+            character (CharacterDataclass): Dataclass containing the updated character fields and full data payload.
+        
+        Returns:
+            CharacterDocument | None: `CharacterDocument` with the updated data if the document existed, `None` if no document was found.
+        """
         doc_ref = self.collection.document(character_id)
         doc = await doc_ref.get()
 

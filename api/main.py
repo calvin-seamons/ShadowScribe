@@ -9,10 +9,10 @@ from api.routers import websocket, characters, feedback, campaigns
 
 
 def warmup_local_classifier():
-    """Preload the local classifier model to avoid cold start delays.
-
-    Uses the singleton pattern from central_engine to ensure the model
-    is loaded once and shared across all engine instances.
+    """
+    Preloads the local classifier model to reduce cold-start latency.
+    
+    If a local classifier is available, performs a sample inference to fully initialize model kernels; logs progress and failures to standard output.
     """
     try:
         print("[Warmup] Loading local classifier model...")

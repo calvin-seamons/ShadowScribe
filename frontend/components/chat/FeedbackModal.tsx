@@ -10,6 +10,15 @@ interface FeedbackModalProps {
   onSubmit?: () => void;
 }
 
+/**
+ * Display a modal that lets the user review a model routing decision, mark it as correct, or submit corrected tools and optional notes.
+ *
+ * The component reads and updates feedback-related state from the feedback store, loads tool intentions when needed, and submits feedback via the feedback service.
+ *
+ * @param onClose - Optional callback invoked after the modal is closed (via Cancel or after successful submit).
+ * @param onSubmit - Optional callback invoked after a successful feedback submission.
+ * @returns The modal element when visible; otherwise `null`.
+ */
 export default function FeedbackModal({ onClose, onSubmit }: FeedbackModalProps) {
   const {
     showFeedbackModal,
