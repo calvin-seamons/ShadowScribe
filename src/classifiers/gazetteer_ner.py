@@ -317,70 +317,62 @@ class GazetteerEntityExtractor:
                 aliases[char_name] = char_aliases
             counts['CHARACTER'] = self.add_entities([char_name], 'CHARACTER', aliases)
         
-        # Add entities from session notes
+        # Add entities from session notes (per-session, not campaign-wide)
         if session_storage:
-            # Map session note entity types to our gazetteer types
-            session_type_mapping = {
-                'player_character': 'PARTY_MEMBER',
-                'non_player_character': 'NPC',
-                'location': 'LOCATION',
-                'item': 'SESSION_ITEM',
-                'faction': 'FACTION',
-                'organization': 'FACTION',
-            }
-            
-            # Gather all entities from session storage
-            # CampaignSessionNotesStorage has a flat entities dict at the top level
-            entity_groups: Dict[str, List[str]] = {k: [] for k in session_type_mapping}
-            alias_groups: Dict[str, Dict[str, List[str]]] = {k: {} for k in session_type_mapping}
-            
-            # Iterate over the flat entities dictionary
-            if hasattr(session_storage, 'entities') and session_storage.entities:
-                for entity_id, entity in session_storage.entities.items():
-                    # Get entity type as string
-                    entity_type_raw = None
-                    if hasattr(entity, 'entity_type'):
-                        et = entity.entity_type
-                        entity_type_raw = et.value if hasattr(et, 'value') else str(et)
-                    elif isinstance(entity, dict) and 'entity_type' in entity:
-                        entity_type_raw = entity['entity_type']
-                    
-                    if not entity_type_raw:
-                        continue
-                    
-                    # Normalize to our mapping keys
-                    entity_type_key = entity_type_raw.lower().replace(' ', '_')
-                    if entity_type_key not in session_type_mapping:
-                        continue
-                    
-                    # Get entity name
-                    entity_name = entity.name if hasattr(entity, 'name') else (
-                        entity.get('name', '') if isinstance(entity, dict) else str(entity)
-                    )
-                    if not entity_name:
-                        continue
-                    
-                    entity_groups[entity_type_key].append(entity_name)
-                    
-                    # Get aliases if available
-                    aliases_list = []
-                    if hasattr(entity, 'aliases') and entity.aliases:
-                        aliases_list = entity.aliases
-                    elif isinstance(entity, dict) and 'aliases' in entity:
-                        aliases_list = entity['aliases']
-                    
-                    if aliases_list:
-                        alias_groups[entity_type_key][entity_name] = aliases_list
-            
-            # Add to gazetteer
-            for session_type, gazetteer_type in session_type_mapping.items():
-                names = list(set(entity_groups.get(session_type, [])))  # Dedupe
-                if names:
-                    counts[gazetteer_type] = self.add_entities(
-                        names, 
-                        gazetteer_type,
-                        alias_groups.get(session_type, {})
-                    )
+            # Gather entities from all sessions
+            party_members: List[str] = []
+            npcs: List[str] = []
+            locations: List[str] = []
+            session_items: List[str] = []
+            aliases: Dict[str, List[str]] = {}
+
+            # Iterate through all sessions and collect entities
+            for session in session_storage.get_all_sessions():
+                # Player characters
+                for pc in session.player_characters:
+                    name = pc.get('name', '') if isinstance(pc, dict) else ''
+                    if name:
+                        party_members.append(name)
+                        pc_aliases = pc.get('aliases', []) if isinstance(pc, dict) else []
+                        if pc_aliases:
+                            aliases[name] = pc_aliases
+
+                # NPCs
+                for npc in session.npcs:
+                    name = npc.get('name', '') if isinstance(npc, dict) else ''
+                    if name:
+                        npcs.append(name)
+                        npc_aliases = npc.get('aliases', []) if isinstance(npc, dict) else []
+                        if npc_aliases:
+                            aliases[name] = npc_aliases
+
+                # Locations
+                for loc in session.locations:
+                    name = loc.get('name', '') if isinstance(loc, dict) else ''
+                    if name:
+                        locations.append(name)
+                        loc_aliases = loc.get('aliases', []) if isinstance(loc, dict) else []
+                        if loc_aliases:
+                            aliases[name] = loc_aliases
+
+                # Items
+                for item in session.items:
+                    name = item.get('name', '') if isinstance(item, dict) else ''
+                    if name:
+                        session_items.append(name)
+                        item_aliases = item.get('aliases', []) if isinstance(item, dict) else []
+                        if item_aliases:
+                            aliases[name] = item_aliases
+
+            # Dedupe and add to gazetteer
+            if party_members:
+                counts['PARTY_MEMBER'] = self.add_entities(list(set(party_members)), 'PARTY_MEMBER', aliases)
+            if npcs:
+                counts['NPC'] = self.add_entities(list(set(npcs)), 'NPC', aliases)
+            if locations:
+                counts['LOCATION'] = self.add_entities(list(set(locations)), 'LOCATION', aliases)
+            if session_items:
+                counts['SESSION_ITEM'] = self.add_entities(list(set(session_items)), 'SESSION_ITEM', aliases)
         
         print(f"[GazetteerNER] Added dynamic entities: {counts}")
         return counts

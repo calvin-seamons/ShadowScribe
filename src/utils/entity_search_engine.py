@@ -419,7 +419,7 @@ class EntitySearchEngine:
         return results
     
     # ===== SESSION NOTES SEARCH =====
-    
+
     def search_session_notes(
         self,
         campaign_storage: 'CampaignSessionNotesStorage',
@@ -427,90 +427,85 @@ class EntitySearchEngine:
         max_results: int = 10
     ) -> List['EntitySearchResult']:
         """Search session notes for an entity (NPCs, locations, quests, etc.).
-        
+
         Uses multiple search strategies:
-        1. Search indexed entities (NPCs, locations, etc.)
+        1. Search per-session entity lists (NPCs, locations, items, player_characters)
         2. Search entity aliases
         3. Search raw session content for text mentions (fallback)
-        
+
         Returns up to max_results matches sorted by confidence (highest first).
         More context is better - prefer returning too many matches over too few.
         """
         from src.rag.character.character_query_types import EntitySearchResult
-        
+
         if not campaign_storage:
             return []
-        
+
         all_matches = []
-        
-        # Strategy 1 & 2: Search indexed entities and aliases
-        if campaign_storage.entities:
-            for entity_id, entity in campaign_storage.entities.items():
-                # Get entity name
-                name = self._get_item_name(entity)
-                if not name:
-                    continue
-                
-                # Get entity type for section identification
-                entity_type = None
-                if hasattr(entity, 'entity_type'):
-                    entity_type = str(entity.entity_type.value) if hasattr(entity.entity_type, 'value') else str(entity.entity_type)
-                elif isinstance(entity, dict) and 'entity_type' in entity:
-                    entity_type = entity['entity_type']
-                
-                section = f'session_notes.{entity_type}' if entity_type else 'session_notes.entity'
-                
-                # Check main name
-                match_result = self.match_entity_name(entity_name, name)
-                if match_result:
-                    confidence, strategy, matched_text = match_result
-                    all_matches.append((confidence, strategy, matched_text, section))
-                
-                # Check aliases
-                aliases = []
-                if hasattr(entity, 'aliases'):
-                    aliases = entity.aliases
-                elif isinstance(entity, dict) and 'aliases' in entity:
-                    aliases = entity['aliases']
-                
-                for alias in aliases:
-                    if not alias:
+
+        # Strategy 1 & 2: Search per-session entity lists
+        for session in campaign_storage.get_all_sessions():
+            session_num = session.session_number
+
+            # Define entity lists with their types
+            entity_lists = [
+                (session.player_characters, 'player_character'),
+                (session.npcs, 'npc'),
+                (session.locations, 'location'),
+                (session.items, 'item'),
+            ]
+
+            for entity_list, entity_type in entity_lists:
+                for entity in entity_list:
+                    if not isinstance(entity, dict):
                         continue
-                    
-                    match_result = self.match_entity_name(entity_name, alias)
+
+                    name = entity.get('name', '')
+                    if not name:
+                        continue
+
+                    section = f'session_notes.{entity_type}'
+
+                    # Check main name
+                    match_result = self.match_entity_name(entity_name, name)
                     if match_result:
-                        confidence, strategy, _ = match_result
-                        # Slightly lower confidence for alias matches
-                        confidence = min(confidence, 0.95)
-                        all_matches.append((confidence, f"{strategy}_alias", f"{name} (alias: {alias})", section))
-        
+                        confidence, strategy, matched_text = match_result
+                        all_matches.append((confidence, strategy, f"{matched_text} (session {session_num})", section))
+
+                    # Check aliases
+                    aliases = entity.get('aliases', [])
+                    for alias in aliases:
+                        if not alias:
+                            continue
+
+                        match_result = self.match_entity_name(entity_name, alias)
+                        if match_result:
+                            confidence, strategy, _ = match_result
+                            # Slightly lower confidence for alias matches
+                            confidence = min(confidence, 0.95)
+                            all_matches.append((confidence, f"{strategy}_alias", f"{name} (alias: {alias}, session {session_num})", section))
+
         # Strategy 3: Search raw session content for text mentions (if no high-confidence match found)
         high_confidence_found = any(m[0] >= 0.8 for m in all_matches)
-        
-        if not high_confidence_found and campaign_storage.sessions:
+
+        if not high_confidence_found:
             normalized_entity = self.normalize_text(entity_name)
-            
-            for session_id, session in campaign_storage.sessions.items():
-                # Check session content/summary
-                content = None
-                if hasattr(session, 'content'):
-                    content = session.content
-                elif hasattr(session, 'summary'):
-                    content = session.summary
-                
-                if content and normalized_entity in self.normalize_text(content):
-                    # Found in raw content
-                    all_matches.append((0.75, "content_search", f"Found in session {session_id}", 'session_notes.content'))
-                
-                # Check raw_notes.raw_sections if available
-                raw_notes = getattr(session, 'raw_notes', None)
-                if raw_notes and hasattr(raw_notes, 'raw_sections'):
-                    for section_name, section_content in raw_notes.raw_sections.items():
+
+            for session in campaign_storage.get_all_sessions():
+                session_num = session.session_number
+
+                # Check session summary
+                if session.summary and normalized_entity in self.normalize_text(session.summary):
+                    all_matches.append((0.75, "content_search", f"Found in session {session_num} summary", 'session_notes.content'))
+
+                # Check raw_sections
+                if session.raw_sections:
+                    for section_name, section_content in session.raw_sections.items():
                         if normalized_entity in self.normalize_text(section_content):
                             # Determine section type from section name
                             section_type = 'content'
                             if 'npc' in section_name.lower():
-                                section_type = 'non_player_character'
+                                section_type = 'npc'
                             elif 'player' in section_name.lower() or 'character' in section_name.lower():
                                 section_type = 'player_character'
                             elif 'location' in section_name.lower():
@@ -519,10 +514,10 @@ class EntitySearchEngine:
                                 section_type = 'combat'
                             elif 'event' in section_name.lower():
                                 section_type = 'event'
-                            
-                            all_matches.append((0.75, "raw_section_search", f"Found in {section_name}", f'session_notes.{section_type}'))
+
+                            all_matches.append((0.75, "raw_section_search", f"Found in {section_name} (session {session_num})", f'session_notes.{section_type}'))
                             break  # One match per session is enough
-        
+
         # Return ALL matches above threshold, sorted by confidence
         if all_matches:
             all_matches.sort(key=lambda x: x[0], reverse=True)
@@ -534,7 +529,7 @@ class EntitySearchEngine:
                 if section_key in seen_sections:
                     continue
                 seen_sections.add(section_key)
-                
+
                 results.append(EntitySearchResult(
                     entity_name=entity_name,
                     found_in_sections=[section],
@@ -543,7 +538,7 @@ class EntitySearchEngine:
                     match_strategy=strategy
                 ))
             return results
-        
+
         return []
     
     # ===== RULEBOOK SEARCH =====

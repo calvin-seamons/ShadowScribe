@@ -1,7 +1,7 @@
 """Firestore document models and helpers."""
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
-from typing import Optional, Any
+from typing import Optional, Any, List
 import uuid
 
 
@@ -96,22 +96,108 @@ class CampaignDocument:
 
 
 @dataclass
-class SessionNoteDocument:
-    """Session note document for Firestore (subcollection under campaigns)."""
+class SessionDocument:
+    """Session document for Firestore AND RAG queries.
+
+    Stored at: campaigns/{campaign_id}/sessions/{session_id}
+
+    This is the single source of truth for session data - used both for
+    Firestore persistence and in-memory RAG queries. No serialization layer.
+    """
+    # Identity
     id: str
     campaign_id: str
     user_id: str
-    content: str
-    processed_content: Optional[dict] = None
+    session_number: int
+    session_name: str
+
+    # Content
+    raw_content: str = ''  # Original transcript input
+    processed_markdown: str = ''  # LLM-generated structured markdown
+    title: str = ''
+    summary: str = ''
+
+    # Entities (per-session for chronological context)
+    player_characters: List[dict] = field(default_factory=list)  # [{name, entity_type, aliases, description, ...}]
+    npcs: List[dict] = field(default_factory=list)
+    locations: List[dict] = field(default_factory=list)
+    items: List[dict] = field(default_factory=list)
+
+    # Structured RAG fields
+    key_events: List[dict] = field(default_factory=list)
+    combat_encounters: List[dict] = field(default_factory=list)
+    spells_abilities_used: List[dict] = field(default_factory=list)
+    character_decisions: List[dict] = field(default_factory=list)
+    character_statuses: dict = field(default_factory=dict)  # {character_name: status_dict}
+    memories_visions: List[dict] = field(default_factory=list)
+    quest_updates: List[dict] = field(default_factory=list)
+    loot_obtained: dict = field(default_factory=dict)  # {character: [items]}
+    deaths: List[dict] = field(default_factory=list)
+    revivals: List[dict] = field(default_factory=list)
+    party_conflicts: List[str] = field(default_factory=list)
+    party_bonds: List[str] = field(default_factory=list)
+    quotes: List[dict] = field(default_factory=list)  # [{speaker, quote, context}]
+    funny_moments: List[str] = field(default_factory=list)
+    puzzles_encountered: dict = field(default_factory=dict)  # {puzzle: solution/status}
+    mysteries_revealed: List[str] = field(default_factory=list)
+    unresolved_questions: List[str] = field(default_factory=list)
+    divine_interventions: List[str] = field(default_factory=list)
+    religious_elements: List[str] = field(default_factory=list)
+    rules_clarifications: List[str] = field(default_factory=list)
+    dice_rolls: List[dict] = field(default_factory=list)
+    cliffhanger: Optional[str] = None
+    next_session_hook: Optional[str] = None
+    dm_notes: List[str] = field(default_factory=list)
+    raw_sections: dict = field(default_factory=dict)  # {section_name: text}
+
+    # Timestamps
+    date: Optional[datetime] = None  # In-game or real session date
     created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     def to_dict(self) -> dict:
-        """Convert to Firestore document data (excludes id)."""
+        """Convert to Firestore document data (excludes id and campaign_id)."""
+        now = datetime.utcnow()
         return {
             'user_id': self.user_id,
-            'content': self.content,
-            'processed_content': self.processed_content,
-            'created_at': self.created_at or datetime.utcnow(),
+            'session_number': self.session_number,
+            'session_name': self.session_name,
+            'raw_content': self.raw_content,
+            'processed_markdown': self.processed_markdown,
+            'title': self.title,
+            'summary': self.summary,
+            'player_characters': self.player_characters,
+            'npcs': self.npcs,
+            'locations': self.locations,
+            'items': self.items,
+            'key_events': self.key_events,
+            'combat_encounters': self.combat_encounters,
+            'spells_abilities_used': self.spells_abilities_used,
+            'character_decisions': self.character_decisions,
+            'character_statuses': self.character_statuses,
+            'memories_visions': self.memories_visions,
+            'quest_updates': self.quest_updates,
+            'loot_obtained': self.loot_obtained,
+            'deaths': self.deaths,
+            'revivals': self.revivals,
+            'party_conflicts': self.party_conflicts,
+            'party_bonds': self.party_bonds,
+            'quotes': self.quotes,
+            'funny_moments': self.funny_moments,
+            'puzzles_encountered': self.puzzles_encountered,
+            'mysteries_revealed': self.mysteries_revealed,
+            'unresolved_questions': self.unresolved_questions,
+            'divine_interventions': self.divine_interventions,
+            'religious_elements': self.religious_elements,
+            'rules_clarifications': self.rules_clarifications,
+            'dice_rolls': self.dice_rolls,
+            'cliffhanger': self.cliffhanger,
+            'next_session_hook': self.next_session_hook,
+            'dm_notes': self.dm_notes,
+            'raw_sections': self.raw_sections,
+            'date': self.date,
+            'created_at': self.created_at or now,
+            'updated_at': now,
         }
 
     def to_response(self) -> dict:
@@ -120,21 +206,60 @@ class SessionNoteDocument:
             'id': self.id,
             'campaign_id': self.campaign_id,
             'user_id': self.user_id,
-            'content': self.content,
-            'processed_content': self.processed_content,
+            'session_number': self.session_number,
+            'session_name': self.session_name,
+            'title': self.title,
+            'summary': self.summary,
+            'date': _serialize_datetime(self.date),
             'created_at': _serialize_datetime(self.created_at),
+            'updated_at': _serialize_datetime(self.updated_at),
         }
 
     @classmethod
-    def from_firestore(cls, doc_id: str, campaign_id: str, data: dict) -> 'SessionNoteDocument':
+    def from_firestore(cls, doc_id: str, campaign_id: str, data: dict) -> 'SessionDocument':
         """Create from Firestore document."""
         return cls(
             id=doc_id,
             campaign_id=campaign_id,
             user_id=data.get('user_id', ''),
-            content=data.get('content', ''),
-            processed_content=data.get('processed_content'),
+            session_number=data.get('session_number', 0),
+            session_name=data.get('session_name', ''),
+            raw_content=data.get('raw_content', ''),
+            processed_markdown=data.get('processed_markdown', ''),
+            title=data.get('title', ''),
+            summary=data.get('summary', ''),
+            player_characters=data.get('player_characters', []),
+            npcs=data.get('npcs', []),
+            locations=data.get('locations', []),
+            items=data.get('items', []),
+            key_events=data.get('key_events', []),
+            combat_encounters=data.get('combat_encounters', []),
+            spells_abilities_used=data.get('spells_abilities_used', []),
+            character_decisions=data.get('character_decisions', []),
+            character_statuses=data.get('character_statuses', {}),
+            memories_visions=data.get('memories_visions', []),
+            quest_updates=data.get('quest_updates', []),
+            loot_obtained=data.get('loot_obtained', {}),
+            deaths=data.get('deaths', []),
+            revivals=data.get('revivals', []),
+            party_conflicts=data.get('party_conflicts', []),
+            party_bonds=data.get('party_bonds', []),
+            quotes=data.get('quotes', []),
+            funny_moments=data.get('funny_moments', []),
+            puzzles_encountered=data.get('puzzles_encountered', {}),
+            mysteries_revealed=data.get('mysteries_revealed', []),
+            unresolved_questions=data.get('unresolved_questions', []),
+            divine_interventions=data.get('divine_interventions', []),
+            religious_elements=data.get('religious_elements', []),
+            rules_clarifications=data.get('rules_clarifications', []),
+            dice_rolls=data.get('dice_rolls', []),
+            cliffhanger=data.get('cliffhanger'),
+            next_session_hook=data.get('next_session_hook'),
+            dm_notes=data.get('dm_notes', []),
+            raw_sections=data.get('raw_sections', {}),
+            date=_parse_datetime(data.get('date')),
             created_at=_parse_datetime(data.get('created_at')),
+            updated_at=_parse_datetime(data.get('updated_at')),
         )
 
 

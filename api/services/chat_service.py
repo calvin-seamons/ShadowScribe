@@ -50,7 +50,7 @@ class ChatService:
         self._initialize_storage()
 
     def _initialize_storage(self):
-        """Initialize rulebook and session notes storage."""
+        """Initialize rulebook storage."""
         try:
             # Load rulebook storage (shared across all characters)
             self._rulebook_storage = RulebookStorage()
@@ -59,17 +59,17 @@ class ChatService:
                 self._rulebook_storage.load_from_disk(str(rulebook_path))
                 print(f"[ChatService] Loaded rulebook storage")
 
-            # Load session notes storage instance (campaigns are loaded per-request)
-            self._session_notes_storage_instance = SessionNotesStorage()
-            print(f"[ChatService] Session notes storage initialized")
+            # Session notes storage is initialized lazily with Firestore client
+            self._session_notes_storage_instance = None
+            print(f"[ChatService] Session notes storage will be initialized on first request")
         except Exception as e:
             print(f"[ChatService] Warning: Could not load storage: {e}")
 
-    def _get_campaign_session_notes(self, campaign_id: str = "main_campaign"):
-        """Get campaign session notes, using cache if available.
+    async def _get_campaign_session_notes(self, campaign_id: str):
+        """Get campaign session notes from Firestore, using cache if available.
 
         Args:
-            campaign_id: The campaign ID to load. Defaults to "main_campaign".
+            campaign_id: The campaign ID to load.
 
         Returns:
             CampaignSessionNotesStorage or None if not found.
@@ -77,22 +77,23 @@ class ChatService:
         if campaign_id in self._campaign_caches:
             return self._campaign_caches[campaign_id]
 
-        if self._session_notes_storage_instance:
-            campaign_notes = self._session_notes_storage_instance.get_campaign(campaign_id)
-            if campaign_notes:
-                self._campaign_caches[campaign_id] = campaign_notes
-                print(f"[ChatService] Loaded campaign session notes: {campaign_id}")
-                return campaign_notes
+        # Initialize session notes storage with Firestore client if not already done
+        if self._session_notes_storage_instance is None:
+            db = get_firestore_client()
+            self._session_notes_storage_instance = SessionNotesStorage(db)
+            print(f"[ChatService] Session notes storage initialized with Firestore")
 
-        print(f"[ChatService] Campaign not found: {campaign_id}")
+        campaign_notes = await self._session_notes_storage_instance.get_campaign(campaign_id)
+        if campaign_notes:
+            self._campaign_caches[campaign_id] = campaign_notes
+            print(f"[ChatService] Loaded campaign session notes from Firestore: {campaign_id}")
+            return campaign_notes
+
+        print(f"[ChatService] No sessions found for campaign: {campaign_id}")
         return None
 
-    async def _get_or_create_engine(
-        self,
-        character_name: str,
-        default_campaign_id: str = "main_campaign"
-    ) -> CentralEngine:
-        """Get or create CentralEngine for character and campaign.
+    async def _get_or_create_engine(self, character_name: str) -> CentralEngine:
+        """Get or create CentralEngine for character.
 
         The engine is keyed by both character_name and campaign_id, so changing
         either will create a new engine with the appropriate context for
@@ -100,7 +101,6 @@ class ChatService:
 
         Args:
             character_name: Name of the character to use
-            default_campaign_id: Fallback campaign ID for local characters; Firestore characters use their stored campaign_id
 
         Returns:
             Configured CentralEngine instance
@@ -109,29 +109,20 @@ class ChatService:
         db = get_firestore_client()
         repo = CharacterRepository(db)
 
-        # Try to load from Firestore by name
+        # Load from Firestore by name
         char_doc = await repo.get_by_name(character_name)
-        actual_campaign_id = None
-
         if not char_doc:
-            # Fallback: try loading from local pickle files
-            from src.rag.character.character_manager import CharacterManager
-            char_manager = CharacterManager()
-            character = char_manager.load_character(character_name)
-            if not character:
-                raise ValueError(f"Character '{character_name}' not found")
-            # Local characters use the passed default_campaign_id
-            actual_campaign_id = default_campaign_id
-        else:
-            # Convert Firestore data to Character dataclass
-            character = from_dict(
-                data_class=Character,
-                data=char_doc.data,
-                config=dacite.Config(strict=False, check_types=False)
-            )
-            # Use the character's actual campaign_id from Firestore
-            # If character has no campaign, don't load any session notes
-            actual_campaign_id = char_doc.campaign_id
+            raise ValueError(f"Character '{character_name}' not found in Firestore")
+
+        # Convert Firestore data to Character dataclass
+        character = from_dict(
+            data_class=Character,
+            data=char_doc.data,
+            config=dacite.Config(strict=False, check_types=False)
+        )
+        # Use the character's actual campaign_id from Firestore
+        # If character has no campaign, don't load any session notes
+        actual_campaign_id = char_doc.campaign_id
 
         # Key engines by both character and their actual campaign
         engine_key = f"{character_name}::{actual_campaign_id or 'no_campaign'}"
@@ -142,7 +133,7 @@ class ChatService:
         # Get campaign session notes only if character has a campaign
         campaign_session_notes = None
         if actual_campaign_id:
-            campaign_session_notes = self._get_campaign_session_notes(actual_campaign_id)
+            campaign_session_notes = await self._get_campaign_session_notes(actual_campaign_id)
             print(f"[ChatService] Character '{character_name}' belongs to campaign '{actual_campaign_id}'")
         else:
             print(f"[ChatService] Character '{character_name}' has no campaign association")
@@ -212,7 +203,7 @@ class ChatService:
         Yields:
             Response chunks as they are generated
         """
-        engine = await self._get_or_create_engine(character_name, campaign_id)
+        engine = await self._get_or_create_engine(character_name)
 
         async for chunk in engine.process_query_stream(user_query, character_name, metadata_callback):
             yield chunk
