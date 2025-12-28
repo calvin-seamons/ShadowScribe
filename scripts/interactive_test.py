@@ -5,7 +5,11 @@ Interactive Backend Test
 Tests the full RAG pipeline locally before deployment.
 Uses the same code paths as the API WebSocket endpoint.
 
-Usage:
+Usage (preferred - module execution):
+    uv run python -m scripts.interactive_test
+    uv run python -m scripts.interactive_test --character "Duskryn Nightwarden"
+
+Usage (standalone fallback):
     uv run python scripts/interactive_test.py
     uv run python scripts/interactive_test.py --character "Duskryn Nightwarden"
 """
@@ -15,6 +19,14 @@ import argparse
 import os
 import sys
 
+# LAST-RESORT FALLBACK: When running as a standalone script (not via module execution),
+# the project root may not be on sys.path. This ensures imports resolve correctly.
+# Prefer running via: uv run python -m scripts.interactive_test
+if __name__ == '__main__':
+    _project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if _project_root not in sys.path:
+        sys.path.insert(0, _project_root)
+
 # Set credentials before importing firebase
 os.environ.setdefault(
     'GOOGLE_APPLICATION_CREDENTIALS',
@@ -22,9 +34,6 @@ os.environ.setdefault(
 )
 
 from google.cloud.firestore import AsyncClient
-
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import dacite
 
@@ -120,7 +129,7 @@ class InteractiveTest:
         campaign_notes = await self.session_storage.get_campaign(self.campaign_id)
         if campaign_notes:
             print(f"      ✓ Loaded {len(campaign_notes.sessions)} sessions from '{self.campaign_id}'")
-            for sid, session in campaign_notes.sessions.items():
+            for _sid, session in campaign_notes.sessions.items():
                 print(f"        - Session #{session.session_number}: {session.session_name}")
         else:
             print(f"      ○ No session notes found for campaign '{self.campaign_id}'")
@@ -183,7 +192,7 @@ class InteractiveTest:
 
         while True:
             try:
-                user_input = input(f"You: ").strip()
+                user_input = input("You: ").strip()
 
                 if not user_input:
                     continue
@@ -218,7 +227,7 @@ class InteractiveTest:
                         for s in sessions:
                             print(f"  #{s.session_number}: {s.session_name}")
                             print(f"    NPCs: {[n.get('name') for n in s.npcs]}")
-                            print(f"    Locations: {[l.get('name') for l in s.locations]}")
+                        print(f"    Locations: {[loc.get('name') for loc in s.locations]}")
                     else:
                         print("\nNo sessions loaded")
                     print()

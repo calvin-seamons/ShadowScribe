@@ -64,8 +64,11 @@ npm run lint                      # ESLint
 
 ### Backend (Python) - Always use `uv run`
 ```bash
-uv run python demo_central_engine.py                  # Interactive RAG testing (PRIMARY)
-uv run python demo_central_engine.py -q "What is my AC?"  # Single query test
+# Interactive RAG testing (tests full backend pipeline locally)
+uv run python scripts/interactive_test.py
+uv run python scripts/interactive_test.py --character "Duskryn Nightwarden"
+uv run python scripts/interactive_test.py --character "Duskryn" --query "What happened last session?"
+
 uv run python -m scripts.run_inspector --list         # List characters
 uv run python -m scripts.run_inspector "Name" --format text  # Inspect character
 
@@ -84,8 +87,9 @@ DATABASE_URL="..." GOOGLE_APPLICATION_CREDENTIALS="./credentials/firebase-servic
 ## Google Cloud & Firebase
 
 ### Project Info
-- **GCP Project (Cloud Run)**: `shadowscribe-prod`
+- **GCP Project**: `shadowscribe-prod`
 - **Firebase Project**: `shadowscribe-prod-3405b`
+- **Credentials File**: `credentials/firebase-service-account.json` (for project `shadowscribe-prod-3405b`)
 - **Region**: `us-central1`
 - **Cloud Run URL**: `https://shadowscribe-api-768657256070.us-central1.run.app`
 
@@ -107,8 +111,15 @@ characters/{character_id}
 campaigns/{campaign_id}
   - user_id, name, description, created_at
 
-campaigns/{campaign_id}/notes/{note_id}
-  - user_id, content, processed_content, created_at
+campaigns/{campaign_id}/sessions/{session_id}  (unified SessionDocument model)
+  - session_number, session_name, title, summary
+  - raw_content (original transcript), processed_markdown (LLM-structured)
+  - player_characters, npcs, locations, items (List[dict] - per-session entities)
+  - key_events, combat_encounters, character_decisions (List[dict])
+  - character_statuses (dict), memories_visions, quest_updates (List[dict])
+  - loot_obtained, puzzles_encountered (dict)
+  - unresolved_questions, divine_interventions, cliffhanger, etc.
+  - date, created_at, updated_at
 
 routing_feedback/{feedback_id}
   - user_query, predicted_tools, is_correct, corrected_tools, etc.
@@ -205,14 +216,17 @@ GOOGLE_APPLICATION_CREDENTIALS=./credentials/firebase-service-account.json
 |------|---------|
 | `src/central_engine.py` | Main query orchestrator with streaming |
 | `src/rag/character/character_types.py` | 20+ dataclasses for D&D characters |
+| `src/rag/session_notes/session_notes_storage.py` | Async Firestore session loading with caching |
+| `src/rag/session_notes/session_notes_query_router.py` | Session notes RAG query routing |
 | `src/config.py` | RAG configuration (models, temperatures) |
 | `api/main.py` | FastAPI entry point |
 | `api/auth.py` | Firebase token verification |
 | `api/database/firestore_client.py` | Firestore async client singleton |
-| `api/database/firestore_models.py` | Document dataclasses |
+| `api/database/firestore_models.py` | Document dataclasses (SessionDocument is unified model) |
 | `api/routers/websocket.py` | WebSocket `/ws/chat` endpoint |
 | `frontend/lib/stores/wizardStore.ts` | 8-step character creation wizard |
-| `demo_central_engine.py` | Primary testing tool for RAG system |
+| `scripts/interactive_test.py` | Interactive backend/RAG testing CLI |
+| `scripts/migrate_session_notes.py` | One-time migration: notes/ → sessions/ |
 | `tests/` | Pytest test suite |
 | `Dockerfile` | Production Docker image for Cloud Run |
 
@@ -286,8 +300,38 @@ uv run pytest tests/ -v -k "test_name"     # Specific test
 
 **Database**: Firestore (migrated from Cloud SQL in Dec 2024 to save ~$10/month)
 
+**Session Notes**: Migrated to unified `SessionDocument` model in Firestore (Dec 2024):
+- Old: `campaigns/{id}/notes/{id}` with unstructured `processed_content` blob
+- New: `campaigns/{id}/sessions/{id}` with full structured RAG fields
+- Per-session entities (npcs, locations, items) preserve chronological context
+- No more pickle files or local storage - everything in Firestore
+
 **Conversation History**: Currently in-memory only (per-session). Not persisted to database.
 
 **Known Limitations**:
 - Firestore composite indexes: Avoid `where()` + `order_by()` combinations. Sort in Python instead.
 - Cold starts: Local classifier model takes ~2-3 seconds to load on first query
+
+## Session Notes Architecture
+
+The `SessionDocument` model (`api/database/firestore_models.py`) is the **single source of truth** for session data - used for both Firestore persistence AND in-memory RAG queries (no serialization/hydration layer).
+
+```text
+Firestore: campaigns/{id}/sessions/{id}
+    └── SessionDocument (30+ fields)
+              │
+              ▼ (SessionNotesStorage.get_campaign)
+CampaignSessionNotesStorage
+    └── sessions: Dict[str, SessionDocument]
+              │
+              ▼ (SessionNotesQueryRouter.query)
+RAG Context: SessionNotesContext
+```
+
+**Per-Session Entities**: Each session stores its own entity lists (npcs, locations, items) rather than a campaign-wide index. This preserves chronological context for queries like "When did we first meet Ghul'Vor?"
+
+**Interactive Testing**:
+```bash
+uv run python scripts/interactive_test.py --character "Duskryn Nightwarden"
+# Commands: /sessions, /reload, /debug, /quit
+```

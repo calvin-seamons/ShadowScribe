@@ -5,8 +5,9 @@ This is a one-time migration script to transform the old session note structure
 to the new unified SessionDocument model.
 
 Usage:
-    uv run python scripts/migrate_session_notes.py --dry-run  # Preview changes
-    uv run python scripts/migrate_session_notes.py            # Execute migration
+    uv run python scripts/migrate_session_notes.py --dry-run    # Preview changes
+    uv run python scripts/migrate_session_notes.py              # Execute migration
+    uv run python scripts/migrate_session_notes.py --fail-fast  # Abort on first error
 """
 
 import asyncio
@@ -20,7 +21,8 @@ os.environ.setdefault(
     './credentials/firebase-service-account.json'
 )
 
-from google.cloud.firestore import AsyncClient
+from google.cloud.firestore import AsyncClient  # For type hints only
+from api.database.firestore_client import get_firestore_client
 from api.database.firestore_models import SessionDocument
 
 
@@ -118,8 +120,15 @@ def transform_note_to_session(note_id: str, campaign_id: str, note_data: dict) -
     )
 
 
-async def migrate_campaign(db: AsyncClient, campaign_id: str, dry_run: bool) -> dict:
-    """Migrate a single campaign's notes to sessions."""
+async def migrate_campaign(db: AsyncClient, campaign_id: str, *, dry_run: bool = False, fail_fast: bool = False) -> dict:
+    """Migrate a single campaign's notes to sessions.
+    
+    Args:
+        db: Firestore client
+        campaign_id: Campaign to migrate
+        dry_run: If True, preview changes without writing
+        fail_fast: If True, re-raise exceptions instead of continuing
+    """
     result = {
         'campaign_id': campaign_id,
         'notes_found': 0,
@@ -167,14 +176,16 @@ async def migrate_campaign(db: AsyncClient, campaign_id: str, dry_run: bool) -> 
             result['sessions_created'] += 1
 
         except Exception as e:
-            error_msg = f"Error migrating note {note_id}: {str(e)}"
+            error_msg = f"Error migrating note {note_id}: {e!r}"
             print(f"  ERROR: {error_msg}")
             result['errors'].append(error_msg)
+            if fail_fast:
+                raise
 
     return result
 
 
-async def main(dry_run: bool = True):
+async def main(*, dry_run: bool = True, fail_fast: bool = False):
     """Main migration function."""
     print("=" * 60)
     print("Session Notes Migration: notes/ -> sessions/")
@@ -185,8 +196,8 @@ async def main(dry_run: bool = True):
     else:
         print("\n*** LIVE MODE - Changes will be written to Firestore ***\n")
 
-    # Initialize Firestore
-    db = AsyncClient()
+    # Initialize Firestore (using centralized singleton)
+    db = get_firestore_client()
 
     # Get all campaigns
     campaigns = await get_all_campaigns(db)
@@ -206,7 +217,7 @@ async def main(dry_run: bool = True):
         print(f"\nProcessing campaign: {campaign_name} ({campaign_id})")
         print("-" * 40)
 
-        result = await migrate_campaign(db, campaign_id, dry_run)
+        result = await migrate_campaign(db, campaign_id, dry_run=dry_run, fail_fast=fail_fast)
 
         total_results['campaigns_processed'] += 1
         total_results['total_notes'] += result['notes_found']
@@ -236,6 +247,7 @@ async def main(dry_run: bool = True):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Migrate session notes to new structure')
     parser.add_argument('--dry-run', action='store_true', help='Preview changes without writing')
+    parser.add_argument('--fail-fast', action='store_true', help='Abort on first error instead of continuing')
     args = parser.parse_args()
 
-    asyncio.run(main(dry_run=args.dry_run))
+    asyncio.run(main(dry_run=args.dry_run, fail_fast=args.fail_fast))
