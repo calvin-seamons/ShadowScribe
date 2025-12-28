@@ -15,9 +15,9 @@ ShadowScribe is a D&D character management system with RAG (Retrieval-Augmented 
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────┐     ┌─────────────────────┐     ┌─────────────────────┐
-│   Next.js Frontend  │     │    FastAPI Backend  │     │   RAG Engine (src/) │
+│   Next.js Frontend  │
 │   (Vercel)          │────▶│    (Cloud Run)      │────▶│                     │
 │                     │     │                     │     │   CentralEngine     │
 │   - React/Zustand   │     │   - REST API        │     │   - Query routing   │
@@ -60,7 +60,7 @@ These secrets are configured in Google Secret Manager and mounted to Cloud Run:
 
 ### Firestore Collections
 
-```
+```text
 users/{firebase_uid}
 ├── email: string
 ├── display_name: string

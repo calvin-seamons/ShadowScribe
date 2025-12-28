@@ -170,12 +170,14 @@ class CharacterManager:
             last_updated=datetime.fromisoformat(data['last_updated']) if data.get('last_updated') and isinstance(data['last_updated'], str) else datetime.now()
         )
     
-    async def save_character_to_db(self, character: Character) -> str:
+    async def save_character_to_db(self, character: Character, user_id: str, campaign_id: str = "") -> str:
         """
         Save a Character object to the database.
         
         Args:
             character: The Character object to save
+            user_id: The Firebase UID of the user who owns this character
+            campaign_id: Optional campaign ID the character belongs to
             
         Returns:
             The character ID in the database
@@ -196,7 +198,7 @@ class CharacterManager:
             return existing.id
         else:
             # Create new character
-            db_character = await self._repository.create(character)
+            db_character = await self._repository.create(character, user_id=user_id, campaign_id=campaign_id)
             await self.db_session.commit()
             return db_character.id
     

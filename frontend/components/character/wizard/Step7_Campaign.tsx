@@ -92,6 +92,7 @@ export function Step7_Campaign() {
                         <div className="text-center py-8">
                             <p className="text-red-400 mb-4">{error}</p>
                             <button
+                                type="button"
                                 onClick={fetchCampaigns}
                                 className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                             >
@@ -119,6 +120,7 @@ export function Step7_Campaign() {
                                 const isSelected = selectedCampaignId === campaign.id
                                 return (
                                     <button
+                                        type="button"
                                         key={campaign.id}
                                         onClick={() => setSelectedCampaignId(campaign.id)}
                                         className={`w-full p-4 rounded-xl text-left transition-all ${isSelected

@@ -11,9 +11,11 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ScrollText, Check, Loader2, AlertTriangle, Swords, Backpack, Sparkles, User } from 'lucide-react'
 import { useWizardStore } from '@/lib/stores/wizardStore'
+import { useAuth } from '@/lib/auth-context'
 
 export function Step8_Review() {
   const router = useRouter()
+  const { token } = useAuth()
   const {
     characterData,
     characterSummary,
@@ -45,8 +47,6 @@ export function Step8_Review() {
     setError(null)
 
     try {
-      // Get auth token from localStorage
-      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
       }

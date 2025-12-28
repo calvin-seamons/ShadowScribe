@@ -88,7 +88,7 @@ class TestCleanHtml:
     def test_clean_html_empty_string(self):
         """Test handling of empty and None values."""
         assert clean_html("") == ""
-        assert clean_html(None) is None
+        assert clean_html(None) == ""  # Returns empty string for type safety (str -> str)
         assert clean_html("   \n\n   ") == ""
     
     def test_clean_html_complex_formatting(self):
