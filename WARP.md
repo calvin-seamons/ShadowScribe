@@ -185,17 +185,18 @@ NEXT_PUBLIC_API_URL=https://shadowscribe-api-768657256070.us-central1.run.app
 - Environment variables configured in Vercel dashboard
 
 ### Backend (Cloud Run)
-Deploy using the script:
+Deploy using manage.py:
 ```bash
 # Fast deploy - build locally, push to Artifact Registry (uses Docker cache)
-uv run python scripts/deploy_cloudrun.py --local
+uv run python manage.py deploy --local
 
 # Standard deploy - build with Cloud Build
-uv run python scripts/deploy_cloudrun.py
+uv run python manage.py deploy
 
 # With version bump
-uv run python scripts/deploy_cloudrun.py --local --patch   # 1.0.0 -> 1.0.1
-uv run python scripts/deploy_cloudrun.py --local --minor   # 1.0.0 -> 1.1.0
+uv run python manage.py deploy --local --patch   # 1.0.0 -> 1.0.1
+uv run python manage.py deploy --local --minor   # 1.0.0 -> 1.1.0
+uv run python manage.py deploy --version         # Show current version
 ```
 
 **Deployment files:**
@@ -238,7 +239,7 @@ gcloud auth list
 | `frontend/lib/auth-context.tsx` | React auth context with sign in/out |
 | `frontend/lib/services/api.ts` | API client with auth headers |
 | `frontend/lib/stores/wizardStore.ts` | 8-step character creation wizard state |
-| `scripts/deploy_cloudrun.py` | Automated Cloud Run deployment |
+| `manage.py` | Unified management script (start, stop, deploy, etc.) |
 | `scripts/interactive_test.py` | Interactive backend/RAG testing CLI |
 | `scripts/migrate_session_notes.py` | One-time migration: notes/ → sessions/ |
 | `Dockerfile` | Production Docker image for Cloud Run |

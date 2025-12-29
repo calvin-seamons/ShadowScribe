@@ -107,8 +107,8 @@ ShadowScribe/
 │       └── session_notes/     # Campaign history
 ├── scripts/                   # Utility scripts
 │   ├── interactive_test.py   # Backend testing CLI
-│   ├── deploy_cloudrun.py    # Cloud Run deployment
 │   └── migrate_session_notes.py
+├── manage.py                  # Unified management (start, stop, deploy, etc.)
 ├── tests/                     # Pytest test suite
 ├── Dockerfile                 # Cloud Run image
 └── pyproject.toml             # Python dependencies (uv)
@@ -164,16 +164,16 @@ Auto-deploys from `main` branch. Environment variables configured in Vercel dash
 ### Backend (Cloud Run)
 
 ```bash
-# Using deployment script
-uv run python scripts/deploy_cloudrun.py
+# Fast deploy - build locally, push to Artifact Registry (uses Docker cache)
+uv run python manage.py deploy --local
 
-# Or manually
-gcloud run deploy shadowscribe-api \
-  --region=us-central1 \
-  --source=. \
-  --allow-unauthenticated \
-  --memory=2Gi \
-  --cpu=2
+# Standard deploy - build with Cloud Build
+uv run python manage.py deploy
+
+# With version bump
+uv run python manage.py deploy --local --patch   # 1.0.0 -> 1.0.1
+uv run python manage.py deploy --local --minor   # 1.0.0 -> 1.1.0
+uv run python manage.py deploy --version         # Show current version
 ```
 
 ## Environment Variables

@@ -145,14 +145,15 @@ metadata/stats
 ### Deployment Commands
 ```bash
 # Fast deploy - build locally and push (uses Docker cache, ~70% faster)
-uv run python scripts/deploy_cloudrun.py --local
+uv run python manage.py deploy --local
 
 # Standard deploy - build with Cloud Build (default)
-uv run python scripts/deploy_cloudrun.py
+uv run python manage.py deploy
 
 # With version bump
-uv run python scripts/deploy_cloudrun.py --local --patch   # 1.0.0 -> 1.0.1
-uv run python scripts/deploy_cloudrun.py --local --minor   # 1.0.0 -> 1.1.0
+uv run python manage.py deploy --local --patch   # 1.0.0 -> 1.0.1
+uv run python manage.py deploy --local --minor   # 1.0.0 -> 1.1.0
+uv run python manage.py deploy --version         # Show current version
 
 # Check Cloud Run service status
 gcloud run services describe shadowscribe-api --region us-central1 --project shadowscribe-prod

@@ -67,7 +67,6 @@ uv run uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 
 # Other scripts
 uv run python -m scripts.run_inspector --list
-uv run python scripts/deploy_cloudrun.py
 ```
 
 ### Frontend Development
@@ -78,16 +77,18 @@ npm run build    # Production build
 npm run lint     # ESLint
 ```
 
-### Deployment
+### Deployment (manage.py)
 ```bash
 # Fast deploy - build locally and push (uses Docker cache, ~70% faster)
-uv run python scripts/deploy_cloudrun.py --local
+uv run python manage.py deploy --local
 
 # Standard deploy - build with Cloud Build
-uv run python scripts/deploy_cloudrun.py
+uv run python manage.py deploy
 
 # With version bump
-uv run python scripts/deploy_cloudrun.py --local --patch
+uv run python manage.py deploy --local --patch   # 1.0.0 -> 1.0.1
+uv run python manage.py deploy --local --minor   # 1.0.0 -> 1.1.0
+uv run python manage.py deploy --version         # Show current version
 
 # Frontend auto-deploys from main branch via Vercel
 ```
@@ -147,8 +148,8 @@ if character.spell_list:
 | `api/database/firestore_models.py` | Document dataclasses (SessionDocument is unified model) |
 | `api/routers/websocket.py` | WebSocket `/ws/chat` endpoint |
 | `frontend/lib/stores/wizardStore.ts` | 8-step character creation wizard |
+| `manage.py` | Unified management script (start, stop, deploy, etc.) |
 | `scripts/interactive_test.py` | **THE BEST way to test backend** - Interactive RAG testing CLI |
-| `scripts/deploy_cloudrun.py` | Automated Cloud Run deployment |
 
 ## Testing & Debugging
 

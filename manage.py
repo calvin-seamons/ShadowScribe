@@ -5,7 +5,7 @@ ShadowScribe 2.0 - Application Management Script
 A cross-platform (macOS/Windows/Linux) script for managing the ShadowScribe application.
 
 Usage:
-    python manage.py start          # Start all services
+    python manage.py start          # Start all services (Docker)
     python manage.py stop           # Stop all services
     python manage.py restart        # Restart all services
     python manage.py status         # Show service status
@@ -15,6 +15,9 @@ Usage:
     python manage.py migrate        # Run database migrations
     python manage.py shell          # Open interactive shell
     python manage.py demo           # Run demo central engine
+    python manage.py deploy         # Deploy to Cloud Run (Cloud Build)
+    python manage.py deploy --local # Deploy to Cloud Run (local build, faster)
+    python manage.py deploy --local --patch  # Bump version and deploy
 """
 
 import argparse
@@ -67,6 +70,42 @@ MODEL_DIR = PROJECT_ROOT / "models" / "routing_classifier"
 MODEL_CHECKPOINT = MODEL_DIR / "joint_classifier.pt"
 MODEL_GDRIVE_FOLDER = "1zWZwMTjYdT5d_4UKG6sC_79qCooiyOQ4"
 
+# ============ CLOUD RUN DEPLOYMENT CONFIGURATION ============
+CLOUDRUN_PROJECT_ID = "shadowscribe-prod"
+CLOUDRUN_REGION = "us-central1"
+CLOUDRUN_SERVICE_NAME = "shadowscribe-api"
+
+# Resource allocation
+CLOUDRUN_MEMORY = "2Gi"
+CLOUDRUN_CPU = "2"
+CLOUDRUN_TIMEOUT = "300"
+
+# Artifact Registry for local builds
+ARTIFACT_REGISTRY = f"{CLOUDRUN_REGION}-docker.pkg.dev"
+ARTIFACT_REPOSITORY = "shadowscribe"
+ARTIFACT_IMAGE_NAME = "api"
+
+# Secrets (from Google Secret Manager) - as environment variables
+CLOUDRUN_SECRETS = {
+    "OPENAI_API_KEY": "openai-api-key:latest",
+    "ANTHROPIC_API_KEY": "anthropic-api-key:latest",
+}
+
+# Secrets mounted as files (path=secret:version)
+CLOUDRUN_FILE_SECRETS = {
+    "/secrets/firebase-service-account.json": "firebase-service-account:latest",
+}
+
+# CORS origins for Cloud Run
+CLOUDRUN_CORS_ORIGINS = [
+    "https://shadow-scribe-six.vercel.app",
+    "https://shadow-scribe-git-main-sherman-portfolios.vercel.app",
+    "https://shadow-scribe-q9qe9p6ig-sherman-portfolios.vercel.app",
+    "https://shadow-scribe-sherman-portfolios.vercel.app",
+    "http://localhost:3000",
+]
+# ============ END CLOUD RUN CONFIGURATION ============
+
 
 def print_banner():
     """Print the ShadowScribe banner."""
@@ -95,20 +134,34 @@ def log(message: str, level: str = "info"):
 
 
 def run_command(
-    cmd: List[str], 
-    capture_output: bool = False, 
+    cmd: List[str],
+    capture_output: bool = False,
     check: bool = True,
     cwd: Optional[Path] = None
 ) -> subprocess.CompletedProcess:
-    """Run a command and return the result."""
+    """Run a command and return the result.
+
+    On Windows, uses shell=True to find executables like gcloud.cmd in PATH.
+    """
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=capture_output,
-            text=True,
-            check=check,
-            cwd=cwd or PROJECT_ROOT
-        )
+        # On Windows, use shell=True to properly resolve PATH (needed for gcloud, etc.)
+        if sys.platform == "win32":
+            result = subprocess.run(
+                subprocess.list2cmdline(cmd),
+                capture_output=capture_output,
+                text=True,
+                check=check,
+                cwd=cwd or PROJECT_ROOT,
+                shell=True
+            )
+        else:
+            result = subprocess.run(
+                cmd,
+                capture_output=capture_output,
+                text=True,
+                check=check,
+                cwd=cwd or PROJECT_ROOT
+            )
         return result
     except subprocess.CalledProcessError as e:
         if capture_output:
@@ -1196,9 +1249,9 @@ asyncio.run(main())
 def cmd_generate_types(args):
     """
     Generate TypeScript type definitions from the project's Pydantic models.
-    
+
     Runs the project's scripts/generate_types.py script, logs the outcome, and exits the process with code 1 on failure.
-    
+
     Parameters:
     	args (argparse.Namespace): CLI arguments namespace (unused).
     """
@@ -1217,6 +1270,192 @@ def cmd_generate_types(args):
 
 
 # ============================================================================
+# Cloud Run Deployment
+# ============================================================================
+
+def get_current_version() -> str:
+    """Read the current version from pyproject.toml."""
+    import re
+    pyproject_path = PROJECT_ROOT / "pyproject.toml"
+    content = pyproject_path.read_text()
+    match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)
+    if not match:
+        log("Could not find version in pyproject.toml", "error")
+        sys.exit(1)
+    return match.group(1)
+
+
+def bump_version(current: str, bump_type: str) -> str:
+    """Bump version according to semver rules."""
+    parts = current.split('.')
+    if len(parts) != 3:
+        log(f"Invalid version format '{current}'. Expected X.Y.Z", "error")
+        sys.exit(1)
+
+    major, minor, patch = int(parts[0]), int(parts[1]), int(parts[2])
+
+    if bump_type == "major":
+        return f"{major + 1}.0.0"
+    elif bump_type == "minor":
+        return f"{major}.{minor + 1}.0"
+    elif bump_type == "patch":
+        return f"{major}.{minor}.{patch + 1}"
+    else:
+        return current
+
+
+def update_version_in_pyproject(new_version: str) -> None:
+    """Update the version in pyproject.toml."""
+    import re
+    pyproject_path = PROJECT_ROOT / "pyproject.toml"
+    content = pyproject_path.read_text()
+    updated = re.sub(
+        r'^(version\s*=\s*["\'])([^"\']+)(["\'])',
+        f'\\g<1>{new_version}\\g<3>',
+        content,
+        flags=re.MULTILINE
+    )
+    pyproject_path.write_text(updated)
+
+
+def cmd_deploy(args):
+    """Deploy to Google Cloud Run."""
+    import tempfile
+
+    # Get current version
+    current_version = get_current_version()
+
+    # Handle --version flag (no banner for simple version check)
+    if args.show_version:
+        print(f"ShadowScribe v{current_version}")
+        return
+
+    print_banner()
+
+    # Determine version bump
+    bump_type = None
+    if args.patch:
+        bump_type = "patch"
+    elif args.minor:
+        bump_type = "minor"
+    elif args.major:
+        bump_type = "major"
+
+    # Bump version if requested
+    new_version = current_version
+    if bump_type:
+        new_version = bump_version(current_version, bump_type)
+        log(f"Bumping version: {current_version} -> {new_version}", "info")
+        update_version_in_pyproject(new_version)
+
+        # Commit the version bump
+        run_command(["git", "add", "pyproject.toml"], check=False)
+        run_command(["git", "commit", "-m", f"chore: bump version to {new_version}"], check=False)
+        print()
+
+    if args.no_deploy:
+        log(f"Version updated to {new_version}. Skipping deployment.", "success")
+        return
+
+    log(f"Deploying ShadowScribe API v{new_version} to Cloud Run", "rocket")
+    print(f"   Project: {CLOUDRUN_PROJECT_ID}")
+    print(f"   Region: {CLOUDRUN_REGION}")
+    print(f"   Service: {CLOUDRUN_SERVICE_NAME}")
+    print(f"   Build: {'Local Docker' if args.local else 'Cloud Build'}")
+    print()
+
+    # Verify gcloud is configured
+    result = run_command(["gcloud", "config", "get-value", "project"], capture_output=True, check=False)
+    current_project = result.stdout.strip() if result.stdout else ""
+    if current_project != CLOUDRUN_PROJECT_ID:
+        log(f"Current project is '{current_project}', switching to '{CLOUDRUN_PROJECT_ID}'", "warning")
+        run_command(["gcloud", "config", "set", "project", CLOUDRUN_PROJECT_ID])
+
+    # Full image URL for Artifact Registry
+    image_url = f"{ARTIFACT_REGISTRY}/{CLOUDRUN_PROJECT_ID}/{ARTIFACT_REPOSITORY}/{ARTIFACT_IMAGE_NAME}:latest"
+
+    # Local build path: build locally, push to Artifact Registry, deploy from image
+    if args.local:
+        log("Building Docker image locally...", "info")
+
+        # Configure Docker for Artifact Registry
+        run_command(["gcloud", "auth", "configure-docker", ARTIFACT_REGISTRY, "--quiet"])
+
+        # Build locally for AMD64 (Cloud Run requires linux/amd64)
+        run_command([
+            "docker", "build",
+            "--platform", "linux/amd64",
+            "-t", image_url,
+            "-f", "Dockerfile",
+            str(PROJECT_ROOT)
+        ])
+
+        log("Pushing to Artifact Registry...", "info")
+        run_command(["docker", "push", image_url])
+
+        log("Deploying from image...", "rocket")
+    else:
+        log("Building with Cloud Build...", "info")
+
+    # Build the deploy command
+    cmd = [
+        "gcloud", "run", "deploy", CLOUDRUN_SERVICE_NAME,
+        f"--region={CLOUDRUN_REGION}",
+        "--allow-unauthenticated",
+        f"--memory={CLOUDRUN_MEMORY}",
+        f"--cpu={CLOUDRUN_CPU}",
+        f"--timeout={CLOUDRUN_TIMEOUT}",
+    ]
+
+    # Use image URL for local builds, source for Cloud Build
+    if args.local:
+        cmd.append(f"--image={image_url}")
+    else:
+        cmd.append(f"--source={PROJECT_ROOT}")
+
+    # Add secrets as environment variables
+    secrets_str = ",".join(f"{k}={v}" for k, v in CLOUDRUN_SECRETS.items())
+    # Add file-mounted secrets
+    file_secrets_str = ",".join(f"{path}={secret}" for path, secret in CLOUDRUN_FILE_SECRETS.items())
+    all_secrets = f"{secrets_str},{file_secrets_str}"
+    cmd.append(f"--set-secrets={all_secrets}")
+
+    # Create a temporary env vars file to avoid shell escaping issues with commas
+    cors_str = ",".join(CLOUDRUN_CORS_ORIGINS)
+    env_vars = {
+        "CORS_ORIGINS": cors_str,
+        "GOOGLE_APPLICATION_CREDENTIALS": "/secrets/firebase-service-account.json"
+    }
+
+    # Write env vars to temp file in YAML format
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        for key, value in env_vars.items():
+            # Quote values to handle special characters
+            f.write(f'{key}: "{value}"\n')
+        env_file = f.name
+
+    try:
+        cmd.append(f"--env-vars-file={env_file}")
+
+        # Run deployment
+        log("Building and deploying...", "wait")
+        print()
+
+        # Run interactively so user can see progress
+        if sys.platform == "win32":
+            cmd_str = subprocess.list2cmdline(cmd)
+            subprocess.run(cmd_str, cwd=PROJECT_ROOT, shell=True)
+        else:
+            subprocess.run(cmd, cwd=PROJECT_ROOT)
+
+        log("Deployment complete!", "success")
+        print(f"\n   Service URL: https://{CLOUDRUN_SERVICE_NAME}-768657256070.{CLOUDRUN_REGION}.run.app")
+    finally:
+        # Clean up temp file
+        os.unlink(env_file)
+
+
+# ============================================================================
 # Main
 # ============================================================================
 
@@ -1231,9 +1470,11 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python manage.py start           Start all services
-  python manage.py logs -f api     Follow API logs
-  python manage.py demo -q "What is my AC?"
+  python manage.py start                      Start all services
+  python manage.py logs -f api                Follow API logs
+  python manage.py demo -q "What is my AC?"   Run a demo query
+  python manage.py deploy --local             Deploy to Cloud Run (local build)
+  python manage.py deploy --local --patch     Bump version and deploy
         """
     )
     
@@ -1314,6 +1555,32 @@ Examples:
         help="Generate TypeScript types from Pydantic models"
     )
     generate_types_parser.set_defaults(func=cmd_generate_types)
+
+    # deploy
+    deploy_parser = subparsers.add_parser(
+        "deploy",
+        help="Deploy API to Google Cloud Run",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Version bump types:
+  --patch    Bug fixes, small changes (1.0.0 -> 1.0.1)
+  --minor    New features, backward compatible (1.0.0 -> 1.1.0)
+  --major    Breaking changes (1.0.0 -> 2.0.0)
+
+Examples:
+  python manage.py deploy              # Deploy with Cloud Build (default)
+  python manage.py deploy --local      # Build locally + push (faster!)
+  python manage.py deploy --local --patch   # Bump patch version and deploy
+"""
+    )
+    version_group = deploy_parser.add_mutually_exclusive_group()
+    version_group.add_argument("--patch", action="store_true", help="Bump patch version")
+    version_group.add_argument("--minor", action="store_true", help="Bump minor version")
+    version_group.add_argument("--major", action="store_true", help="Bump major version")
+    version_group.add_argument("--version", dest="show_version", action="store_true", help="Show current version and exit")
+    deploy_parser.add_argument("--no-deploy", action="store_true", help="Only update version, skip deployment")
+    deploy_parser.add_argument("--local", action="store_true", help="Build locally and push (faster)")
+    deploy_parser.set_defaults(func=cmd_deploy)
 
     args = parser.parse_args()
     
