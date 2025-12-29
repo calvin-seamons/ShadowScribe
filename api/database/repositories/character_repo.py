@@ -1,7 +1,6 @@
 """Character repository for Firestore operations."""
 from google.cloud.firestore_v1 import AsyncClient
 from typing import List, Optional
-from dataclasses import asdict
 from datetime import datetime
 import re
 import json
@@ -27,8 +26,13 @@ class CharacterRepository:
         self.collection = db.collection(CHARACTERS_COLLECTION)
 
     async def create(self, character: CharacterDataclass, user_id: str, campaign_id: str) -> CharacterDocument:
-        """Create a new character in Firestore."""
-        character_data = asdict(character)
+        """
+        Create a new character document in the characters collection.
+        
+        Returns:
+            CharacterDocument: The created character document containing the generated document id, provided user and campaign ids, and the stored character data.
+        """
+        character_data = character.model_dump()
 
         # Handle datetime serialization
         character_data_json = json.dumps(character_data, default=_json_serialize)
@@ -84,14 +88,23 @@ class CharacterRepository:
         return sorted(characters, key=lambda c: c.created_at or datetime.min)
 
     async def update(self, character_id: str, character: CharacterDataclass) -> Optional[CharacterDocument]:
-        """Update character."""
+        """
+        Apply updates from a CharacterDataclass to an existing character document.
+        
+        Parameters:
+            character_id (str): Firestore document ID of the character to update.
+            character (CharacterDataclass): Dataclass containing the updated character fields and full data payload.
+        
+        Returns:
+            CharacterDocument | None: `CharacterDocument` with the updated data if the document existed, `None` if no document was found.
+        """
         doc_ref = self.collection.document(character_id)
         doc = await doc_ref.get()
 
         if not doc.exists:
             return None
 
-        character_data = asdict(character)
+        character_data = character.model_dump()
         character_data_json = json.dumps(character_data, default=_json_serialize)
         character_data = json.loads(character_data_json)
 

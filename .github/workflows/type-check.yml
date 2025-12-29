@@ -1,0 +1,63 @@
+name: Type Validation
+
+on:
+  push:
+    paths:
+      - 'src/rag/character/character_types.py'
+      - 'api/database/firestore_models.py'
+      - 'api/schemas/**'
+      - 'frontend/lib/types/**'
+      - 'scripts/generate_types.py'
+  pull_request:
+    paths:
+      - 'src/rag/character/character_types.py'
+      - 'api/database/firestore_models.py'
+      - 'api/schemas/**'
+      - 'frontend/lib/types/**'
+      - 'scripts/generate_types.py'
+
+jobs:
+  validate-types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install Python dependencies
+        run: uv sync --dev
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Generate TypeScript types
+        run: uv run python scripts/generate_types.py
+
+      - name: Fail if generated types changed
+        run: |
+          if [[ -n $(git status --porcelain frontend/lib/types/generated/) ]]; then
+            echo "Generated types are out of sync with Python models!"
+            echo ""
+            echo "Changes detected:"
+            git diff frontend/lib/types/generated/
+            echo ""
+            echo "Please run: uv run python scripts/generate_types.py"
+            echo "Then commit the updated type files."
+            exit 1
+          fi
+
+      - name: Run TypeScript type check
+        working-directory: frontend
+        run: npx tsc --noEmit

@@ -1193,11 +1193,39 @@ asyncio.run(main())
         sys.exit(1)
 
 
+def cmd_generate_types(args):
+    """
+    Generate TypeScript type definitions from the project's Pydantic models.
+    
+    Runs the project's scripts/generate_types.py script, logs the outcome, and exits the process with code 1 on failure.
+    
+    Parameters:
+    	args (argparse.Namespace): CLI arguments namespace (unused).
+    """
+    log("Generating TypeScript types from Pydantic models...", "info")
+
+    result = run_command([
+        sys.executable,
+        str(PROJECT_ROOT / "scripts" / "generate_types.py")
+    ])
+
+    if result.returncode == 0:
+        log("TypeScript types generated successfully", "success")
+    else:
+        log("Type generation failed", "error")
+        sys.exit(1)
+
+
 # ============================================================================
 # Main
 # ============================================================================
 
 def main():
+    """
+    Entry point for the management CLI that parses command-line arguments and dispatches subcommands.
+    
+    Parses available subcommands (start, stop, restart, status, logs, health, migrate, shell, demo, build, clean, feedback, generate-types, etc.), invokes the selected command handler, and exits with an appropriate status code. If no command is provided the help is printed and the process exits with code 0. On keyboard interrupt the process exits with code 130; unhandled exceptions cause an exit with code 1.
+    """
     parser = argparse.ArgumentParser(
         description="ShadowScribe 2.0 Management Script",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -1279,7 +1307,14 @@ Examples:
     feedback_parser.add_argument("--web", action="store_true", help="Open in browser (HTML view)")
     feedback_parser.add_argument("--reprocess", action="store_true", help="Re-extract entities and apply placeholders to all records")
     feedback_parser.set_defaults(func=cmd_feedback)
-    
+
+    # generate-types
+    generate_types_parser = subparsers.add_parser(
+        "generate-types",
+        help="Generate TypeScript types from Pydantic models"
+    )
+    generate_types_parser.set_defaults(func=cmd_generate_types)
+
     args = parser.parse_args()
     
     if not args.command:

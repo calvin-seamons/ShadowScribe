@@ -1,317 +1,236 @@
-# 🎲 ShadowScribe 2.0
+# 🎲 ShadowScribe
 
-A D&D character management system with an AI-powered chat interface for querying character data, rulebooks, and session notes.
+A D&D character management system with RAG (Retrieval-Augmented Generation) capabilities. Combines character data, rulebook embeddings, and session notes with AI chat.
 
-## Overview
+## Tech Stack
 
-ShadowScribe 2.0 is a comprehensive RAG (Retrieval-Augmented Generation) system that combines:
-- **Character Data Management**: Complete D&D 5e character information with dataclass-based type system
-- **Rulebook Integration**: Vector-embedded D&D 5e rules with semantic search
-- **Session Notes**: Campaign history tracking and retrieval
-- **AI Chat Interface**: Real-time streaming responses via Claude/GPT models
-- **Web Frontend**: Modern Next.js interface with WebSocket streaming
+- **Frontend**: Next.js 14, Tailwind CSS, Zustand, Firebase Auth
+- **Backend**: FastAPI (Python 3.12), WebSocket streaming
+- **Database**: Google Cloud Firestore (NoSQL)
+- **Deployment**: Vercel (frontend), Google Cloud Run (API)
+- **AI**: Claude (Anthropic) for chat, local DeBERTa classifier for routing
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Frontend (Next.js 14)                         │
-│  • Real-time chat with streaming responses                       │
-│  • Character selection and management                            │
-│  • Conversation history (localStorage)                           │
-└─────────────────────┬───────────────────────────────────────────┘
-                      │ WebSocket + HTTP
-┌─────────────────────┴───────────────────────────────────────────┐
-│                    API Layer (FastAPI)                           │
-│  • WebSocket endpoint: /ws/chat                                  │
-│  • REST endpoints: /api/characters                               │
-│  • Integration with CentralEngine                                │
-└─────────────────────┬───────────────────────────────────────────┘
-                      │ Python imports
-┌─────────────────────┴───────────────────────────────────────────┐
-│                 Backend Core (Python)                            │
-│  • CentralEngine: Query orchestration                            │
-│  • Tool & Entity Selection: Parallel LLM calls                   │
-│  • RAG Routers: Character, Rulebook, Session Notes              │
-│  • Entity Search: Multi-source resolution                        │
-└─────────────────────┬───────────────────────────────────────────┘
-                      │
-┌─────────────────────┴───────────────────────────────────────────┐
-│                    Database (MySQL 8.0)                          │
-│  • Character data (JSON storage)                                 │
-└──────────────────────────────────────────────────────────────────┘
+```text
+┌─────────────────────┐     ┌─────────────────────┐     ┌─────────────────────┐
+│   Next.js Frontend  │     │   FastAPI Backend   │     │                     │
+│   (Vercel)          │────▶│   (Cloud Run)       │────▶│   CentralEngine     │
+│                     │     │                     │     │   - Query routing   │
+│   - React/Zustand   │     │   - REST API        │     │   - Streaming LLM   │
+│   - Firebase Auth   │     │   - WebSocket       │     │   - Entity extract  │
+│   - Tailwind CSS    │     │   - Firestore       │     │                     │
+└─────────────────────┘     └─────────────────────┘     └─────────────────────┘
+         │                           │
+         │                           ▼
+         │                  ┌─────────────────────┐
+         │                  │   Firestore (NoSQL) │
+         │                  │                     │
+         │                  │   Collections:      │
+         │                  │   - users           │
+         │                  │   - characters      │
+         │                  │   - campaigns       │
+         │                  │   - routing_feedback│
+         │                  └─────────────────────┘
+         │
+         ▼
+┌─────────────────────┐
+│   Firebase Auth     │
+│   (Google Sign-In)  │
+└─────────────────────┘
 ```
 
 ## Quick Start
 
 ### Prerequisites
-1. **Docker Desktop** installed and running
-2. **API Keys** in `.env` file:
+
+1. **Python 3.12** with [uv](https://docs.astral.sh/uv/) package manager
+2. **Node.js 18+** for frontend
+3. **Google Cloud credentials** for Firestore access
+4. **API Keys** in `.env`:
+
    ```bash
    OPENAI_API_KEY=sk-...
    ANTHROPIC_API_KEY=sk-ant-...
+   GOOGLE_APPLICATION_CREDENTIALS=./credentials/firebase-service-account.json
    ```
 
-### Start the Application
-
-```bash
-# Automated startup (recommended)
-./scripts/start.sh
-
-# Or manual startup
-docker-compose up -d
-```
-
-This starts:
-- **MySQL**: Port 3306
-- **FastAPI**: Port 8000
-- **Next.js**: Port 3000
-
-### Access Points
-
-- **Frontend**: http://localhost:3000
-- **API Docs**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
-
-### Usage
-
-1. Open http://localhost:3000 in your browser
-2. Click "Select Character" dropdown
-3. Choose a character (e.g., "Duskryn Nightwarden")
-4. Ask questions like:
-   - "What is my AC?"
-   - "Tell me about Eldaryth of Regret"
-   - "What spells do I have?"
-   - "Summarize the last session"
-5. Watch responses stream in real-time! ✨
-
-## Project Structure
-
-```
-ShadowScribe2.0/
-├── api/                        # FastAPI Backend (NEW)
-│   ├── main.py                # App entry point
-│   ├── config.py              # Configuration
-│   ├── database/              # SQLAlchemy models & repos
-│   ├── routers/               # WebSocket & REST endpoints
-│   ├── services/              # Business logic
-│   └── schemas/               # Pydantic schemas
-├── frontend/                   # Next.js Frontend (NEW)
-│   ├── app/                   # Pages & layouts
-│   ├── components/            # React components
-│   └── lib/                   # Stores, services, types
-├── src/                       # Core Python RAG System
-│   ├── central_engine.py      # Main orchestration
-│   ├── config.py              # LLM configuration
-│   ├── llm/                   # LLM clients & prompts
-│   ├── rag/                   # Query routers
-│   │   ├── character/         # Character data system
-│   │   ├── rulebook/          # D&D rules system
-│   │   └── session_notes/     # Campaign history
-│   └── utils/                 # Entity search, managers
-├── knowledge_base/            # Data storage
-│   ├── saved_characters/      # Character pickle files
-│   ├── processed_rulebook/    # Vector embeddings
-│   └── processed_session_notes/
-├── scripts/                   # Utility scripts
-│   ├── start.sh              # Automated startup
-│   ├── migrate_characters_to_db.py
-│   └── export_character_to_json.py
-├── docs/                      # Design & planning docs
-├── docker-compose.yml         # Orchestration
-└── requirements.txt           # Python dependencies
-```
-
-## Features
-
-### ✅ Implemented
-
-#### Real-Time Chat
-- WebSocket streaming from CentralEngine
-- Conversation history in localStorage
-- Automatic reconnection on disconnect
-- Error handling with user-friendly messages
-
-#### Character Management
-- Load characters from MySQL database
-- Select character from dropdown
-- View character details (race, class, level)
-- Automatic character migration from pickle files
-
-#### RAG Query System
-- **2-Parallel LLM Architecture**: Tool selection + entity extraction
-- **Multi-Source Querying**: Character data, rulebook, session notes
-- **Entity Resolution**: Smart search across all data sources
-- **Streaming Responses**: Real-time token-by-token output
-
-#### Data Types
-- **Character Data**: 20+ dataclasses modeling D&D characters
-- **Rulebook**: Vector-embedded D&D 5e rules with semantic search
-- **Session Notes**: Campaign history with entity tracking
-
-### 🎯 Key Components
-
-#### CentralEngine (`src/central_engine.py`)
-Main query processor with streaming support:
-```python
-async for chunk in engine.process_query_stream(query, character_name):
-    # Yields response chunks as they arrive
-```
-
-#### Character Types (`src/rag/character/character_types.py`)
-Complete D&D character modeling:
-- `Character`: Main dataclass with required/optional modules
-- `AbilityScores`, `CombatStats`, `Inventory`, `SpellList`
-- `ActionEconomy`, `BackgroundInfo`, `PersonalityTraits`
-
-#### Query Routers
-- **CharacterQueryRouter**: Combat, abilities, inventory, spells, backstory
-- **RulebookQueryRouter**: Rules, spell details, monster stats
-- **SessionNotesQueryRouter**: NPCs, events, locations, quests
-
-## Development
-
-### Environment Setup
-
-**ALWAYS activate virtual environment first:**
-```bash
-# On macOS/Linux
-source .venv/bin/activate
-
-# On Windows (PowerShell)
-.\.venv\Scripts\Activate.ps1
-```
-
-### Local Development (Without Docker)
+### Local Development
 
 **Backend:**
+
 ```bash
-# Install dependencies
-pip install -r requirements.txt
-pip install fastapi uvicorn[standard] websockets sqlalchemy[asyncio] aiomysql
-
-# Run MySQL
-docker run -d -p 3306:3306 \
-  -e MYSQL_ROOT_PASSWORD=shadowscribe_root \
-  -e MYSQL_DATABASE=shadowscribe \
-  -e MYSQL_USER=shadowscribe \
-  -e MYSQL_PASSWORD=shadowscribe_pass \
-  mysql:8.0
-
-# Run API
-uvicorn api.main:app --reload
+# Start API server
+uv run uvicorn api.main:app --reload
 ```
 
 **Frontend:**
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### Testing
+### Access Points
 
-**Interactive Demo (Best for Testing):**
-```bash
-# Activate venv first!
-source .venv/bin/activate
+- **Frontend**: http://localhost:3000
+- **API Docs**: http://localhost:8000/docs
+- **Production Frontend**: https://shadow-scribe-six.vercel.app
+- **Production API**: https://shadowscribe-api-768657256070.us-central1.run.app
 
-# Interactive mode
-python demo_central_engine.py
+## Project Structure
 
-# Single query
-python demo_central_engine.py -q "What is my AC?"
-
-# Multiple queries (maintains context)
-python demo_central_engine.py -q "What is my AC?" -q "What about my HP?"
+```
+ShadowScribe/
+├── api/                        # FastAPI Backend
+│   ├── main.py                # App entry point
+│   ├── auth.py                # Firebase token verification
+│   ├── database/              # Firestore client & models
+│   │   ├── firestore_client.py   # Async client singleton
+│   │   └── firestore_models.py   # Document dataclasses
+│   ├── routers/               # REST & WebSocket endpoints
+│   └── services/              # Business logic
+├── frontend/                   # Next.js Frontend
+│   ├── app/                   # Pages & layouts
+│   ├── components/            # React components
+│   └── lib/                   # Stores, services, types
+│       ├── firebase.ts        # Firebase client init
+│       ├── auth-context.tsx   # Auth context
+│       └── stores/            # Zustand stores
+├── src/                       # Core Python RAG System
+│   ├── central_engine.py      # Main orchestration
+│   ├── config.py              # LLM configuration
+│   └── rag/                   # Query routers
+│       ├── character/         # Character data system
+│       ├── rulebook/          # D&D rules system
+│       └── session_notes/     # Campaign history
+├── scripts/                   # Utility scripts
+│   ├── interactive_test.py   # Backend testing CLI
+│   ├── deploy_cloudrun.py    # Cloud Run deployment
+│   └── migrate_session_notes.py
+├── tests/                     # Pytest test suite
+├── Dockerfile                 # Cloud Run image
+└── pyproject.toml             # Python dependencies (uv)
 ```
 
-**Character Inspector:**
-```bash
-# List all characters
-python -m scripts.run_inspector --list
+## Testing
 
-# Inspect character
-python -m scripts.run_inspector "Duskryn Nightwarden" --format summary
-```
+### Interactive Backend Testing (Recommended)
 
-### Common Commands
+The best way to test the backend RAG pipeline locally:
 
 ```bash
-# View Docker logs
-docker-compose logs -f api
-docker-compose logs -f frontend
-docker-compose logs -f mysql
+# Interactive mode - select character, ask questions
+uv run python scripts/interactive_test.py
 
-# Stop services
-docker-compose down
-
-# Rebuild after code changes
-docker-compose up --build
-
-# Run character migration
-docker-compose exec api python scripts/migrate_characters_to_db.py
-
-# Check database
-docker-compose exec mysql mysql -ushadowscribe -pshadowscribe_pass shadowscribe
+# Specify character directly
+uv run python scripts/interactive_test.py --character "Duskryn Nightwarden"
 ```
 
-## API Documentation
+This tests the full pipeline: Firestore loading → RAG routing → LLM streaming.
 
-### REST Endpoints
+### Unit Tests
 
-**Characters:**
-- `GET /api/characters` - List all characters
-- `GET /api/characters/{id}` - Get character details
+```bash
+uv run pytest tests/ -v                           # Run all tests
+uv run pytest tests/ -v -k "test_name"            # Run specific test
+uv run pytest tests/src/character_creation/ -v    # Run module tests
+```
+
+## API Endpoints
+
+### REST
+
+- `GET /api/characters` - List user's characters (requires auth)
+- `GET /api/characters/{id}` - Character details
+- `POST /api/characters` - Create character
+- `PUT /api/characters/{id}` - Update character
 - `DELETE /api/characters/{id}` - Delete character
+- `POST /api/characters/fetch` - Fetch from D&D Beyond URL
+- `GET /api/feedback/stats` - Routing feedback statistics
 
-**Health:**
-- `GET /health` - Health check
-- `GET /` - API info
+### WebSocket
 
-### WebSocket API
+- `ws://localhost:8000/ws/chat` - Streaming chat with RAG
+- `ws://localhost:8000/ws/character/create` - Character creation with progress
 
-**Connection:** `ws://localhost:8000/ws/chat`
+## Deployment
 
-**Client → Server:**
-```json
-{
-  "type": "message",
-  "message": "What is my AC?",
-  "character_name": "Duskryn Nightwarden"
-}
-```
+### Frontend (Vercel)
 
-**Server → Client (Streaming):**
-```json
-// Message received
-{"type": "message_received"}
+Auto-deploys from `main` branch. Environment variables configured in Vercel dashboard.
 
-// Response chunks
-{"type": "response_chunk", "content": "Your"}
-{"type": "response_chunk", "content": " Armor"}
-{"type": "response_chunk", "content": " Class"}
+### Backend (Cloud Run)
 
-// Complete
-{"type": "response_complete"}
-
-// Error
-{"type": "error", "error": "Error message"}
-```
-
-## Critical Development Patterns
-
-### Import System
-**Always use absolute imports and module execution:**
 ```bash
-# ✅ Correct
-python -m scripts.run_inspector --list
+# Using deployment script
+uv run python scripts/deploy_cloudrun.py
 
-# ❌ Wrong
-python scripts/run_inspector.py
+# Or manually
+gcloud run deploy shadowscribe-api \
+  --region=us-central1 \
+  --source=. \
+  --allow-unauthenticated \
+  --memory=2Gi \
+  --cpu=2
 ```
 
-### Character Access Patterns
+## Environment Variables
+
+### Backend (`.env`)
+
+```bash
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+GOOGLE_APPLICATION_CREDENTIALS=./credentials/firebase-service-account.json
+CORS_ORIGINS=https://shadow-scribe-six.vercel.app,http://localhost:3000
+```
+
+### Frontend (`frontend/.env.local`)
+
+```bash
+NEXT_PUBLIC_FIREBASE_API_KEY=AIza...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=shadowscribe-prod.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=shadowscribe-prod
+NEXT_PUBLIC_API_URL=https://shadowscribe-api-768657256070.us-central1.run.app
+```
+
+## Session Notes Architecture
+
+Session notes use a unified `SessionDocument` model that serves both Firestore storage AND in-memory RAG queries.
+
+### Firestore Structure
+
+```text
+campaigns/{campaign_id}/sessions/{session_id}
+├── session_number, session_name, title, summary
+├── raw_content (original transcript)
+├── processed_markdown (LLM-structured text)
+├── npcs, locations, items (entity lists)
+├── key_events, combat_encounters, character_decisions
+├── quotes, funny_moments, mysteries_revealed
+└── created_at, updated_at
+```
+
+Entities are stored per-session to preserve chronological context, enabling queries like "When did we first meet Ghul'Vor?"
+
+## Code Patterns
+
+### Firestore Async Pattern
+
+```python
+from api.database.firestore_client import get_firestore_client
+
+db = get_firestore_client()  # Singleton AsyncClient
+doc_ref = db.collection('characters').document(char_id)
+doc = await doc_ref.get()
+if doc.exists:
+    data = doc.to_dict()
+```
+
+### Character Access
+
 ```python
 # Required fields (always present)
 character.character_base.name
@@ -321,185 +240,37 @@ character.combat_stats.armor_class
 # Optional fields (check for None)
 if character.inventory:
     items = character.inventory.backpack
-
-if character.spell_list:
-    spells = character.spell_list.spells
-```
-
-### Virtual Environment
-**ALWAYS activate before running Python code:**
-```bash
-source .venv/bin/activate  # macOS/Linux
-.\.venv\Scripts\Activate.ps1  # Windows
-```
-
-## Configuration
-
-### Environment Variables
-
-**Backend (`.env` in root):**
-```bash
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
-DATABASE_URL=mysql+aiomysql://shadowscribe:shadowscribe_pass@mysql:3306/shadowscribe
-```
-
-**Frontend (`frontend/.env.local`):**
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_WS_URL=ws://localhost:8000
-```
-
-### LLM Configuration (`src/config.py`)
-
-```python
-# Router LLM (fast decisions)
-router_llm_provider = "anthropic"  # or "openai"
-anthropic_router_model = "claude-3-5-haiku-latest"
-
-# Final Response LLM (quality responses)
-final_response_llm_provider = "anthropic"
-anthropic_final_model = "claude-sonnet-4-5-20250929"
-```
-
-## Troubleshooting
-
-### Services won't start
-```bash
-# Check Docker is running
-docker info
-
-# Check port conflicts
-lsof -i :3000  # Frontend
-lsof -i :8000  # API
-lsof -i :3306  # MySQL
-
-# View service logs
-docker-compose logs [service-name]
-```
-
-### No characters appear
-```bash
-# Check database
-docker-compose exec mysql mysql -ushadowscribe -pshadowscribe_pass shadowscribe -e "SELECT * FROM characters;"
-
-# Run migration
-docker-compose exec api python scripts/migrate_characters_to_db.py
-```
-
-### WebSocket connection fails
-```bash
-# Check API is running
-curl http://localhost:8000/health
-
-# Check WebSocket endpoint
-wscat -c ws://localhost:8000/ws/chat
-```
-
-### Import errors in Python
-```bash
-# Ensure venv is activated
-source .venv/bin/activate
-
-# Run from project root with module syntax
-python -m scripts.script_name
-```
-
-### Frontend TypeScript errors
-These are expected until dependencies are installed:
-```bash
-cd frontend
-npm install
-```
-
-## Data Migration
-
-**Migrate existing characters from pickle to MySQL:**
-```bash
-docker-compose exec api python scripts/migrate_characters_to_db.py
-```
-
-**Export character to JSON:**
-```bash
-python -m scripts.export_character_to_json
 ```
 
 ## Code Philosophy
 
-### Clean Code Principles
-- **Delete obsolete code** - don't comment out or leave unused functions
-- **No backward compatibility** unless required for data persistence
-- **Break things and fix properly** rather than maintaining legacy cruft
-- **Name code as fundamental**, not "new" or "v2"
+1. **Delete obsolete code** - no commented-out code or legacy cruft
+2. **No fallback measures** - don't hide bugs with silent fallbacks
+3. **Let things fail loudly** - crash immediately so we can fix root causes
+4. **Config is the source of truth** - settings belong in `src/config.py`
+5. **Always use `uv run`** for Python - it manages the virtual environment
+6. **Write tests** - new parsing/utility code should have tests in `tests/`
 
-### Development Workflow
-1. Make changes
-2. Test with `demo_central_engine.py`
-3. Commit and document
-4. Delete temporary test files
+## Troubleshooting
 
-## Future Enhancements
+### "Firebase not configured, using demo mode"
 
-### Phase 6: UI Polish
-- [ ] Dark mode toggle implementation
-- [ ] D&D themed styling (parchment, dice, fonts)
-- [ ] Loading animations
-- [ ] Toast notifications
+Frontend Firebase env vars are missing. Check `frontend/.env.local`.
 
-### Phase 7: Advanced Features
-- [ ] Character creation wizard
-- [ ] Session notes viewer/editor
-- [ ] Dice roller integration
-- [ ] Multi-character comparison
-- [ ] Export conversation history
+### 401 Unauthorized on API calls
 
-### Phase 8: Discord Integration
-- [ ] Discord bot setup
-- [ ] Live transcription
-- [ ] Voice-to-text integration
-- [ ] Auto-generation of session notes
+1. Check Firebase is configured (not demo mode)
+2. Verify token in `Authorization: Bearer <token>` header
+3. Check Cloud Run logs for verification errors
 
-## Documentation
+### CORS errors
 
-- **`docs/DESIGN_RAG_ORCHESTRATION.md`**: RAG architecture design
-- **`docs/IMPLEMENTATION_GUIDE.md`**: Original frontend planning
-- **`docs/character-questions.md`**: Test questions for character queries
-- **`docs/session_notes_template.md`**: Session note format
-- **`.github/copilot-instructions.md`**: Development guidelines
+Update `CORS_ORIGINS` in Cloud Run env vars, then redeploy.
 
-## Success Criteria
+### Frontend not using new API URL
 
-✅ User can select a character  
-✅ User can send messages and receive streaming responses  
-✅ Conversations are persisted to localStorage  
-✅ Character data is viewable  
-✅ WebSocket reconnection works  
-✅ Error states are handled gracefully  
-✅ Application is responsive  
-
-## Contributing
-
-This project prioritizes:
-- Clean, modern code over backward compatibility
-- Type safety with dataclasses and TypeScript
-- Real LLM API integration (no mocks)
-- Comprehensive testing via demo scripts
-- Clear documentation
-
-## License
-
-[Your License Here]
-
-## Support
-
-For issues:
-1. Check Docker logs: `docker-compose logs [service]`
-2. Review API docs: http://localhost:8000/docs
-3. Check browser console for frontend errors
-4. Test backend directly: `python demo_central_engine.py`
+`NEXT_PUBLIC_*` vars are embedded at build time. Trigger a new Vercel deployment.
 
 ---
 
-**Built with:** Python 3.10+, FastAPI, Next.js 14, MySQL 8.0, Claude Sonnet 4, OpenAI GPT-4
-
-**Status:** Core functionality complete, ready for testing and UI polish 🎉
+**Built with:** Python 3.12, FastAPI, Next.js 14, Firestore, Claude Sonnet 4

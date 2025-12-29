@@ -5,7 +5,6 @@ import pickle
 import json
 import requests
 from pathlib import Path
-from dataclasses import asdict
 from datetime import datetime
 
 
@@ -21,14 +20,26 @@ def serialize_for_json(obj):
 
 
 def import_character(pkl_path: Path, api_url: str = "http://localhost:8000") -> bool:
-    """Import a single character from pickle file to database."""
+    """
+    Import a character stored in a pickle file into the remote API.
+    
+    Parameters:
+        pkl_path (Path): Path to the .pkl file containing the character object.
+        api_url (str): Base URL of the API to send the character to (default: "http://localhost:8000").
+    
+    Returns:
+        bool: True if the API accepted and imported the character, False otherwise.
+    
+    Side effects:
+        Sends a POST request to `{api_url}/api/characters` with the character data as JSON and prints progress and result messages.
+    """
     print(f"Loading: {pkl_path.name}")
     
     with open(pkl_path, 'rb') as f:
         character = pickle.load(f)
     
     # Convert to dict and handle datetime serialization
-    char_dict = serialize_for_json(asdict(character))
+    char_dict = serialize_for_json(character.model_dump())
     
     # Send to API
     response = requests.post(

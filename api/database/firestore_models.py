@@ -1,17 +1,36 @@
-"""Firestore document models and helpers."""
-from dataclasses import dataclass, field, asdict
+"""Firestore document models and helpers.
+
+These are Pydantic models that serve as the single source of truth for Firestore documents.
+TypeScript types are auto-generated from these models using pydantic-to-typescript.
+"""
+from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, Any, List
-import uuid
+from typing import Optional, Any
 
 
 def _serialize_datetime(dt: Optional[datetime]) -> Optional[str]:
-    """Convert datetime to ISO string for JSON serialization."""
+    """
+    Serialize a datetime to an ISO 8601 string suitable for JSON responses.
+    
+    Parameters:
+        dt (Optional[datetime]): The datetime to serialize; may be timezone-aware or naive.
+    
+    Returns:
+        Optional[str]: ISO 8601 string representation of `dt`, or `None` if `dt` is `None`.
+    """
     return dt.isoformat() if dt else None
 
 
 def _parse_datetime(value: Any) -> Optional[datetime]:
-    """Parse datetime from Firestore timestamp or ISO string."""
+    """
+    Convert a Firestore Timestamp, ISO 8601 string, or datetime object to a timezone-naive datetime.
+    
+    Parameters:
+        value (Any): A value that may be a datetime, a Firestore-like Timestamp (object with a `timestamp()` method), an ISO 8601 string, or None.
+    
+    Returns:
+        Optional[datetime]: A timezone-naive `datetime` parsed from `value`, or `None` if `value` is `None` or cannot be parsed.
+    """
     if value is None:
         return None
     if isinstance(value, datetime):
@@ -23,8 +42,7 @@ def _parse_datetime(value: Any) -> Optional[datetime]:
     return None
 
 
-@dataclass
-class UserDocument:
+class UserDocument(BaseModel):
     """User document for Firestore."""
     id: str  # Firebase UID (document ID)
     email: str
@@ -50,7 +68,16 @@ class UserDocument:
 
     @classmethod
     def from_firestore(cls, doc_id: str, data: dict) -> 'UserDocument':
-        """Create from Firestore document."""
+        """
+        Construct a UserDocument from Firestore document data.
+        
+        Parameters:
+            doc_id (str): Firestore document ID to use as the user's `id`.
+            data (dict): Firestore document fields; expected keys include 'email', 'display_name', and 'created_at'.
+        
+        Returns:
+            UserDocument: Instance populated from the provided Firestore data.
+        """
         return cls(
             id=doc_id,
             email=data.get('email', ''),
@@ -59,8 +86,7 @@ class UserDocument:
         )
 
 
-@dataclass
-class CampaignDocument:
+class CampaignDocument(BaseModel):
     """Campaign document for Firestore."""
     id: str
     name: str
@@ -86,7 +112,16 @@ class CampaignDocument:
 
     @classmethod
     def from_firestore(cls, doc_id: str, data: dict) -> 'CampaignDocument':
-        """Create from Firestore document."""
+        """
+        Create a CampaignDocument from Firestore document data.
+        
+        Parameters:
+            doc_id (str): Firestore document ID.
+            data (dict): Raw Firestore document data; may omit fields like `name`, `description`, or `created_at`.
+        
+        Returns:
+            CampaignDocument: Instance populated from the provided Firestore fields.
+        """
         return cls(
             id=doc_id,
             name=data.get('name', ''),
@@ -95,8 +130,7 @@ class CampaignDocument:
         )
 
 
-@dataclass
-class SessionDocument:
+class SessionDocument(BaseModel):
     """Session document for Firestore AND RAG queries.
 
     Stored at: campaigns/{campaign_id}/sessions/{session_id}
@@ -118,37 +152,37 @@ class SessionDocument:
     summary: str = ''
 
     # Entities (per-session for chronological context)
-    player_characters: List[dict] = field(default_factory=list)  # [{name, entity_type, aliases, description, ...}]
-    npcs: List[dict] = field(default_factory=list)
-    locations: List[dict] = field(default_factory=list)
-    items: List[dict] = field(default_factory=list)
+    player_characters: list[dict[str, Any]] = Field(default_factory=list)  # [{name, entity_type, aliases, description, ...}]
+    npcs: list[dict[str, Any]] = Field(default_factory=list)
+    locations: list[dict[str, Any]] = Field(default_factory=list)
+    items: list[dict[str, Any]] = Field(default_factory=list)
 
     # Structured RAG fields
-    key_events: List[dict] = field(default_factory=list)
-    combat_encounters: List[dict] = field(default_factory=list)
-    spells_abilities_used: List[dict] = field(default_factory=list)
-    character_decisions: List[dict] = field(default_factory=list)
-    character_statuses: dict = field(default_factory=dict)  # {character_name: status_dict}
-    memories_visions: List[dict] = field(default_factory=list)
-    quest_updates: List[dict] = field(default_factory=list)
-    loot_obtained: dict = field(default_factory=dict)  # {character: [items]}
-    deaths: List[dict] = field(default_factory=list)
-    revivals: List[dict] = field(default_factory=list)
-    party_conflicts: List[str] = field(default_factory=list)
-    party_bonds: List[str] = field(default_factory=list)
-    quotes: List[dict] = field(default_factory=list)  # [{speaker, quote, context}]
-    funny_moments: List[str] = field(default_factory=list)
-    puzzles_encountered: dict = field(default_factory=dict)  # {puzzle: solution/status}
-    mysteries_revealed: List[str] = field(default_factory=list)
-    unresolved_questions: List[str] = field(default_factory=list)
-    divine_interventions: List[str] = field(default_factory=list)
-    religious_elements: List[str] = field(default_factory=list)
-    rules_clarifications: List[str] = field(default_factory=list)
-    dice_rolls: List[dict] = field(default_factory=list)
+    key_events: list[dict[str, Any]] = Field(default_factory=list)
+    combat_encounters: list[dict[str, Any]] = Field(default_factory=list)
+    spells_abilities_used: list[dict[str, Any]] = Field(default_factory=list)
+    character_decisions: list[dict[str, Any]] = Field(default_factory=list)
+    character_statuses: dict[str, Any] = Field(default_factory=dict)  # {character_name: status_dict}
+    memories_visions: list[dict[str, Any]] = Field(default_factory=list)
+    quest_updates: list[dict[str, Any]] = Field(default_factory=list)
+    loot_obtained: dict[str, Any] = Field(default_factory=dict)  # {character: [items]}
+    deaths: list[dict[str, Any]] = Field(default_factory=list)
+    revivals: list[dict[str, Any]] = Field(default_factory=list)
+    party_conflicts: list[str] = Field(default_factory=list)
+    party_bonds: list[str] = Field(default_factory=list)
+    quotes: list[dict[str, Any]] = Field(default_factory=list)  # [{speaker, quote, context}]
+    funny_moments: list[str] = Field(default_factory=list)
+    puzzles_encountered: dict[str, Any] = Field(default_factory=dict)  # {puzzle: solution/status}
+    mysteries_revealed: list[str] = Field(default_factory=list)
+    unresolved_questions: list[str] = Field(default_factory=list)
+    divine_interventions: list[str] = Field(default_factory=list)
+    religious_elements: list[str] = Field(default_factory=list)
+    rules_clarifications: list[str] = Field(default_factory=list)
+    dice_rolls: list[dict[str, Any]] = Field(default_factory=list)
     cliffhanger: Optional[str] = None
     next_session_hook: Optional[str] = None
-    dm_notes: List[str] = field(default_factory=list)
-    raw_sections: dict = field(default_factory=dict)  # {section_name: text}
+    dm_notes: list[str] = Field(default_factory=list)
+    raw_sections: dict[str, Any] = Field(default_factory=dict)  # {section_name: text}
 
     # Timestamps
     date: Optional[datetime] = None  # In-game or real session date
@@ -217,7 +251,19 @@ class SessionDocument:
 
     @classmethod
     def from_firestore(cls, doc_id: str, campaign_id: str, data: dict) -> 'SessionDocument':
-        """Create from Firestore document."""
+        """
+        Create a SessionDocument instance from Firestore document data.
+        
+        Constructs a SessionDocument with id set to `doc_id` and campaign_id set to `campaign_id`, populating all session fields from `data`. Missing keys are filled with sensible defaults (empty strings, empty lists/dicts, or zeros) and the `date`, `created_at`, and `updated_at` fields are converted using _parse_datetime.
+        
+        Parameters:
+            doc_id (str): Firestore document identifier to use as the session `id`.
+            campaign_id (str): Campaign identifier to associate with the session.
+            data (dict): Firestore document data containing session fields.
+        
+        Returns:
+            SessionDocument: A populated SessionDocument instance.
+        """
         return cls(
             id=doc_id,
             campaign_id=campaign_id,
@@ -263,13 +309,12 @@ class SessionDocument:
         )
 
 
-@dataclass
-class CharacterDocument:
+class CharacterDocument(BaseModel):
     """Character document for Firestore."""
     id: str
     user_id: str
     name: str
-    data: dict  # Full character dataclass serialized
+    data: dict[str, Any]  # Full character dataclass serialized
     campaign_id: str  # Required - all characters belong to a campaign
     race: Optional[str] = None
     character_class: Optional[str] = None
@@ -309,7 +354,16 @@ class CharacterDocument:
 
     @classmethod
     def from_firestore(cls, doc_id: str, data: dict) -> 'CharacterDocument':
-        """Create from Firestore document."""
+        """
+        Constructs a CharacterDocument instance from Firestore document data.
+        
+        Parameters:
+            doc_id (str): Firestore document ID to use as the CharacterDocument.id.
+            data (dict): Firestore document fields; missing keys fall back to defaults.
+        
+        Returns:
+            CharacterDocument: Instance populated from `data`. `created_at` and `updated_at` are parsed into datetimes; `campaign_id` is set to an empty string when missing (for legacy documents).
+        """
         return cls(
             id=doc_id,
             user_id=data.get('user_id', ''),
@@ -324,19 +378,18 @@ class CharacterDocument:
         )
 
 
-@dataclass
-class RoutingFeedbackDocument:
+class RoutingFeedbackDocument(BaseModel):
     """Routing feedback document for Firestore."""
     id: str
     user_query: str
     character_name: str
-    predicted_tools: list  # List of {tool, intention, confidence}
+    predicted_tools: list[dict[str, Any]]  # List of {tool, intention, confidence}
     campaign_id: str = 'main_campaign'
-    predicted_entities: Optional[list] = None
+    predicted_entities: Optional[list[dict[str, Any]]] = None
     classifier_backend: str = 'local'
     classifier_inference_time_ms: Optional[float] = None
     is_correct: Optional[bool] = None
-    corrected_tools: Optional[list] = None
+    corrected_tools: Optional[list[dict[str, Any]]] = None
     feedback_notes: Optional[str] = None
     created_at: Optional[datetime] = None
     feedback_at: Optional[datetime] = None
@@ -397,7 +450,16 @@ class RoutingFeedbackDocument:
 
     @classmethod
     def from_firestore(cls, doc_id: str, data: dict) -> 'RoutingFeedbackDocument':
-        """Create from Firestore document."""
+        """
+        Constructs a RoutingFeedbackDocument from a Firestore document.
+        
+        Parameters:
+            doc_id (str): Firestore document ID to use as the model's `id`.
+            data (dict): Firestore document data mapping used to populate fields; missing keys are replaced by the model's defaults or parsed where applicable (`created_at`, `feedback_at`, `exported_at`).
+        
+        Returns:
+            RoutingFeedbackDocument: Instance populated from the provided Firestore data.
+        """
         return cls(
             id=doc_id,
             user_query=data.get('user_query', ''),
@@ -417,8 +479,7 @@ class RoutingFeedbackDocument:
         )
 
 
-@dataclass
-class FeedbackStats:
+class FeedbackStats(BaseModel):
     """Statistics for routing feedback."""
     total_records: int = 0
     pending_review: int = 0

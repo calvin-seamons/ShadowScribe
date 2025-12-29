@@ -1,5 +1,5 @@
 """Pydantic schemas for character API."""
-from pydantic import BaseModel, HttpUrl, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional, Dict, Any
 
 
@@ -25,13 +25,14 @@ class CharacterListResponse(BaseModel):
 class FetchCharacterRequest(BaseModel):
     """Request schema for fetching character from D&D Beyond."""
     url: str
-    
-    class Config:
-        json_schema_extra = {
+
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "url": "https://www.dndbeyond.com/characters/152248393"
             }
         }
+    )
 
 
 class FetchCharacterResponse(BaseModel):
@@ -50,9 +51,9 @@ class CharacterCreateRequest(BaseModel):
         ...,
         description="ID of the campaign to assign this character to (required)"
     )
-    
-    class Config:
-        json_schema_extra = {
+
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "campaign_id": "abc123-uuid",
                 "character": {
@@ -73,6 +74,7 @@ class CharacterCreateRequest(BaseModel):
                 }
             }
         }
+    )
 
 
 class CharacterUpdateRequest(BaseModel):
@@ -89,9 +91,9 @@ class SectionUpdateRequest(BaseModel):
         ...,
         description="Section-specific data to update"
     )
-    
-    class Config:
-        json_schema_extra = {
+
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "data": {
                     "strength": 14,
@@ -103,6 +105,7 @@ class SectionUpdateRequest(BaseModel):
                 }
             }
         }
+    )
 
 
 class SectionUpdateResponse(BaseModel):

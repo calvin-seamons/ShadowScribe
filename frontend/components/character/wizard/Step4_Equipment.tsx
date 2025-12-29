@@ -115,6 +115,15 @@ const RANGES = [
   'Special',
 ]
 
+/**
+ * Renders the "Equipment & Spells" step UI for editing a character's inventory and spellbook.
+ *
+ * Provides interfaces to add, edit, move, and remove equipped items and backpack items, manage total weight,
+ * and add, list, and remove spells across spell levels. User actions update the shared wizard store's
+ * `inventory` and `spell_list` sections.
+ *
+ * @returns The React element for step 4 of the wizard (inventory and spellbook editors).
+ */
 export function Step4_Equipment() {
   const { characterData, updateSection, prevStep, nextStep } = useWizardStore()
   const [expandedSpellLevel, setExpandedSpellLevel] = useState<number | null>(null)
@@ -213,11 +222,12 @@ export function Step4_Equipment() {
   }
 
   const moveToEquipped = (backpackIndex: number) => {
-    const item = inventory.backpack[backpackIndex]
+    const backpack = inventory.backpack ?? []
+    const item = backpack[backpackIndex]
     if (!item) return
 
-    const newBackpack = inventory.backpack.filter((_, i) => i !== backpackIndex)
-    const newEquipped = [...inventory.equipped_items, { ...item, equipped: true }]
+    const newBackpack = backpack.filter((_, i) => i !== backpackIndex)
+    const newEquipped = [...(inventory.equipped_items ?? []), { ...item, equipped: true }]
 
     updateSection('inventory', {
       ...inventory,
@@ -227,11 +237,12 @@ export function Step4_Equipment() {
   }
 
   const moveToBackpack = (equippedIndex: number) => {
-    const item = inventory.equipped_items[equippedIndex]
+    const equipped = inventory.equipped_items ?? []
+    const item = equipped[equippedIndex]
     if (!item) return
 
-    const newEquipped = inventory.equipped_items.filter((_, i) => i !== equippedIndex)
-    const newBackpack = [...inventory.backpack, { ...item, equipped: false }]
+    const newEquipped = equipped.filter((_, i) => i !== equippedIndex)
+    const newBackpack = [...(inventory.backpack ?? []), { ...item, equipped: false }]
 
     updateSection('inventory', {
       ...inventory,
@@ -241,18 +252,18 @@ export function Step4_Equipment() {
   }
 
   const updateItemQuantity = (type: 'equipped_items' | 'backpack', index: number, quantity: number) => {
-    const items = [...inventory[type]]
+    const items = [...(inventory[type] ?? [])]
     items[index] = { ...items[index], quantity: Math.max(1, quantity) }
     updateSection('inventory', { ...inventory, [type]: items })
   }
 
   const removeItem = (type: 'equipped_items' | 'backpack', index: number) => {
-    const items = inventory[type].filter((_, i) => i !== index)
+    const items = (inventory[type] ?? []).filter((_, i) => i !== index)
     updateSection('inventory', { ...inventory, [type]: items })
   }
 
   const updateItemDescription = (type: 'equipped_items' | 'backpack', index: number, description: string) => {
-    const items = [...inventory[type]]
+    const items = [...(inventory[type] ?? [])]
     items[index] = {
       ...items[index],
       definition: {
@@ -558,7 +569,7 @@ export function Step4_Equipment() {
               </div>
             ) : (
               <div className="space-y-2">
-                {inventory.equipped_items.map((item, index) => {
+                {(inventory.equipped_items ?? []).map((item, index) => {
                   const isExpanded = expandedEquipItem === index
                   return (
                     <div key={index} className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 overflow-hidden">
@@ -619,7 +630,7 @@ export function Step4_Equipment() {
               </div>
             ) : (
               <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                {inventory.backpack.map((item, index) => {
+                {(inventory.backpack ?? []).map((item, index) => {
                   const isExpanded = expandedBackpackItem === index
                   return (
                     <div key={index} className="rounded-xl bg-card/50 border border-border/50 overflow-hidden">

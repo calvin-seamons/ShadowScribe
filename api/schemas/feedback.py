@@ -1,5 +1,5 @@
 """Pydantic schemas for routing feedback API."""
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
@@ -19,6 +19,12 @@ class EntityExtraction(BaseModel):
     confidence: float = Field(default=1.0, description="Extraction confidence")
 
 
+class ToolCorrection(BaseModel):
+    """A tool correction from the user."""
+    tool: str = Field(..., description="Tool name: character_data, session_notes, or rulebook")
+    intention: str = Field(..., description="The correct intention for this tool")
+
+
 class RoutingRecord(BaseModel):
     """Schema for creating a new routing feedback record."""
     user_query: str = Field(..., description="The original user query")
@@ -36,24 +42,17 @@ class RoutingRecordResponse(BaseModel):
     user_query: str
     character_name: str
     campaign_id: str
-    predicted_tools: List[Dict[str, Any]]
-    predicted_entities: Optional[List[Dict[str, Any]]]
+    predicted_tools: List[ToolPrediction]
+    predicted_entities: Optional[List[EntityExtraction]]
     classifier_backend: str
     classifier_inference_time_ms: Optional[float]
     is_correct: Optional[bool]
-    corrected_tools: Optional[List[Dict[str, Any]]]
+    corrected_tools: Optional[List[ToolCorrection]]
     feedback_notes: Optional[str]
     created_at: Optional[str]
     feedback_at: Optional[str]
-    
-    class Config:
-        from_attributes = True
 
-
-class ToolCorrection(BaseModel):
-    """A tool correction from the user."""
-    tool: str = Field(..., description="Tool name: character_data, session_notes, or rulebook")
-    intention: str = Field(..., description="The correct intention for this tool")
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FeedbackSubmission(BaseModel):

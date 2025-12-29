@@ -3,13 +3,21 @@
 import { useEffect, useState } from 'react'
 import { useFeedbackStore } from '@/lib/stores/feedbackStore'
 import { feedbackService } from '@/lib/services/feedbackService'
-import type { ToolCorrection } from '@/lib/types/feedback'
 
 interface FeedbackModalProps {
   onClose?: () => void;
   onSubmit?: () => void;
 }
 
+/**
+ * Display a modal that lets the user review a model routing decision, mark it as correct, or submit corrected tools and optional notes.
+ *
+ * The component reads and updates feedback-related state from the feedback store, loads tool intentions when needed, and submits feedback via the feedback service.
+ *
+ * @param onClose - Optional callback invoked after the modal is closed (via Cancel or after successful submit).
+ * @param onSubmit - Optional callback invoked after a successful feedback submission.
+ * @returns The modal element when visible; otherwise `null`.
+ */
 export default function FeedbackModal({ onClose, onSubmit }: FeedbackModalProps) {
   const {
     showFeedbackModal,
@@ -123,7 +131,7 @@ export default function FeedbackModal({ onClose, onSubmit }: FeedbackModalProps)
                   </span>
                   <span className="text-sm">{tool.intention}</span>
                   <span className="text-xs text-muted-foreground ml-auto">
-                    {(tool.confidence * 100).toFixed(0)}%
+                    {((tool.confidence ?? 1) * 100).toFixed(0)}%
                   </span>
                 </div>
               ))}

@@ -64,7 +64,21 @@ def load_json_file(file_path: str) -> Dict[str, Any]:
 
 
 def extract_inventory_items(data: Dict[str, Any]) -> List[InventoryItem]:
-    """Extract and clean inventory items from the JSON data."""
+    """
+    Parse a D&D Beyond JSON export and produce a cleaned, deduplicated list of InventoryItem objects.
+    
+    Description:
+    - Extracts item definitions from data['data']['inventory'] (returns an empty list if the key is missing or not a list).
+    - Cleans HTML in item descriptions to plain text.
+    - Removes granted modifiers and limited-use entries that contain no meaningful fields.
+    - Merges items with the same name and description by summing their quantities; other fields are preserved from the first occurrence.
+    
+    Parameters:
+        data (Dict[str, Any]): Parsed JSON dictionary from a D&D Beyond export.
+    
+    Returns:
+        List[InventoryItem]: A list of cleaned InventoryItem objects with duplicate items (same name and description) combined and their quantities summed.
+    """
     items = []
     
     # Access inventory under data key
@@ -97,7 +111,7 @@ def extract_inventory_items(data: Dict[str, Any]) -> List[InventoryItem]:
                     diceString=dice.get('diceString') if dice else None
                 )
                 # Only add if it has meaningful data
-                if any(getattr(cleaned_mod, field) is not None for field in cleaned_mod.__dataclass_fields__):
+                if any(getattr(cleaned_mod, field) is not None for field in ItemModifier.model_fields):
                     granted_modifiers.append(cleaned_mod)
         
         # Clean description
@@ -138,7 +152,7 @@ def extract_inventory_items(data: Dict[str, Any]) -> List[InventoryItem]:
                 resetTypeDescription=lu.get('resetTypeDescription')
             )
             # Only keep if it has meaningful data
-            if not any(getattr(limited_use, field) is not None for field in limited_use.__dataclass_fields__):
+            if not any(getattr(limited_use, field) is not None for field in LimitedUse.model_fields):
                 limited_use = None
         
         # Create InventoryItem
@@ -237,4 +251,3 @@ def should_include_field(key: str, value: Any) -> bool:
         return False
     
     return True
-

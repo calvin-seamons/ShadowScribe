@@ -378,14 +378,14 @@ class TestExtractInventoryItems:
                             "attunementDescription": "Requires attunement",
                             "rarity": "Rare",
                             "weight": 5,
-                            "capacity": 10,
+                            "capacity": "10 lb",  # capacity is str
                             "capacityWeight": 2,
                             "canEquip": True,
                             "magic": True,
                             "tags": ["magical", "weapon"],
-                            "damage": "1d8",
+                            "damage": {"diceString": "1d8"},  # damage is dict
                             "damageType": "slashing",
-                            "attackType": "melee",
+                            "attackType": 1,  # attackType is int
                             "range": 5,
                             "longRange": 10,
                             "isContainer": False,
@@ -644,7 +644,7 @@ class TestIntegration:
                             "magic": True,
                             "rarity": "Uncommon",
                             "weight": 3,
-                            "damage": "1d8",
+                            "damage": {"diceString": "1d8"},  # damage is dict
                             "damageType": "slashing",
                             "grantedModifiers": [
                                 {

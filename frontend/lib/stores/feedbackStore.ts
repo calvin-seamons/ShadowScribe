@@ -2,32 +2,32 @@
  * Zustand store for routing feedback state
  */
 import { create } from 'zustand';
-import type { RoutingRecord, ToolIntentionOptions, FeedbackStats, ToolCorrection } from '../types/feedback';
+import type { RoutingRecordResponse, ToolIntentionOptions, FeedbackStats, ToolCorrection, ToolPrediction } from '../types/feedback';
 
 interface FeedbackState {
   // Current query feedback (for inline feedback UI)
   currentFeedbackId: string | null;
   currentPredictedTools: ToolCorrection[];
-  
+
   // Tool options (cached)
   toolIntentions: ToolIntentionOptions | null;
-  
+
   // Feedback modal state
   showFeedbackModal: boolean;
-  selectedRecord: RoutingRecord | null;
-  
+  selectedRecord: RoutingRecordResponse | null;
+
   // User's current corrections
   corrections: ToolCorrection[];
   feedbackNotes: string;
-  
+
   // Stats
   stats: FeedbackStats | null;
-  
+
   // Actions
   setCurrentFeedback: (feedbackId: string, predictedTools: ToolCorrection[]) => void;
   clearCurrentFeedback: () => void;
   setToolIntentions: (options: ToolIntentionOptions) => void;
-  openFeedbackModal: (record: RoutingRecord) => void;
+  openFeedbackModal: (record: RoutingRecordResponse) => void;
   closeFeedbackModal: () => void;
   setCorrections: (corrections: ToolCorrection[]) => void;
   addCorrection: (tool: string, intention: string) => void;
@@ -65,8 +65,8 @@ export const useFeedbackStore = create<FeedbackState>((set) => ({
   openFeedbackModal: (record) => set({
     showFeedbackModal: true,
     selectedRecord: record,
-    // Pre-populate corrections with predicted tools
-    corrections: record.predicted_tools.map(t => ({
+    // Pre-populate corrections with predicted tools (cast from API response)
+    corrections: (record.predicted_tools as unknown as ToolPrediction[]).map(t => ({
       tool: t.tool,
       intention: t.intention
     })),

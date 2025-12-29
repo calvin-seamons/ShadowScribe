@@ -10,8 +10,8 @@ import pickle
 from pathlib import Path
 from typing import Optional
 from datetime import datetime
-from dataclasses import asdict
-from sqlalchemy.ext.asyncio import AsyncSession
+
+from google.cloud.firestore_v1 import AsyncClient
 
 import dacite
 
@@ -22,16 +22,16 @@ class CharacterManager:
     """Manager for saving and loading Character objects from database or files."""
     
     def __init__(
-        self, 
+        self,
         save_directory: str = "knowledge_base/saved_characters",
-        db_session: Optional[AsyncSession] = None
+        db_session: Optional[AsyncClient] = None
     ):
         """
-        Initialize the character manager.
+        Create a CharacterManager that persists Character objects to disk and optionally to a database.
         
-        Args:
-            save_directory: Directory for pickle file storage
-            db_session: Optional database session for database operations
+        Parameters:
+            save_directory (str): Filesystem path where pickle files will be stored; the directory is created if it does not exist.
+            db_session (Optional[Any]): Optional database session; if provided a CharacterRepository is instantiated for database operations.
         """
         self.save_directory = Path(save_directory)
         self.save_directory.mkdir(parents=True, exist_ok=True)
