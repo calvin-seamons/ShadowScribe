@@ -103,7 +103,7 @@ async def migrate_stats(db: AsyncClient, dry_run: bool = True) -> bool:
         return False
     
     old_data = stats_doc.to_dict()
-    print(f"\nCurrent stats document:")
+    print("\nCurrent stats document:")
     for key, value in old_data.items():
         print(f"  {key}: {value}")
     
@@ -116,7 +116,7 @@ async def migrate_stats(db: AsyncClient, dry_run: bool = True) -> bool:
         "queries_exported": old_data.get("feedback_exported", old_data.get("queries_exported", 0)),
     }
     
-    print(f"\nNew stats document:")
+    print("\nNew stats document:")
     for key, value in new_data.items():
         print(f"  {key}: {value}")
     
@@ -137,7 +137,7 @@ async def verify_migration(db: AsyncClient) -> None:
     old_count = len(list(old_docs))
     new_count = len(list(new_docs))
     
-    print(f"\nVerification:")
+    print("\nVerification:")
     print(f"  {OLD_COLLECTION}: {old_count} documents")
     print(f"  {NEW_COLLECTION}: {new_count} documents")
     
