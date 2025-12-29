@@ -212,13 +212,11 @@ poppler-binaries/**
 # Large ML model files
 *.safetensors
 *.zip
-574-Assignment/models/
 models/routing_classifier/*.pt
 nul
 
 # Credentials
 credentials/
-cloud-sql-proxy
 frontend/.env.production
 .env.production
 

@@ -59,7 +59,7 @@ class EvalResult:
 
 def load_test_questions() -> List[dict]:
     """Load the ground truth test questions."""
-    test_file = project_root / "574-Assignment" / "retrieval_study" / "ground_truth" / "test_questions.json"
+    test_file = project_root / "tests" / "ground_truth" / "test_questions.json"
     
     with open(test_file) as f:
         data = json.load(f)
@@ -287,7 +287,7 @@ class PipelineEvaluator:
                 print(f"    Missed: {r.misses}")
         
         # Save results
-        output_path = project_root / "574-Assignment" / "retrieval_study" / "results" / "full_pipeline_eval.json"
+        output_path = project_root / "tests" / "ground_truth" / "results" / "full_pipeline_eval.json"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         
         output_data = {

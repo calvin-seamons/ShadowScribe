@@ -3,9 +3,17 @@
 ShadowScribe Cloud Run Deployment Script
 
 Deploys the API to Google Cloud Run with all necessary configuration.
-Run with: python scripts/deploy_cloudrun.py
+
+Usage:
+    uv run python scripts/deploy_cloudrun.py              # Deploy without version bump
+    uv run python scripts/deploy_cloudrun.py --patch      # Bump patch version (1.0.0 -> 1.0.1)
+    uv run python scripts/deploy_cloudrun.py --minor      # Bump minor version (1.0.0 -> 1.1.0)
+    uv run python scripts/deploy_cloudrun.py --major      # Bump major version (1.0.0 -> 2.0.0)
+    uv run python scripts/deploy_cloudrun.py --version    # Show current version only
 """
 
+import argparse
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -44,6 +52,54 @@ CORS_ORIGINS = [
 # ============ END CONFIGURATION ============
 
 
+def get_project_root() -> Path:
+    """Get the project root directory."""
+    return Path(__file__).parent.parent.absolute()
+
+
+def get_current_version() -> str:
+    """Read the current version from pyproject.toml."""
+    pyproject_path = get_project_root() / "pyproject.toml"
+    content = pyproject_path.read_text()
+    match = re.search(r'^version\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)
+    if not match:
+        print("Error: Could not find version in pyproject.toml")
+        sys.exit(1)
+    return match.group(1)
+
+
+def bump_version(current: str, bump_type: str) -> str:
+    """Bump version according to semver rules."""
+    parts = current.split('.')
+    if len(parts) != 3:
+        print(f"Error: Invalid version format '{current}'. Expected X.Y.Z")
+        sys.exit(1)
+    
+    major, minor, patch = int(parts[0]), int(parts[1]), int(parts[2])
+    
+    if bump_type == "major":
+        return f"{major + 1}.0.0"
+    elif bump_type == "minor":
+        return f"{major}.{minor + 1}.0"
+    elif bump_type == "patch":
+        return f"{major}.{minor}.{patch + 1}"
+    else:
+        return current
+
+
+def update_version_in_pyproject(new_version: str) -> None:
+    """Update the version in pyproject.toml."""
+    pyproject_path = get_project_root() / "pyproject.toml"
+    content = pyproject_path.read_text()
+    updated = re.sub(
+        r'^(version\s*=\s*["\'])([^"\']+)(["\'])',
+        f'\\g<1>{new_version}\\g<3>',
+        content,
+        flags=re.MULTILINE
+    )
+    pyproject_path.write_text(updated)
+
+
 def run_command(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
     """Run a shell command and return the result."""
     print(f"Running: {' '.join(cmd)}")
@@ -54,11 +110,65 @@ def run_command(cmd: list[str], check: bool = True) -> subprocess.CompletedProce
     return result
 
 
+def parse_args() -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Deploy ShadowScribe API to Google Cloud Run",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Version bump types:
+  --patch    Bug fixes, small changes (1.0.0 -> 1.0.1)
+  --minor    New features, backward compatible (1.0.0 -> 1.1.0)
+  --major    Breaking changes (1.0.0 -> 2.0.0)
+"""
+    )
+    version_group = parser.add_mutually_exclusive_group()
+    version_group.add_argument('--patch', action='store_true', help='Bump patch version')
+    version_group.add_argument('--minor', action='store_true', help='Bump minor version')
+    version_group.add_argument('--major', action='store_true', help='Bump major version')
+    version_group.add_argument('--version', action='store_true', help='Show current version and exit')
+    parser.add_argument('--no-deploy', action='store_true', help='Only update version, skip deployment')
+    return parser.parse_args()
+
+
 def main():
-    # Get project root (parent of scripts/)
-    project_root = Path(__file__).parent.parent.absolute()
+    args = parse_args()
+    project_root = get_project_root()
     
-    print(f"🚀 Deploying ShadowScribe API to Cloud Run")
+    # Get current version
+    current_version = get_current_version()
+    
+    # Handle --version flag
+    if args.version:
+        print(f"ShadowScribe v{current_version}")
+        return
+    
+    # Determine version bump
+    bump_type = None
+    if args.patch:
+        bump_type = "patch"
+    elif args.minor:
+        bump_type = "minor"
+    elif args.major:
+        bump_type = "major"
+    
+    # Bump version if requested
+    new_version = current_version
+    if bump_type:
+        new_version = bump_version(current_version, bump_type)
+        print(f"📦 Bumping version: {current_version} -> {new_version}")
+        update_version_in_pyproject(new_version)
+        
+        # Commit the version bump
+        run_command(["git", "add", "pyproject.toml"], check=False)
+        run_command(["git", "commit", "-m", f"chore: bump version to {new_version}"], check=False)
+        print()
+    
+    if args.no_deploy:
+        print(f"✅ Version updated to {new_version}. Skipping deployment.")
+        return
+
+    print(f"🚀 Deploying ShadowScribe API v{new_version} to Cloud Run")
     print(f"   Project: {PROJECT_ID}")
     print(f"   Region: {REGION}")
     print(f"   Service: {SERVICE_NAME}")
