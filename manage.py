@@ -89,6 +89,7 @@ ARTIFACT_IMAGE_NAME = "api"
 CLOUDRUN_SECRETS = {
     "OPENAI_API_KEY": "openai-api-key:latest",
     "ANTHROPIC_API_KEY": "anthropic-api-key:latest",
+    "HF_TOKEN": "HF_TOKEN:latest",
 }
 
 # Secrets mounted as files (path=secret:version)
