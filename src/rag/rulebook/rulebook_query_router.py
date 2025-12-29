@@ -15,13 +15,39 @@ from rank_bm25 import BM25Okapi
 from sentence_transformers import CrossEncoder
 
 from .rulebook_types import (
-    RulebookQueryIntent, RulebookSection, SearchResult, 
+    RulebookQueryIntent, RulebookSection, SearchResult,
     RulebookCategory, INTENTION_CATEGORY_MAP, QueryPerformanceMetrics
 )
 from ...config import get_config
 from ...embeddings import get_embedding_provider, EmbeddingProvider
 
 # Note: dotenv is loaded in config.py
+
+# Module-level singleton for cross-encoder reranker
+_reranker_instance: Optional[CrossEncoder] = None
+
+
+def get_reranker() -> Optional[CrossEncoder]:
+    """
+    Get or initialize the cross-encoder reranker (singleton).
+
+    Returns None if reranking is disabled in config.
+    """
+    global _reranker_instance
+
+    config = get_config()
+    if not config.rulebook_rerank_enabled:
+        return None
+
+    if _reranker_instance is None:
+        print(f"Loading cross-encoder reranker: {config.rulebook_reranker_model}")
+        _reranker_instance = CrossEncoder(
+            config.rulebook_reranker_model,
+            max_length=512,
+            device=config.local_model_device
+        )
+
+    return _reranker_instance
 
 
 class EmbeddingCache:
@@ -385,15 +411,10 @@ class RulebookQueryRouter:
         results.sort(key=lambda x: x[1], reverse=True)
         return results
     
-    def _get_reranker(self) -> CrossEncoder:
-        """Get or initialize the cross-encoder reranker (lazy loading)"""
+    def _get_reranker(self) -> Optional[CrossEncoder]:
+        """Get the cross-encoder reranker (uses module-level singleton)"""
         if self._reranker is None:
-            print(f"Loading cross-encoder reranker: {self._reranker_model}")
-            self._reranker = CrossEncoder(
-                self._reranker_model,
-                max_length=512,  # Max tokens per passage
-                device=self.config.local_model_device
-            )
+            self._reranker = get_reranker()
         return self._reranker
     
     def _rerank_results(

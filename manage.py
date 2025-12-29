@@ -76,7 +76,7 @@ CLOUDRUN_REGION = "us-central1"
 CLOUDRUN_SERVICE_NAME = "shadowscribe-api"
 
 # Resource allocation
-CLOUDRUN_MEMORY = "2Gi"
+CLOUDRUN_MEMORY = "4Gi"
 CLOUDRUN_CPU = "2"
 CLOUDRUN_TIMEOUT = "300"
 
@@ -1425,7 +1425,8 @@ def cmd_deploy(args):
     cors_str = ",".join(CLOUDRUN_CORS_ORIGINS)
     env_vars = {
         "CORS_ORIGINS": cors_str,
-        "GOOGLE_APPLICATION_CREDENTIALS": "/secrets/firebase-service-account.json"
+        "GOOGLE_APPLICATION_CREDENTIALS": "/secrets/firebase-service-account.json",
+        "RAG_ROUTING_MODE": "haiku",  # Use Haiku only in prod (no local model = less memory)
     }
 
     # Write env vars to temp file in YAML format

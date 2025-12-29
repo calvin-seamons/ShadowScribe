@@ -47,6 +47,28 @@ def warmup_models():
     except Exception as e:
         print(f"[Warmup] Failed to preload embedding model: {e}")
 
+    try:
+        # 3. Load cross-encoder reranker (used for rulebook RAG reranking)
+        from src.config import get_config
+        rag_config = get_config()
+
+        if rag_config.rulebook_rerank_enabled:
+            print(f"[Warmup] Loading cross-encoder reranker: {rag_config.rulebook_reranker_model}...")
+            start = time.time()
+
+            from src.rag.rulebook.rulebook_query_router import get_reranker
+            reranker = get_reranker()
+
+            if reranker:
+                # Run a warmup prediction to fully initialize
+                _ = reranker.predict([["warmup query", "warmup document"]], show_progress_bar=False)
+                elapsed = time.time() - start
+                print(f"[Warmup] Cross-encoder reranker ready in {elapsed:.2f}s")
+        else:
+            print("[Warmup] Cross-encoder reranking disabled, skipping")
+    except Exception as e:
+        print(f"[Warmup] Failed to preload cross-encoder reranker: {e}")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
