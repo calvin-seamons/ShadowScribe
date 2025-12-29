@@ -12,6 +12,7 @@ import asyncio
 import argparse
 from datetime import datetime
 
+from google.api_core.exceptions import GoogleAPIError
 from google.cloud.firestore_v1 import AsyncClient
 from api.database.firestore_client import get_firestore_client
 
@@ -85,7 +86,7 @@ async def migrate_documents(db: AsyncClient, dry_run: bool = True) -> dict:
                 await new_collection.document(doc_id).set(migrated_data)
                 print(f"  MIGRATED: {doc_id}")
                 migrated += 1
-            except Exception as e:
+            except GoogleAPIError as e:
                 print(f"  ERROR: {doc_id} - {e}")
                 errors += 1
     
