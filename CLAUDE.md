@@ -18,7 +18,7 @@ Firebase Auth                                  ↓
                                          - users
                                          - characters
                                          - campaigns
-                                         - routing_feedback
+                                         - query_logs
                                          - metadata/stats
 ```
 

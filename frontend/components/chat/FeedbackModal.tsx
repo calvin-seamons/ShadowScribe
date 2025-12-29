@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useFeedbackStore } from '@/lib/stores/feedbackStore'
 import { feedbackService } from '@/lib/services/feedbackService'
+import type { ToolCorrection, ToolPrediction } from '@/lib/types/feedback'
 
 interface FeedbackModalProps {
   onClose?: () => void;
@@ -124,7 +125,7 @@ export default function FeedbackModal({ onClose, onSubmit }: FeedbackModalProps)
           <div className="mb-4">
             <label className="text-sm font-medium text-muted-foreground">Model's Routing</label>
             <div className="mt-1 space-y-2">
-              {selectedRecord.predicted_tools.map((tool, index) => (
+              {selectedRecord.predicted_tools.map((tool: ToolPrediction, index: number) => (
                 <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
                   <span className="px-2 py-1 bg-primary/20 text-primary rounded text-xs font-medium">
                     {tool.tool}
@@ -144,7 +145,7 @@ export default function FeedbackModal({ onClose, onSubmit }: FeedbackModalProps)
               Correct Routing (modify if incorrect)
             </label>
             <div className="mt-2 space-y-2">
-              {corrections.map((correction, index) => (
+              {corrections.map((correction: ToolCorrection, index: number) => (
                 <div key={index} className="flex items-center gap-2">
                   {/* Tool selector */}
                   <select
@@ -156,7 +157,7 @@ export default function FeedbackModal({ onClose, onSubmit }: FeedbackModalProps)
                     }}
                     className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-sm"
                   >
-                    {toolNames.map(tool => (
+                    {toolNames.map((tool: string) => (
                       <option key={tool} value={tool}>{tool}</option>
                     ))}
                   </select>
@@ -167,7 +168,7 @@ export default function FeedbackModal({ onClose, onSubmit }: FeedbackModalProps)
                     onChange={(e) => updateCorrection(index, correction.tool, e.target.value)}
                     className="flex-1 px-3 py-2 bg-background border border-border rounded-lg text-sm"
                   >
-                    {(tools[correction.tool] || []).map(intention => (
+                    {(tools[correction.tool] || []).map((intention: string) => (
                       <option key={intention} value={intention}>{intention}</option>
                     ))}
                   </select>

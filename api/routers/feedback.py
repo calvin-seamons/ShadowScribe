@@ -46,7 +46,13 @@ async def create_query_log(
         classifier_inference_time_ms=record.classifier_inference_time_ms,
         original_query=record.original_query,
         assistant_response=record.assistant_response,
-        context_sources=record.context_sources,
+        context_sources=(
+            record.context_sources.model_dump() 
+            if hasattr(record.context_sources, "model_dump") 
+            else record.context_sources.dict() 
+            if hasattr(record.context_sources, "dict") 
+            else None
+        ) if record.context_sources else None,
         response_time_ms=record.response_time_ms,
         model_used=record.model_used,
     )

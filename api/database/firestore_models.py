@@ -532,8 +532,8 @@ class QueryLogStats(BaseModel):
         """Create from Firestore stats document."""
         return cls(
             queries_total=data.get('queries_total', 0),
-            queries_pending_review=data.get('queries_pending', 0),
-            queries_confirmed_correct=data.get('queries_correct', 0),
+            queries_pending_review=data.get('queries_pending_review', data.get('queries_pending', 0)),
+            queries_confirmed_correct=data.get('queries_confirmed_correct', data.get('queries_correct', 0)),
             queries_corrected=data.get('queries_corrected', 0),
             queries_exported=data.get('queries_exported', 0),
         )

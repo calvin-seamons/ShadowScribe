@@ -27,11 +27,35 @@ class QueryLogRepository:
         if not doc.exists:
             await self.stats_ref.set({
                 'queries_total': 0,
-                'queries_pending': 0,
-                'queries_correct': 0,
+                'queries_pending_review': 0,
+                'queries_confirmed_correct': 0,
                 'queries_corrected': 0,
                 'queries_exported': 0
             })
+            return
+
+        # Migrate/ensure aligned stats fields exist for older documents.
+        data = doc.to_dict() or {}
+        updates = {}
+
+        if 'queries_pending_review' not in data and 'queries_pending' in data:
+            updates['queries_pending_review'] = data.get('queries_pending', 0)
+
+        if 'queries_confirmed_correct' not in data and 'queries_correct' in data:
+            updates['queries_confirmed_correct'] = data.get('queries_correct', 0)
+
+        for key in (
+            'queries_total',
+            'queries_pending_review',
+            'queries_confirmed_correct',
+            'queries_corrected',
+            'queries_exported',
+        ):
+            if key not in data and key not in updates:
+                updates[key] = 0
+
+        if updates:
+            await self.stats_ref.update(updates)
 
     async def create(self, query_log: QueryLogDocument) -> QueryLogDocument:
         """Create a new query log record."""
@@ -45,7 +69,7 @@ class QueryLogRepository:
         # Update counters atomically
         await self.stats_ref.update({
             'queries_total': Increment(1),
-            'queries_pending': Increment(1)
+            'queries_pending_review': Increment(1)
         })
 
         return query_log
@@ -143,10 +167,10 @@ class QueryLogRepository:
         # Update counters atomically
         counter_updates = {}
         if was_pending:
-            counter_updates['queries_pending'] = Increment(-1)
+            counter_updates['queries_pending_review'] = Increment(-1)
 
         if is_correct:
-            counter_updates['queries_correct'] = Increment(1)
+            counter_updates['queries_confirmed_correct'] = Increment(1)
         elif corrected_tools is not None:
             counter_updates['queries_corrected'] = Increment(1)
 
@@ -162,6 +186,7 @@ class QueryLogRepository:
 
         await self._ensure_stats_doc()
         exported_count = 0
+        batch = self.db.batch()
 
         for log_id in log_ids:
             doc_ref = self.collection.document(log_id)
@@ -170,11 +195,14 @@ class QueryLogRepository:
             if doc.exists:
                 data = doc.to_dict()
                 if not data.get('exported_for_training', False):
-                    await doc_ref.update({
+                    batch.update(doc_ref, {
                         'exported_for_training': True,
                         'exported_at': datetime.utcnow()
                     })
                     exported_count += 1
+
+        if exported_count > 0:
+            await batch.commit()
 
         # Update exported counter
         if exported_count > 0:
