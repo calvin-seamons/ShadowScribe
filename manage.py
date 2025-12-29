@@ -21,6 +21,7 @@ Usage:
 """
 
 import argparse
+import io
 import os
 import subprocess
 import sys
@@ -30,6 +31,11 @@ import signal
 from pathlib import Path
 from datetime import datetime
 from typing import Optional, List, Tuple
+
+# Fix stdout encoding for Windows terminals that can't handle Unicode
+if sys.platform == "win32" and sys.stdout.encoding != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
 # ANSI color codes (works on most terminals)
 class Colors:
@@ -76,7 +82,7 @@ CLOUDRUN_REGION = "us-central1"
 CLOUDRUN_SERVICE_NAME = "shadowscribe-api"
 
 # Resource allocation
-CLOUDRUN_MEMORY = "4Gi"
+CLOUDRUN_MEMORY = "8Gi"
 CLOUDRUN_CPU = "2"
 CLOUDRUN_TIMEOUT = "300"
 
@@ -1406,6 +1412,12 @@ def cmd_deploy(args):
         f"--memory={CLOUDRUN_MEMORY}",
         f"--cpu={CLOUDRUN_CPU}",
         f"--timeout={CLOUDRUN_TIMEOUT}",
+        # Cold start optimization
+        "--cpu-boost",  # Extra CPU during startup for faster cold starts
+        "--session-affinity",  # Keep user on same instance for consistency
+        # Startup probe - Cloud Run waits for /ready to return 200 before routing traffic
+        # Format: httpGet.path=PATH,httpGet.port=PORT,periodSeconds=N,timeoutSeconds=N,failureThreshold=N
+        "--startup-probe=httpGet.path=/ready,httpGet.port=8080,periodSeconds=5,timeoutSeconds=3,failureThreshold=30",
     ]
 
     # Use image URL for local builds, source for Cloud Build
@@ -1427,6 +1439,7 @@ def cmd_deploy(args):
         "CORS_ORIGINS": cors_str,
         "GOOGLE_APPLICATION_CREDENTIALS": "/secrets/firebase-service-account.json",
         "RAG_ROUTING_MODE": "haiku",  # Use Haiku only in prod (no local model = less memory)
+        "WARMUP_BLOCKING": "true",  # Block startup until all models loaded
     }
 
     # Write env vars to temp file in YAML format

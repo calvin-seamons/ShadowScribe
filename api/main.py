@@ -1,11 +1,18 @@
 """FastAPI main application entry point."""
+import os
 import time
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 
 from api.config import config
 from api.routers import websocket, characters, feedback, campaigns
+
+
+# Global warmup state
+_warmup_complete = False
+_warmup_started_at: float | None = None
 
 
 def warmup_models():
@@ -75,17 +82,36 @@ async def lifespan(app: FastAPI):
     """Application lifespan manager."""
     import asyncio
 
-    # Startup - Firestore client is initialized on first use (singleton)
-    print("[Startup] Initializing Firestore client...")
+    global _warmup_complete, _warmup_started_at
 
-    # Warmup: preload ML models in background
-    # Note: Models should be pre-downloaded in Docker image for fast cold starts
-    asyncio.create_task(asyncio.to_thread(warmup_models))
+    print("[Startup] Initializing Firestore client...")
+    _warmup_started_at = time.time()
+
+    # WARMUP_BLOCKING=true (default): Block startup until models loaded
+    # WARMUP_BLOCKING=false: Load models in background (for local dev)
+    blocking = os.getenv("WARMUP_BLOCKING", "true").lower() == "true"
+
+    if blocking:
+        print("[Startup] Running blocking warmup (WARMUP_BLOCKING=true)...")
+        warmup_models()
+        _warmup_complete = True
+        elapsed = time.time() - _warmup_started_at
+        print(f"[Startup] Blocking warmup complete in {elapsed:.2f}s, accepting requests")
+    else:
+        print("[Startup] Running background warmup (WARMUP_BLOCKING=false)...")
+        asyncio.create_task(asyncio.to_thread(_warmup_models_and_mark_complete))
 
     yield
 
-    # Shutdown - Firestore client handles cleanup automatically
     print("[Shutdown] Application shutting down...")
+
+
+def _warmup_models_and_mark_complete():
+    """Wrapper to run warmup and set completion flag (for background mode)."""
+    global _warmup_complete
+    warmup_models()
+    _warmup_complete = True
+    print("[Warmup] Background warmup complete")
 
 
 app = FastAPI(
@@ -123,5 +149,38 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
+    """Health check endpoint (liveness probe)."""
     return {"status": "healthy"}
+
+
+@app.get("/ready")
+async def readiness_check():
+    """Readiness endpoint - returns 503 until all models are loaded.
+
+    Used by:
+    - Cloud Run startup probe to know when instance is ready
+    - Frontend to poll until backend is ready for queries
+    """
+    if not _warmup_complete:
+        elapsed = time.time() - _warmup_started_at if _warmup_started_at else 0
+        return JSONResponse(
+            status_code=503,
+            content={
+                "ready": False,
+                "status": "warming_up",
+                "elapsed_seconds": round(elapsed, 1),
+            },
+        )
+    return {"ready": True, "status": "ready"}
+
+
+@app.post("/warmup")
+async def trigger_warmup():
+    """Explicit warmup trigger endpoint.
+
+    Called by frontend on page load to trigger Cloud Run instance startup.
+    Idempotent - safe to call multiple times.
+    """
+    if _warmup_complete:
+        return {"status": "ready"}
+    return {"status": "warming_up"}

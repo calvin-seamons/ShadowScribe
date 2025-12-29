@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { LogoText } from './Logo'
+import { useWarmupStore } from '@/lib/stores/warmupStore'
+import { pollUntilReady } from '@/lib/services/warmupService'
 
 interface AppInitializerProps {
   children: React.ReactNode
@@ -9,68 +11,25 @@ interface AppInitializerProps {
 
 export default function AppInitializer({ children }: AppInitializerProps) {
   const [isInitialized, setIsInitialized] = useState(false)
-  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'error'>('checking')
-  const [errorMessage, setErrorMessage] = useState<string>('')
+  const { status, error } = useWarmupStore()
 
   useEffect(() => {
-    const checkConnection = async () => {
-      try {
-        // Get API URL from environment or construct for local dev
-        let apiUrl: string
-        if (process.env.NEXT_PUBLIC_API_URL) {
-          apiUrl = process.env.NEXT_PUBLIC_API_URL
-        } else {
-          // Development fallback: use localhost
-          const protocol = window.location.protocol
-          const host = window.location.hostname
-          const port = '8000'
-          apiUrl = `${protocol}//${host}:${port}`
-        }
+    const initialize = async () => {
+      const ready = await pollUntilReady(2000, 120000) // Poll every 2s, timeout 2 min
 
-        console.log(`Checking backend connection at: ${apiUrl}`)
-        
-        // Test backend connection with timeout (30s for Cloud Run cold starts)
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 30000)
-
-        const response = await fetch(`${apiUrl}/docs`, {
-          signal: controller.signal,
-          mode: 'no-cors', // Just check if endpoint responds
-        })
-
-        clearTimeout(timeoutId)
-
-        // If we got here without error, backend is accessible
-        console.log('Backend connection successful')
-        setConnectionStatus('connected')
-        
+      if (ready) {
         // Small delay for smooth transition
         setTimeout(() => {
           setIsInitialized(true)
         }, 500)
-
-      } catch (error) {
-        console.error('Backend connection failed:', error)
-        setConnectionStatus('error')
-        
-        if (error instanceof Error) {
-          if (error.name === 'AbortError') {
-            setErrorMessage('Connection timeout - backend is not responding')
-          } else {
-            setErrorMessage(error.message || 'Unable to connect to backend')
-          }
-        } else {
-          setErrorMessage('Unable to connect to backend')
-        }
       }
     }
 
-    checkConnection()
+    initialize()
   }, [])
 
   const retry = () => {
-    setConnectionStatus('checking')
-    setErrorMessage('')
+    useWarmupStore.getState().reset()
     window.location.reload()
   }
 
@@ -88,8 +47,8 @@ export default function AppInitializer({ children }: AppInitializerProps) {
           </div>
         </div>
 
-        {/* Status indicator */}
-        {connectionStatus === 'checking' && (
+        {/* Warming up state */}
+        {(status === 'idle' || status === 'checking' || status === 'warming') && (
           <div className="space-y-6">
             <div className="flex justify-center">
               <div className="relative">
@@ -99,20 +58,23 @@ export default function AppInitializer({ children }: AppInitializerProps) {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white mb-2">
-                Initializing Application
+                Preparing the System
               </h2>
               <p className="text-purple-300">
-                Connecting to backend services...
+                {status === 'warming'
+                  ? 'Loading knowledge bases...'
+                  : 'Connecting to backend services...'}
               </p>
             </div>
           </div>
         )}
 
-        {connectionStatus === 'error' && (
+        {/* Error state */}
+        {status === 'error' && (
           <div className="space-y-6">
             <div className="flex justify-center">
               <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center">
-                <span className="text-4xl">⚠️</span>
+                <span className="text-4xl">!</span>
               </div>
             </div>
             <div>
@@ -120,7 +82,7 @@ export default function AppInitializer({ children }: AppInitializerProps) {
                 Connection Failed
               </h2>
               <p className="text-red-300 mb-4">
-                {errorMessage || 'Unable to connect to the backend server'}
+                {error || 'Unable to connect to the backend server'}
               </p>
               <div className="space-y-2 text-sm text-purple-300/80">
                 <p>This may be due to:</p>
