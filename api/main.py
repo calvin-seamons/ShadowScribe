@@ -40,8 +40,9 @@ async def lifespan(app: FastAPI):
     # Startup - Firestore client is initialized on first use (singleton)
     print("[Startup] Initializing Firestore client...")
 
-    # Warmup: preload local classifier to avoid cold start on first query
-    warmup_local_classifier()
+    # Warmup: preload local classifier in background to avoid blocking startup
+    import asyncio
+    asyncio.create_task(asyncio.to_thread(warmup_local_classifier))
 
     yield
 

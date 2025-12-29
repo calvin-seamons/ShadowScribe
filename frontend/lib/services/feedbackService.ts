@@ -34,7 +34,7 @@ export class FeedbackService {
   private baseUrl: string;
 
   constructor() {
-    this.baseUrl = `${getApiUrl()}/api/feedback`;
+    this.baseUrl = `${getApiUrl()}/api/query-logs`;
   }
 
   /**
@@ -105,8 +105,8 @@ export class FeedbackService {
   /**
    * Get a specific routing record
    */
-  async getRecord(feedbackId: string): Promise<QueryLogResponse> {
-    const response = await fetch(`${this.baseUrl}/record/${feedbackId}`);
+  async getRecord(logId: string): Promise<QueryLogResponse> {
+    const response = await fetch(`${this.baseUrl}/${logId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch routing record');
     }
@@ -117,10 +117,10 @@ export class FeedbackService {
    * Submit feedback on a routing decision
    */
   async submitFeedback(
-    feedbackId: string,
+    logId: string,
     submission: FeedbackSubmission
   ): Promise<QueryLogResponse> {
-    const response = await fetch(`${this.baseUrl}/record/${feedbackId}/submit`, {
+    const response = await fetch(`${this.baseUrl}/${logId}/feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(submission)

@@ -98,11 +98,11 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
 
 class LocalEmbeddingProvider(EmbeddingProvider):
     """Local sentence-transformer embedding provider.
-    
+
     Uses sentence-transformers library for local inference.
     No API calls required.
     """
-    
+
     # Map config model names to sentence-transformers model names
     MODEL_MAP = {
         "local-minilm-l6": "sentence-transformers/all-MiniLM-L6-v2",
@@ -112,7 +112,7 @@ class LocalEmbeddingProvider(EmbeddingProvider):
         "local-gte-small": "thenlper/gte-small",
         "local-gte-base": "thenlper/gte-base",
     }
-    
+
     MODEL_DIMENSIONS = {
         "local-minilm-l6": 384,
         "local-mpnet-base": 768,
@@ -121,22 +121,33 @@ class LocalEmbeddingProvider(EmbeddingProvider):
         "local-gte-small": 384,
         "local-gte-base": 768,
     }
-    
+
     def __init__(self, model: str = "local-bge-base-en"):
         """Initialize local embedding provider.
-        
+
         Args:
             model: Local model name (e.g., "local-bge-base-en")
         """
         from sentence_transformers import SentenceTransformer
-        
+
+        # Configure HuggingFace Hub to use HF_TOKEN if available (avoids rate limiting)
+        hf_token = os.getenv("HF_TOKEN")
+        if hf_token:
+            try:
+                # Set the token in environment for huggingface_hub to pick up
+                os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
+                os.environ["HF_TOKEN"] = hf_token
+                print("HuggingFace Hub token configured")
+            except Exception as e:
+                print(f"Warning: Failed to configure HuggingFace Hub token: {e}")
+
         if model not in self.MODEL_MAP:
             raise ValueError(f"Unknown local model: {model}. Available: {list(self.MODEL_MAP.keys())}")
-        
+
         self._model_name = model
         self.hf_model_name = self.MODEL_MAP[model]
         self._dimension = self.MODEL_DIMENSIONS[model]
-        
+
         print(f"Loading local embedding model: {self.hf_model_name}")
         self.model = SentenceTransformer(self.hf_model_name)
         print(f"Model loaded. Embedding dimension: {self._dimension}")

@@ -228,6 +228,13 @@ class LocalClassifier:
     
     def _load_model(self) -> None:
         """Load the trained model, tokenizer, and checkpoint."""
+        import os
+
+        # Configure HuggingFace Hub token in environment (avoids rate limiting)
+        hf_token = os.getenv("HF_TOKEN")
+        if hf_token:
+            os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
+
         # Load tokenizer - try local first, fall back to HuggingFace
         tokenizer_path = self.model_path / 'tokenizer'
         try:
