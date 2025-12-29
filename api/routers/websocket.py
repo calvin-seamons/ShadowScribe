@@ -12,8 +12,8 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from api.database.firestore_client import get_firestore_client
-from api.database.firestore_models import RoutingFeedbackDocument
-from api.database.repositories.feedback_repo import FeedbackRepository
+from api.database.firestore_models import QueryLogDocument
+from api.database.repositories.feedback_repo import QueryLogRepository
 from api.services.chat_service import ChatService
 from api.services.dndbeyond_service import DndBeyondService
 from src.character_creation.async_character_builder import AsyncCharacterBuilder
@@ -70,27 +70,43 @@ async def websocket_endpoint(websocket: WebSocket):
     # Get Firestore client
     db = get_firestore_client()
 
-    # Track current query's routing info for feedback collection
-    current_routing_info = {
+    # Track current query's info for query log collection
+    current_query_info = {
         'tools_needed': None,
         'entities': None,
         'normalized_query': None,  # Placeholder-ized query from CentralEngine
         'backend': 'local',
-        'inference_time_ms': None
+        'inference_time_ms': None,
+        # New fields
+        'original_query': None,
+        'assistant_response': None,
+        'context_sources': None,
+        'response_time_ms': None,
+        'model_used': None,
     }
 
     async def emit_metadata(event_type: str, data: dict):
-        """Callback to emit metadata events to the client and capture for feedback."""
-        # Capture routing info for feedback collection
+        """Callback to emit metadata events to the client and capture for query logging."""
+        # Capture routing info
         if event_type == 'routing_metadata':
-            current_routing_info['tools_needed'] = data.get('tools_needed', [])
-            current_routing_info['backend'] = data.get('classifier_backend', 'local')
+            current_query_info['tools_needed'] = data.get('tools_needed', [])
+            current_query_info['backend'] = data.get('classifier_backend', 'local')
             # Capture normalized query (placeholder-ized) from CentralEngine
-            current_routing_info['normalized_query'] = data.get('normalized_query')
+            current_query_info['normalized_query'] = data.get('normalized_query')
             # Capture extracted entities with text/type for training data
-            current_routing_info['entities'] = data.get('extracted_entities', [])
+            current_query_info['entities'] = data.get('extracted_entities', [])
             # Capture local classifier timing if available (comparison mode)
-            current_routing_info['inference_time_ms'] = data.get('local_inference_time_ms')
+            current_query_info['inference_time_ms'] = data.get('local_inference_time_ms')
+        
+        # Capture context sources
+        if event_type == 'context_sources':
+            current_query_info['context_sources'] = data
+        
+        # Capture response metadata
+        if event_type == 'response_metadata':
+            current_query_info['assistant_response'] = data.get('assistant_response')
+            current_query_info['response_time_ms'] = data.get('response_time_ms')
+            current_query_info['model_used'] = data.get('model_used')
 
         await websocket.send_json({
             'type': event_type,
@@ -133,11 +149,16 @@ async def websocket_endpoint(websocket: WebSocket):
             # Send acknowledgment
             await websocket.send_json({'type': 'message_received'})
 
-            # Reset routing info for this query
-            current_routing_info['tools_needed'] = None
-            current_routing_info['entities'] = None
-            current_routing_info['normalized_query'] = None
-            current_routing_info['inference_time_ms'] = None
+            # Reset query info for this query
+            current_query_info['tools_needed'] = None
+            current_query_info['entities'] = None
+            current_query_info['normalized_query'] = None
+            current_query_info['inference_time_ms'] = None
+            current_query_info['original_query'] = user_message  # Store original before normalization
+            current_query_info['assistant_response'] = None
+            current_query_info['context_sources'] = None
+            current_query_info['response_time_ms'] = None
+            current_query_info['model_used'] = None
 
             # Stream response from CentralEngine
             try:
@@ -155,14 +176,14 @@ async def websocket_endpoint(websocket: WebSocket):
                 # Send completion signal
                 await websocket.send_json({'type': 'response_complete'})
 
-                # Record routing decision for feedback collection (Firestore)
-                if current_routing_info['tools_needed'] and current_routing_info['normalized_query']:
+                # Record query log to Firestore
+                if current_query_info['tools_needed'] and current_query_info['normalized_query']:
                     try:
-                        repo = FeedbackRepository(db)
+                        repo = QueryLogRepository(db)
 
                         # Convert entities to serializable format
                         entities_data = None
-                        if current_routing_info['entities']:
+                        if current_query_info['entities']:
                             entities_data = [
                                 {
                                     'name': e.get('name', ''),
@@ -170,30 +191,36 @@ async def websocket_endpoint(websocket: WebSocket):
                                     'type': e.get('type', ''),
                                     'confidence': e.get('confidence', 1.0)
                                 }
-                                for e in current_routing_info['entities']
+                                for e in current_query_info['entities']
                             ]
 
-                        # Use normalized query from CentralEngine (already has placeholders applied)
-                        feedback_record = RoutingFeedbackDocument(
+                        # Create query log with all captured data
+                        query_log = QueryLogDocument(
                             id=str(uuid.uuid4()),
-                            user_query=current_routing_info['normalized_query'],
+                            user_query=current_query_info['normalized_query'],
                             character_name=character_name,
                             campaign_id=campaign_id,
-                            predicted_tools=current_routing_info['tools_needed'],
+                            predicted_tools=current_query_info['tools_needed'],
                             predicted_entities=entities_data,
-                            classifier_backend=current_routing_info['backend'],
-                            classifier_inference_time_ms=current_routing_info['inference_time_ms']
+                            classifier_backend=current_query_info['backend'],
+                            classifier_inference_time_ms=current_query_info['inference_time_ms'],
+                            # New fields
+                            original_query=current_query_info['original_query'],
+                            assistant_response=current_query_info['assistant_response'],
+                            context_sources=current_query_info['context_sources'],
+                            response_time_ms=current_query_info['response_time_ms'],
+                            model_used=current_query_info['model_used'],
                         )
 
-                        created = await repo.create(feedback_record)
+                        created = await repo.create(query_log)
 
-                        # Send feedback ID to client for later feedback submission
+                        # Send query log ID to client for later feedback submission
                         await websocket.send_json({
-                            'type': 'feedback_id',
+                            'type': 'query_log_id',
                             'data': {'id': created.id}
                         })
                     except Exception as e:
-                        print(f"Failed to record routing feedback: {e}")
+                        print(f"Failed to record query log: {e}")
 
             except Exception as e:
                 await websocket.send_json({

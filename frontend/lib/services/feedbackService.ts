@@ -3,10 +3,10 @@
  */
 
 import type {
-  RoutingRecordResponse,
+  QueryLogResponse,
   FeedbackSubmission,
   ToolIntentionOptions,
-  FeedbackStats,
+  QueryLogStats,
   ToolPrediction,
   EntityExtraction
 } from '../types/feedback';
@@ -59,7 +59,7 @@ export class FeedbackService {
     classifierBackend: string = 'local',
     inferenceTimeMs: number | null = null,
     campaignId: string = 'main_campaign'
-  ): Promise<RoutingRecordResponse> {
+  ): Promise<QueryLogResponse> {
     const response = await fetch(`${this.baseUrl}/record`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -83,7 +83,7 @@ export class FeedbackService {
   /**
    * Get pending feedback records
    */
-  async getPendingFeedback(limit: number = 50): Promise<RoutingRecordResponse[]> {
+  async getPendingFeedback(limit: number = 50): Promise<QueryLogResponse[]> {
     const response = await fetch(`${this.baseUrl}/pending?limit=${limit}`);
     if (!response.ok) {
       throw new Error('Failed to fetch pending feedback');
@@ -94,7 +94,7 @@ export class FeedbackService {
   /**
    * Get recent routing records
    */
-  async getRecentRecords(limit: number = 100): Promise<RoutingRecordResponse[]> {
+  async getRecentRecords(limit: number = 100): Promise<QueryLogResponse[]> {
     const response = await fetch(`${this.baseUrl}/recent?limit=${limit}`);
     if (!response.ok) {
       throw new Error('Failed to fetch recent records');
@@ -105,7 +105,7 @@ export class FeedbackService {
   /**
    * Get a specific routing record
    */
-  async getRecord(feedbackId: string): Promise<RoutingRecordResponse> {
+  async getRecord(feedbackId: string): Promise<QueryLogResponse> {
     const response = await fetch(`${this.baseUrl}/record/${feedbackId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch routing record');
@@ -119,7 +119,7 @@ export class FeedbackService {
   async submitFeedback(
     feedbackId: string,
     submission: FeedbackSubmission
-  ): Promise<RoutingRecordResponse> {
+  ): Promise<QueryLogResponse> {
     const response = await fetch(`${this.baseUrl}/record/${feedbackId}/submit`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -136,7 +136,7 @@ export class FeedbackService {
   /**
    * Get feedback collection statistics
    */
-  async getStats(): Promise<FeedbackStats> {
+  async getStats(): Promise<QueryLogStats> {
     const response = await fetch(`${this.baseUrl}/stats`);
     if (!response.ok) {
       throw new Error('Failed to fetch feedback stats');

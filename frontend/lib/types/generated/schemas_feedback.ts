@@ -6,6 +6,23 @@
 */
 
 /**
+ * Sources of context used for a query response.
+ */
+export interface ContextSources {
+  /**
+   * Character fields retrieved
+   */
+  character_fields?: string[] | null;
+  /**
+   * Rulebook sections retrieved
+   */
+  rulebook_sections?: string[] | null;
+  /**
+   * Session note IDs/titles retrieved
+   */
+  session_notes?: string[] | null;
+}
+/**
  * An extracted entity from the query.
  */
 export interface EntityExtraction {
@@ -27,14 +44,14 @@ export interface EntityExtraction {
   confidence?: number;
 }
 /**
- * Statistics about collected feedback.
+ * Statistics about collected query logs.
  */
-export interface FeedbackStats {
-  total_records: number;
-  pending_review: number;
-  confirmed_correct: number;
-  corrected: number;
-  exported: number;
+export interface QueryLogStats {
+  queries_total: number;
+  queries_pending_review: number;
+  queries_confirmed_correct: number;
+  queries_corrected: number;
+  queries_exported: number;
 }
 /**
  * Schema for submitting user feedback on routing.
@@ -67,11 +84,11 @@ export interface ToolCorrection {
   intention: string;
 }
 /**
- * Schema for creating a new routing feedback record.
+ * Schema for creating a new query log record.
  */
-export interface RoutingRecord {
+export interface QueryLogRecord {
   /**
-   * The original user query
+   * The normalized user query (with placeholders replaced)
    */
   user_query: string;
   /**
@@ -98,6 +115,26 @@ export interface RoutingRecord {
    * Inference time in ms
    */
   classifier_inference_time_ms?: number | null;
+  /**
+   * Original query before placeholder normalization
+   */
+  original_query?: string | null;
+  /**
+   * Full LLM response
+   */
+  assistant_response?: string | null;
+  /**
+   * Context sources used
+   */
+  context_sources?: ContextSources | null;
+  /**
+   * Total query-to-response time in ms
+   */
+  response_time_ms?: number | null;
+  /**
+   * LLM model used (e.g., 'claude-sonnet-4-20250514')
+   */
+  model_used?: string | null;
 }
 /**
  * A single tool prediction with intention and confidence.
@@ -117,9 +154,9 @@ export interface ToolPrediction {
   confidence?: number;
 }
 /**
- * Response schema for a routing feedback record.
+ * Response schema for a query log record.
  */
-export interface RoutingRecordResponse {
+export interface QueryLogResponse {
   id: string;
   user_query: string;
   character_name: string;
@@ -133,6 +170,11 @@ export interface RoutingRecordResponse {
   feedback_notes: string | null;
   created_at: string | null;
   feedback_at: string | null;
+  original_query?: string | null;
+  assistant_response?: string | null;
+  context_sources?: ContextSources | null;
+  response_time_ms?: number | null;
+  model_used?: string | null;
 }
 /**
  * Available tools and their valid intentions.

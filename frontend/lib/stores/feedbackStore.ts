@@ -2,7 +2,7 @@
  * Zustand store for routing feedback state
  */
 import { create } from 'zustand';
-import type { RoutingRecordResponse, ToolIntentionOptions, FeedbackStats, ToolCorrection, ToolPrediction } from '../types/feedback';
+import type { QueryLogResponse, ToolIntentionOptions, QueryLogStats, ToolCorrection, ToolPrediction } from '../types/feedback';
 
 interface FeedbackState {
   // Current query feedback (for inline feedback UI)
@@ -14,27 +14,27 @@ interface FeedbackState {
 
   // Feedback modal state
   showFeedbackModal: boolean;
-  selectedRecord: RoutingRecordResponse | null;
+  selectedRecord: QueryLogResponse | null;
 
   // User's current corrections
   corrections: ToolCorrection[];
   feedbackNotes: string;
 
   // Stats
-  stats: FeedbackStats | null;
+  stats: QueryLogStats | null;
 
   // Actions
   setCurrentFeedback: (feedbackId: string, predictedTools: ToolCorrection[]) => void;
   clearCurrentFeedback: () => void;
   setToolIntentions: (options: ToolIntentionOptions) => void;
-  openFeedbackModal: (record: RoutingRecordResponse) => void;
+  openFeedbackModal: (record: QueryLogResponse) => void;
   closeFeedbackModal: () => void;
   setCorrections: (corrections: ToolCorrection[]) => void;
   addCorrection: (tool: string, intention: string) => void;
   removeCorrection: (index: number) => void;
   updateCorrection: (index: number, tool: string, intention: string) => void;
   setFeedbackNotes: (notes: string) => void;
-  setStats: (stats: FeedbackStats) => void;
+  setStats: (stats: QueryLogStats) => void;
   resetForm: () => void;
 }
 

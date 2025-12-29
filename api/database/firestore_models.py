@@ -378,16 +378,25 @@ class CharacterDocument(BaseModel):
         )
 
 
-class RoutingFeedbackDocument(BaseModel):
-    """Routing feedback document for Firestore."""
+class QueryLogDocument(BaseModel):
+    """Query log document for Firestore - captures full query/response cycle."""
     id: str
-    user_query: str
+    user_query: str  # Normalized query with placeholders
     character_name: str
     predicted_tools: list[dict[str, Any]]  # List of {tool, intention, confidence}
     campaign_id: str = 'main_campaign'
     predicted_entities: Optional[list[dict[str, Any]]] = None
     classifier_backend: str = 'local'
     classifier_inference_time_ms: Optional[float] = None
+    
+    # New fields for complete query logging
+    original_query: Optional[str] = None  # Raw query before placeholder normalization
+    assistant_response: Optional[str] = None  # Full LLM response
+    context_sources: Optional[dict[str, Any]] = None  # {character_fields, rulebook_sections, session_notes}
+    response_time_ms: Optional[float] = None  # Total query-to-response time
+    model_used: Optional[str] = None  # e.g., "claude-sonnet-4-20250514"
+    
+    # Feedback fields
     is_correct: Optional[bool] = None
     corrected_tools: Optional[list[dict[str, Any]]] = None
     feedback_notes: Optional[str] = None
@@ -406,6 +415,13 @@ class RoutingFeedbackDocument(BaseModel):
             'predicted_entities': self.predicted_entities,
             'classifier_backend': self.classifier_backend,
             'classifier_inference_time_ms': self.classifier_inference_time_ms,
+            # New fields
+            'original_query': self.original_query,
+            'assistant_response': self.assistant_response,
+            'context_sources': self.context_sources,
+            'response_time_ms': self.response_time_ms,
+            'model_used': self.model_used,
+            # Feedback fields
             'is_correct': self.is_correct,
             'corrected_tools': self.corrected_tools,
             'feedback_notes': self.feedback_notes,
@@ -426,6 +442,13 @@ class RoutingFeedbackDocument(BaseModel):
             'predicted_entities': self.predicted_entities,
             'classifier_backend': self.classifier_backend,
             'classifier_inference_time_ms': self.classifier_inference_time_ms,
+            # New fields
+            'original_query': self.original_query,
+            'assistant_response': self.assistant_response,
+            'context_sources': self.context_sources,
+            'response_time_ms': self.response_time_ms,
+            'model_used': self.model_used,
+            # Feedback fields
             'is_correct': self.is_correct,
             'corrected_tools': self.corrected_tools,
             'feedback_notes': self.feedback_notes,
@@ -449,16 +472,16 @@ class RoutingFeedbackDocument(BaseModel):
         return examples
 
     @classmethod
-    def from_firestore(cls, doc_id: str, data: dict) -> 'RoutingFeedbackDocument':
+    def from_firestore(cls, doc_id: str, data: dict) -> 'QueryLogDocument':
         """
-        Constructs a RoutingFeedbackDocument from a Firestore document.
+        Constructs a QueryLogDocument from a Firestore document.
         
         Parameters:
             doc_id (str): Firestore document ID to use as the model's `id`.
-            data (dict): Firestore document data mapping used to populate fields; missing keys are replaced by the model's defaults or parsed where applicable (`created_at`, `feedback_at`, `exported_at`).
+            data (dict): Firestore document data mapping used to populate fields.
         
         Returns:
-            RoutingFeedbackDocument: Instance populated from the provided Firestore data.
+            QueryLogDocument: Instance populated from the provided Firestore data.
         """
         return cls(
             id=doc_id,
@@ -469,6 +492,13 @@ class RoutingFeedbackDocument(BaseModel):
             predicted_entities=data.get('predicted_entities'),
             classifier_backend=data.get('classifier_backend', 'local'),
             classifier_inference_time_ms=data.get('classifier_inference_time_ms'),
+            # New fields
+            original_query=data.get('original_query'),
+            assistant_response=data.get('assistant_response'),
+            context_sources=data.get('context_sources'),
+            response_time_ms=data.get('response_time_ms'),
+            model_used=data.get('model_used'),
+            # Feedback fields
             is_correct=data.get('is_correct'),
             corrected_tools=data.get('corrected_tools'),
             feedback_notes=data.get('feedback_notes'),
@@ -479,31 +509,36 @@ class RoutingFeedbackDocument(BaseModel):
         )
 
 
-class FeedbackStats(BaseModel):
-    """Statistics for routing feedback."""
-    total_records: int = 0
-    pending_review: int = 0
-    confirmed_correct: int = 0
-    corrected: int = 0
-    exported: int = 0
+class QueryLogStats(BaseModel):
+    """Statistics for query logs."""
+    queries_total: int = 0
+    queries_pending_review: int = 0
+    queries_confirmed_correct: int = 0
+    queries_corrected: int = 0
+    queries_exported: int = 0
 
     def to_response(self) -> dict:
         """Convert to API response format."""
         return {
-            'total_records': self.total_records,
-            'pending_review': self.pending_review,
-            'confirmed_correct': self.confirmed_correct,
-            'corrected': self.corrected,
-            'exported': self.exported,
+            'queries_total': self.queries_total,
+            'queries_pending_review': self.queries_pending_review,
+            'queries_confirmed_correct': self.queries_confirmed_correct,
+            'queries_corrected': self.queries_corrected,
+            'queries_exported': self.queries_exported,
         }
 
     @classmethod
-    def from_firestore(cls, data: dict) -> 'FeedbackStats':
+    def from_firestore(cls, data: dict) -> 'QueryLogStats':
         """Create from Firestore stats document."""
         return cls(
-            total_records=data.get('feedback_total', 0),
-            pending_review=data.get('feedback_pending', 0),
-            confirmed_correct=data.get('feedback_correct', 0),
-            corrected=data.get('feedback_corrected', 0),
-            exported=data.get('feedback_exported', 0),
+            queries_total=data.get('queries_total', 0),
+            queries_pending_review=data.get('queries_pending_review', data.get('queries_pending', 0)),
+            queries_confirmed_correct=data.get('queries_confirmed_correct', data.get('queries_correct', 0)),
+            queries_corrected=data.get('queries_corrected', 0),
+            queries_exported=data.get('queries_exported', 0),
         )
+
+
+# Backward compatibility aliases
+RoutingFeedbackDocument = QueryLogDocument
+FeedbackStats = QueryLogStats

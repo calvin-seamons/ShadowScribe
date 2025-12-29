@@ -208,6 +208,41 @@ RAG Context: SessionNotesContext
 
 **Per-Session Entities**: Each session stores its own entity lists (npcs, locations, items) rather than a campaign-wide index. This preserves chronological context for queries like "When did we first meet Ghul'Vor?"
 
+## Query Logs System (Training Data Collection)
+
+Every chat query is automatically saved to Firestore for training data collection.
+
+### Quick Stats Check
+```bash
+curl https://shadowscribe-api-768657256070.us-central1.run.app/api/query-logs/stats
+# Returns: {"queries_total": N, "queries_pending_review": N, "queries_confirmed_correct": N, "queries_corrected": N, "queries_exported": N}
+```
+
+### Query Logs API Endpoints
+- `GET /api/query-logs/stats` - Counts of all logs
+- `GET /api/query-logs/recent?limit=50` - Recent logs
+- `GET /api/query-logs/pending?limit=50` - Logs awaiting review
+- `POST /api/query-logs/{id}/feedback` - Submit correction
+- `POST /api/query-logs/export` - Export for training
+
+### What's Stored
+Each query saves to `query_logs/{id}`:
+- `user_query` - Normalized with placeholders (e.g., "What is {CHARACTER}'s AC?")
+- `original_query` - Raw query before normalization
+- `predicted_tools` - `[{tool, intention, confidence}]`
+- `predicted_entities` - `[{name, text, type, confidence}]`
+- `classifier_backend` - "local" or "haiku"
+- `assistant_response` - Full LLM response
+- `response_time_ms` - Query-to-response time in ms
+- `model_used` - LLM model (e.g., "claude-sonnet-4-20250514")
+- `context_sources` - `{character_fields, rulebook_sections, session_notes}`
+- `is_correct` - `null`=pending, `true`=confirmed, `false`=corrected
+
+### Code Locations
+- Collection: `api/routers/websocket.py`
+- Repository: `api/database/repositories/feedback_repo.py` → `QueryLogRepository`
+- Model: `api/database/firestore_models.py` → `QueryLogDocument`
+
 ## Code Philosophy
 
 1. **Delete obsolete code** - no commented-out code or legacy cruft
