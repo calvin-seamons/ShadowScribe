@@ -1,0 +1,72 @@
+# Cloud Build ignore file - reduces upload size significantly
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+env/
+venv/
+.venv/
+.uv/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation (not needed in container)
+*.md
+docs/
+WARP.md
+
+# Tests (not needed in production)
+tests/
+test_*.py
+*_test.py
+conftest.py
+
+# Frontend (separate deployment)
+frontend/
+node_modules/
+
+# Development files
+*.ipynb
+.ipynb_checkpoints/
+*.db
+*.sqlite
+.env
+.env.*
+!.env.example
+
+# Scripts not needed in container
+scripts/
+notebooks/
+
+# Build artifacts
+dist/
+build/
+*.egg
+
+# Credentials (handled by Secret Manager)
+credentials/
+*.json
+!knowledge_base/**/*.json

@@ -13,9 +13,7 @@ from typing import Optional
 from datetime import datetime
 
 from google.cloud.firestore_v1 import AsyncClient
-
-import dacite
-from dacite import DaciteError
+from pydantic import ValidationError
 
 from src.rag.character.character_types import Character
 
@@ -87,20 +85,12 @@ class CharacterManager:
         
         data = convert_datetimes(data)
         
-        # Use dacite for proper nested dataclass reconstruction
-        config = dacite.Config(
-            check_types=False,  # Allow flexible type matching
-        )
-        
+        # Character is a Pydantic model - use model_validate
         try:
-            character = dacite.from_dict(
-                data_class=Character,
-                data=data,
-                config=config
-            )
+            character = Character.model_validate(data)
             return character
-        except DaciteError as e:
-            logger.warning(f"Error reconstructing character from database with dacite: {e}")
+        except ValidationError as e:
+            logger.warning(f"Error reconstructing character from database with Pydantic: {e}")
             # Fall back to legacy reconstruction
             return self._legacy_load_character_from_db(data)
     

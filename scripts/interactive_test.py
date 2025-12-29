@@ -35,8 +35,6 @@ os.environ.setdefault(
 
 from google.cloud.firestore import AsyncClient
 
-import dacite
-
 from src.central_engine import CentralEngine
 from src.rag.character import Character
 from src.rag.context_assembler import ContextAssembler
@@ -112,12 +110,8 @@ class InteractiveTest:
         char_doc = await self.db.collection('characters').document(selected['id']).get()
         if char_doc.exists:
             char_data = char_doc.to_dict().get('data', {})
-            config = dacite.Config(check_types=False)
-            self.character = dacite.from_dict(
-                data_class=Character,
-                data=char_data,
-                config=config
-            )
+            # Character is a Pydantic model - use model_validate
+            self.character = Character.model_validate(char_data)
             print(f"      ✓ Loaded {self.character.character_base.name}")
         else:
             print("      ✗ Could not load character data")

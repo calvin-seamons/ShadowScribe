@@ -80,11 +80,22 @@ npm run lint     # ESLint
 
 ### Deployment
 ```bash
-# Deploy backend to Cloud Run
+# Fast deploy - build locally and push (uses Docker cache, ~70% faster)
+uv run python scripts/deploy_cloudrun.py --local
+
+# Standard deploy - build with Cloud Build
 uv run python scripts/deploy_cloudrun.py
+
+# With version bump
+uv run python scripts/deploy_cloudrun.py --local --patch
 
 # Frontend auto-deploys from main branch via Vercel
 ```
+
+**Deployment files:**
+- `Dockerfile` - Optimized with single pip install layer
+- `requirements-cloudrun.txt` - All dependencies consolidated
+- `.gcloudignore` - Excludes frontend/tests/scripts from upload
 
 ### Import System
 **Use absolute imports in all files:**

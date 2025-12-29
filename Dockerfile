@@ -1,69 +1,32 @@
 # Cloud Run Production Dockerfile for ShadowScribe API
+# Optimized for faster builds with consolidated dependencies
+
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies (no MySQL needed - using Firestore)
-RUN apt-get update && apt-get install -y \
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     pkg-config \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy and install ALL Python dependencies in single layer (maximizes cache hits)
+COPY requirements-cloudrun.txt .
+RUN pip install --no-cache-dir -r requirements-cloudrun.txt
 
-# Install PyTorch (CPU version for smaller image) and transformers for local classifier
-RUN pip install --no-cache-dir \
-    torch --index-url https://download.pytorch.org/whl/cpu
-
-RUN pip install --no-cache-dir \
-    transformers==4.36.0 \
-    sentence-transformers \
-    safetensors \
-    sentencepiece \
-    protobuf
-
-# Install FastAPI and Google Cloud dependencies
-RUN pip install --no-cache-dir \
-    fastapi==0.104.1 \
-    uvicorn[standard]==0.24.0 \
-    websockets==12.0 \
-    pydantic==2.5.0 \
-    pydantic-settings==2.1.0 \
-    numpy \
-    scikit-learn \
-    cryptography \
-    httpx==0.25.2 \
-    dacite==1.8.1 \
-    rank_bm25==0.2.2 \
-    python-dotenv \
-    openai \
-    anthropic
-
-# Install Firebase Admin SDK and Google Cloud packages
-RUN pip install --no-cache-dir \
-    firebase-admin>=6.0.0 \
-    google-cloud-storage>=2.0.0 \
-    google-cloud-firestore>=2.19.0 \
-    sqlalchemy[asyncio]>=2.0.0 \
-    aiomysql>=0.2.0
-
-# Copy models and knowledge base FIRST (changes rarely, cached)
+# Copy models and knowledge base (changes rarely - good cache layer)
 COPY models/ ./models/
 COPY knowledge_base/ ./knowledge_base/
-# Note: credentials not needed - Cloud Run uses Application Default Credentials
 
 # Copy application code LAST (changes frequently)
 COPY api/ ./api/
 COPY src/ ./src/
 
-# Cloud Run sets PORT environment variable
+# Cloud Run configuration
 ENV PORT=8080
-
-# Expose the port (informational)
 EXPOSE 8080
 
-# Run the application - Cloud Run requires listening on $PORT
 CMD exec uvicorn api.main:app --host 0.0.0.0 --port ${PORT}

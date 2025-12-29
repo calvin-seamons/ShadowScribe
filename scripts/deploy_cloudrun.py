@@ -5,11 +5,17 @@ ShadowScribe Cloud Run Deployment Script
 Deploys the API to Google Cloud Run with all necessary configuration.
 
 Usage:
-    uv run python scripts/deploy_cloudrun.py              # Deploy without version bump
+    uv run python scripts/deploy_cloudrun.py              # Deploy with Cloud Build (default)
+    uv run python scripts/deploy_cloudrun.py --local      # Build locally + push (faster!)
     uv run python scripts/deploy_cloudrun.py --patch      # Bump patch version (1.0.0 -> 1.0.1)
     uv run python scripts/deploy_cloudrun.py --minor      # Bump minor version (1.0.0 -> 1.1.0)
     uv run python scripts/deploy_cloudrun.py --major      # Bump major version (1.0.0 -> 2.0.0)
     uv run python scripts/deploy_cloudrun.py --version    # Show current version only
+
+Local build is faster because:
+    - Uses local Docker cache (no re-downloading layers)
+    - Skips Cloud Build upload/queue time
+    - Only pushes changed layers to Artifact Registry
 """
 
 import argparse
@@ -27,6 +33,11 @@ SERVICE_NAME = "shadowscribe-api"
 MEMORY = "2Gi"
 CPU = "2"
 TIMEOUT = "300"
+
+# Artifact Registry for local builds
+ARTIFACT_REGISTRY = f"{REGION}-docker.pkg.dev"
+REPOSITORY = "shadowscribe"
+IMAGE_NAME = "api"
 
 # Secrets (from Google Secret Manager) - as environment variables
 SECRETS = {
@@ -128,6 +139,7 @@ Version bump types:
     version_group.add_argument('--major', action='store_true', help='Bump major version')
     version_group.add_argument('--version', action='store_true', help='Show current version and exit')
     parser.add_argument('--no-deploy', action='store_true', help='Only update version, skip deployment')
+    parser.add_argument('--local', action='store_true', help='Build locally and push to Artifact Registry (faster)')
     return parser.parse_args()
 
 
@@ -172,6 +184,7 @@ def main():
     print(f"   Project: {PROJECT_ID}")
     print(f"   Region: {REGION}")
     print(f"   Service: {SERVICE_NAME}")
+    print(f"   Build: {'Local Docker' if args.local else 'Cloud Build'}")
     print()
 
     # Verify gcloud is configured
@@ -181,16 +194,47 @@ def main():
         print(f"⚠️  Current project is '{current_project}', switching to '{PROJECT_ID}'")
         run_command(["gcloud", "config", "set", "project", PROJECT_ID])
 
+    # Full image URL for Artifact Registry
+    image_url = f"{ARTIFACT_REGISTRY}/{PROJECT_ID}/{REPOSITORY}/{IMAGE_NAME}:latest"
+    
+    # Local build path: build locally, push to Artifact Registry, deploy from image
+    if args.local:
+        print("📦 Building Docker image locally...")
+        
+        # Configure Docker for Artifact Registry
+        run_command(["gcloud", "auth", "configure-docker", ARTIFACT_REGISTRY, "--quiet"])
+        
+        # Build locally for AMD64 (Cloud Run requires linux/amd64)
+        run_command([
+            "docker", "build",
+            "--platform", "linux/amd64",
+            "-t", image_url,
+            "-f", "Dockerfile",
+            str(project_root)
+        ])
+        
+        print("\n📤 Pushing to Artifact Registry...")
+        run_command(["docker", "push", image_url])
+        
+        print("\n🚀 Deploying from image...")
+    else:
+        print("📦 Building with Cloud Build...")
+
     # Build the deploy command
     cmd = [
         "gcloud", "run", "deploy", SERVICE_NAME,
         f"--region={REGION}",
-        f"--source={project_root}",
         "--allow-unauthenticated",
         f"--memory={MEMORY}",
         f"--cpu={CPU}",
         f"--timeout={TIMEOUT}",
     ]
+    
+    # Use image URL for local builds, source for Cloud Build
+    if args.local:
+        cmd.append(f"--image={image_url}")
+    else:
+        cmd.append(f"--source={project_root}")
 
     # Add secrets as environment variables
     secrets_str = ",".join(f"{k}={v}" for k, v in SECRETS.items())

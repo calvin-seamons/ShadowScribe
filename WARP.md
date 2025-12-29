@@ -187,21 +187,25 @@ NEXT_PUBLIC_API_URL=https://shadowscribe-api-768657256070.us-central1.run.app
 ### Backend (Cloud Run)
 Deploy using the script:
 ```bash
-python scripts/deploy_cloudrun.py
+# Fast deploy - build locally, push to Artifact Registry (uses Docker cache)
+uv run python scripts/deploy_cloudrun.py --local
+
+# Standard deploy - build with Cloud Build
+uv run python scripts/deploy_cloudrun.py
+
+# With version bump
+uv run python scripts/deploy_cloudrun.py --local --patch   # 1.0.0 -> 1.0.1
+uv run python scripts/deploy_cloudrun.py --local --minor   # 1.0.0 -> 1.1.0
 ```
 
-Or manually:
-```bash
-gcloud run deploy shadowscribe-api \
-  --region=us-central1 \
-  --source=. \
-  --allow-unauthenticated \
-  --memory=2Gi \
-  --cpu=2 \
-  --timeout=300 \
-  --set-secrets="OPENAI_API_KEY=openai-api-key:latest,ANTHROPIC_API_KEY=anthropic-api-key:latest" \
-  --set-env-vars="CORS_ORIGINS=..."
-```
+**Deployment files:**
+- `Dockerfile` - Optimized with single pip install layer for better caching
+- `requirements-cloudrun.txt` - All Cloud Run dependencies in one file
+- `.gcloudignore` - Excludes frontend, tests, scripts from Cloud Build upload
+
+**Artifact Registry** (for `--local` builds):
+- Repository: `us-central1-docker.pkg.dev/shadowscribe-prod/shadowscribe/api`
+- The script automatically builds for `linux/amd64` platform (required for Cloud Run, works on Apple Silicon)
 
 ### Checking Deployment Status
 ```bash

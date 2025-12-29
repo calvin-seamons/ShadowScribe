@@ -135,8 +135,15 @@ metadata/stats
 
 ### Deployment Commands
 ```bash
-# Deploy to Cloud Run (recommended - handles secrets, env vars, etc.)
+# Fast deploy - build locally and push (uses Docker cache, ~70% faster)
+uv run python scripts/deploy_cloudrun.py --local
+
+# Standard deploy - build with Cloud Build (default)
 uv run python scripts/deploy_cloudrun.py
+
+# With version bump
+uv run python scripts/deploy_cloudrun.py --local --patch   # 1.0.0 -> 1.0.1
+uv run python scripts/deploy_cloudrun.py --local --minor   # 1.0.0 -> 1.1.0
 
 # Check Cloud Run service status
 gcloud run services describe shadowscribe-api --region us-central1 --project shadowscribe-prod
@@ -144,6 +151,11 @@ gcloud run services describe shadowscribe-api --region us-central1 --project sha
 # View Cloud Run logs
 gcloud run services logs read shadowscribe-api --region us-central1 --limit 100
 ```
+
+**Deployment files:**
+- `Dockerfile` - Optimized with single pip install layer
+- `requirements-cloudrun.txt` - All Cloud Run dependencies consolidated
+- `.gcloudignore` - Excludes frontend, tests, scripts from upload
 
 ### GCloud CLI Essentials
 ```bash

@@ -1,0 +1,44 @@
+# ShadowScribe Cloud Run Dependencies
+# All dependencies in one file for faster Docker builds (single pip install layer)
+
+# ===== Core Dependencies =====
+typing-extensions>=4.0.0
+dataclasses-json>=0.6.0
+python-dotenv>=1.0.0
+setuptools
+
+# ===== API Framework =====
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+websockets==12.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+httpx==0.25.2
+
+# ===== LLM Clients =====
+openai>=1.0.0
+anthropic>=0.7.0
+
+# ===== ML/AI - Local Classifier =====
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+transformers==4.36.0
+sentence-transformers
+safetensors
+sentencepiece
+protobuf
+
+# ===== Data Processing =====
+numpy
+scikit-learn
+dacite==1.8.1
+rank_bm25==0.2.2
+
+# ===== Firebase/Google Cloud =====
+firebase-admin>=6.0.0
+google-cloud-storage>=2.0.0
+google-cloud-firestore>=2.19.0
+cryptography
+
+# ===== HTTP/Requests =====
+requests>=2.31.0
