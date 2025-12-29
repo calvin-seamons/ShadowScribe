@@ -6,8 +6,6 @@ Gazetteer-based NER for entity extraction by default.
 import sys
 from pathlib import Path
 from typing import AsyncGenerator, Callable, Optional, Dict
-from dacite import from_dict
-import dacite
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -114,12 +112,8 @@ class ChatService:
         if not char_doc:
             raise ValueError(f"Character '{character_name}' not found in Firestore")
 
-        # Convert Firestore data to Character dataclass
-        character = from_dict(
-            data_class=Character,
-            data=char_doc.data,
-            config=dacite.Config(strict=False, check_types=False)
-        )
+        # Convert Firestore data to Character using Pydantic
+        character = Character.model_validate(char_doc.data)
         # Use the character's actual campaign_id from Firestore
         # If character has no campaign, don't load any session notes
         actual_campaign_id = char_doc.campaign_id

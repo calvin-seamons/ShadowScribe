@@ -19,10 +19,15 @@ Local build is faster because:
 """
 
 import argparse
+import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
+
+# Cross-platform support
+IS_WINDOWS = sys.platform == "win32"
 
 # ============ CONFIGURATION ============
 PROJECT_ID = "shadowscribe-prod"
@@ -112,9 +117,20 @@ def update_version_in_pyproject(new_version: str) -> None:
 
 
 def run_command(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
-    """Run a shell command and return the result."""
+    """Run a shell command and return the result.
+    
+    On Windows, uses shell=True to find executables in PATH.
+    """
     print(f"Running: {' '.join(cmd)}")
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    
+    if IS_WINDOWS:
+        # On Windows, use shell=True to properly resolve PATH
+        # Join command for shell execution
+        cmd_str = subprocess.list2cmdline(cmd)
+        result = subprocess.run(cmd_str, capture_output=True, text=True, shell=True)
+    else:
+        result = subprocess.run(cmd, capture_output=True, text=True)
+    
     if check and result.returncode != 0:
         print(f"Error: {result.stderr}")
         sys.exit(1)
@@ -243,17 +259,36 @@ def main():
     all_secrets = f"{secrets_str},{file_secrets_str}"
     cmd.append(f"--set-secrets={all_secrets}")
 
-    # Add environment variables (use ^@^ delimiter for values with commas)
+    # Create a temporary env vars file to avoid shell escaping issues with commas
     cors_str = ",".join(CORS_ORIGINS)
-    # GOOGLE_APPLICATION_CREDENTIALS points to the mounted Firebase service account
-    cmd.append(f"--set-env-vars=^@^CORS_ORIGINS={cors_str}@GOOGLE_APPLICATION_CREDENTIALS=/secrets/firebase-service-account.json")
-
-    # Run deployment
-    print("📦 Building and deploying...")
-    print()
+    env_vars = {
+        "CORS_ORIGINS": cors_str,
+        "GOOGLE_APPLICATION_CREDENTIALS": "/secrets/firebase-service-account.json"
+    }
     
-    # Run interactively so user can see progress
-    subprocess.run(cmd, cwd=project_root)
+    # Write env vars to temp file in YAML format
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        for key, value in env_vars.items():
+            # Quote values to handle special characters
+            f.write(f'{key}: "{value}"\n')
+        env_file = f.name
+    
+    try:
+        cmd.append(f"--env-vars-file={env_file}")
+
+        # Run deployment
+        print("📦 Building and deploying...")
+        print()
+        
+        # Run interactively so user can see progress
+        if IS_WINDOWS:
+            cmd_str = subprocess.list2cmdline(cmd)
+            subprocess.run(cmd_str, cwd=project_root, shell=True)
+        else:
+            subprocess.run(cmd, cwd=project_root)
+    finally:
+        # Clean up temp file
+        os.unlink(env_file)
 
 
 if __name__ == "__main__":
