@@ -32,19 +32,19 @@ export interface CharacterDocument {
   updated_at?: string | null;
 }
 /**
- * Statistics for routing feedback.
+ * Statistics for query logs.
  */
-export interface FeedbackStats {
-  total_records?: number;
-  pending_review?: number;
-  confirmed_correct?: number;
-  corrected?: number;
-  exported?: number;
+export interface QueryLogStats {
+  queries_total?: number;
+  queries_pending_review?: number;
+  queries_confirmed_correct?: number;
+  queries_corrected?: number;
+  queries_exported?: number;
 }
 /**
- * Routing feedback document for Firestore.
+ * Query log document for Firestore - captures full query/response cycle.
  */
-export interface RoutingFeedbackDocument {
+export interface QueryLogDocument {
   id: string;
   user_query: string;
   character_name: string;
@@ -59,6 +59,13 @@ export interface RoutingFeedbackDocument {
     | null;
   classifier_backend?: string;
   classifier_inference_time_ms?: number | null;
+  original_query?: string | null;
+  assistant_response?: string | null;
+  context_sources?: {
+    [k: string]: unknown;
+  } | null;
+  response_time_ms?: number | null;
+  model_used?: string | null;
   is_correct?: boolean | null;
   corrected_tools?:
     | {
