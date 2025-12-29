@@ -80,7 +80,7 @@ async def migrate_documents(db: AsyncClient, dry_run: bool = True) -> dict:
         
         if dry_run:
             print(f"  WOULD MIGRATE: {doc_id}")
-            print(f"    user_query: {data.get('user_query', '')[:50]}...")
+            print(f"    user_query: {(data.get('user_query') or '')[:50]}...")
         else:
             try:
                 await new_collection.document(doc_id).set(migrated_data)
