@@ -93,7 +93,7 @@ export function Step5_Abilities() {
   }
 
   const updateAction = (index: number, field: string, value: any) => {
-    const updated = [...(actionEconomy.actions || [])]
+const updated = [...(actionEconomy.actions ?? [])]
     updated[index] = { ...updated[index], [field]: value }
     updateSection('action_economy', { ...actionEconomy, actions: updated })
   }
@@ -108,7 +108,7 @@ export function Step5_Abilities() {
     }
     updateSection('action_economy', {
       ...actionEconomy,
-      actions: [...(actionEconomy.actions || []), newAction],
+actions: [...(actionEconomy.actions ?? []), newAction],
     })
     setExpandedAction(actionEconomy.actions?.length || 0)
   }

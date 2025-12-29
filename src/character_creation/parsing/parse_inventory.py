@@ -9,7 +9,6 @@ import html
 import json
 import re
 from typing import Dict, List, Optional, Any, Union
-from dataclasses import dataclass, field
 from pathlib import Path
 
 from src.rag.character.character_types import (
@@ -148,11 +147,12 @@ def extract_inventory_items(data: Dict[str, Any]) -> List[InventoryItem]:
             lu = item_data['limitedUse']
             limited_use = LimitedUse(
                 maxUses=lu.get('maxUses'),
+                numberUsed=lu.get('numberUsed'),
                 resetType=lu.get('resetType'),
                 resetTypeDescription=lu.get('resetTypeDescription')
             )
             # Only keep if it has meaningful data
-            if not any(getattr(limited_use, field) is not None for field in LimitedUse.model_fields):
+            if not any(getattr(limited_use, f) is not None for f in LimitedUse.model_fields):
                 limited_use = None
         
         # Create InventoryItem
@@ -166,10 +166,11 @@ def extract_inventory_items(data: Dict[str, Any]) -> List[InventoryItem]:
         
         items.append(item)
     
-    # Merge items with same name and description
+    # Merge items with same name, description, and type
+    # Include type to avoid merging distinct items that happen to have None name
     merged_items = {}
     for item in items:
-        key = (item.definition.name, item.definition.description)
+        key = (item.definition.name, item.definition.description, item.definition.type)
         if key in merged_items:
             merged_items[key].quantity += item.quantity
             # For other fields, keep the first one (assuming they are the same)

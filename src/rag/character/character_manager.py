@@ -5,6 +5,7 @@ A class for saving and loading Character objects from database or pickle files.
 Supports both database (primary) and pickle file (fallback) storage.
 """
 
+import logging
 import json
 import pickle
 from pathlib import Path
@@ -14,8 +15,11 @@ from datetime import datetime
 from google.cloud.firestore_v1 import AsyncClient
 
 import dacite
+from dacite import DaciteError
 
 from src.rag.character.character_types import Character
+
+logger = logging.getLogger(__name__)
 
 
 class CharacterManager:
@@ -95,8 +99,8 @@ class CharacterManager:
                 config=config
             )
             return character
-        except Exception as e:
-            print(f"[CharacterManager] Error reconstructing character from database: {e}")
+        except DaciteError as e:
+            logger.warning(f"Error reconstructing character from database with dacite: {e}")
             # Fall back to legacy reconstruction
             return self._legacy_load_character_from_db(data)
     
