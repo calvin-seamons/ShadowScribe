@@ -8,23 +8,22 @@ from api.config import config
 from api.routers import websocket, characters, feedback, campaigns
 
 
-def warmup_local_classifier():
+def warmup_models():
     """
-    Preloads the local classifier model to reduce cold-start latency.
-    
-    If a local classifier is available, performs a sample inference to fully initialize model kernels; logs progress and failures to standard output.
+    Preloads ML models to reduce cold-start latency.
+
+    Loads the local classifier and embedding model at startup to avoid
+    slow first-request latency on Cloud Run.
     """
     try:
+        # 1. Load local classifier
         print("[Warmup] Loading local classifier model...")
         start = time.time()
 
-        # Import and trigger singleton initialization
         from src.central_engine import get_local_classifier
-
         classifier = get_local_classifier()
 
         if classifier:
-            # Run a warmup inference to fully initialize CUDA/MPS kernels
             _ = classifier.classify_single("What is my AC?")
             elapsed = time.time() - start
             print(f"[Warmup] Local classifier ready in {elapsed:.2f}s")
@@ -33,16 +32,33 @@ def warmup_local_classifier():
     except Exception as e:
         print(f"[Warmup] Failed to preload local classifier: {e}")
 
+    try:
+        # 2. Load embedding model (used for rulebook RAG)
+        print("[Warmup] Loading embedding model...")
+        start = time.time()
+
+        from src.embeddings import get_embedding_provider
+        provider = get_embedding_provider()
+
+        # Run a warmup embedding to fully initialize
+        _ = provider.embed("warmup query")
+        elapsed = time.time() - start
+        print(f"[Warmup] Embedding model ready in {elapsed:.2f}s")
+    except Exception as e:
+        print(f"[Warmup] Failed to preload embedding model: {e}")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager."""
+    import asyncio
+
     # Startup - Firestore client is initialized on first use (singleton)
     print("[Startup] Initializing Firestore client...")
 
-    # Warmup: preload local classifier in background to avoid blocking startup
-    import asyncio
-    asyncio.create_task(asyncio.to_thread(warmup_local_classifier))
+    # Warmup: preload ML models in background
+    # Note: Models should be pre-downloaded in Docker image for fast cold starts
+    asyncio.create_task(asyncio.to_thread(warmup_models))
 
     yield
 

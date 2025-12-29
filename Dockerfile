@@ -17,6 +17,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements-cloudrun.txt .
 RUN pip install --no-cache-dir -r requirements-cloudrun.txt
 
+# Pre-download HuggingFace models during build to avoid runtime downloads
+# This prevents cold-start timeouts and HuggingFace rate limits
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-base-en-v1.5')"
+
 # Copy models and knowledge base (changes rarely - good cache layer)
 COPY models/ ./models/
 COPY knowledge_base/ ./knowledge_base/
