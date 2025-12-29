@@ -1,7 +1,6 @@
 """API router for query log collection and export."""
 from fastapi import APIRouter, Depends, HTTPException
 from google.cloud.firestore_v1 import AsyncClient
-from typing import List
 import uuid
 
 from api.database.firestore_client import get_db
@@ -57,7 +56,7 @@ async def create_query_log(
     return QueryLogResponse(**created.to_response())
 
 
-@router.get("/pending", response_model=List[QueryLogResponse])
+@router.get("/pending", response_model=list[QueryLogResponse])
 async def get_pending_logs(
     limit: int = 50,
     db: AsyncClient = Depends(get_db)
@@ -68,7 +67,7 @@ async def get_pending_logs(
     return [QueryLogResponse(**r.to_response()) for r in records]
 
 
-@router.get("/recent", response_model=List[QueryLogResponse])
+@router.get("/recent", response_model=list[QueryLogResponse])
 async def get_recent_logs(
     limit: int = 100,
     db: AsyncClient = Depends(get_db)
