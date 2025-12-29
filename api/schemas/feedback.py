@@ -1,4 +1,4 @@
-"""Pydantic schemas for routing feedback API."""
+"""Pydantic schemas for query log API."""
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -25,19 +25,36 @@ class ToolCorrection(BaseModel):
     intention: str = Field(..., description="The correct intention for this tool")
 
 
-class RoutingRecord(BaseModel):
-    """Schema for creating a new routing feedback record."""
-    user_query: str = Field(..., description="The original user query")
+class ContextSources(BaseModel):
+    """Sources of context used for a query response."""
+    character_fields: Optional[List[str]] = Field(default=None, description="Character fields retrieved")
+    rulebook_sections: Optional[List[str]] = Field(default=None, description="Rulebook sections retrieved")
+    session_notes: Optional[List[str]] = Field(default=None, description="Session note IDs/titles retrieved")
+
+
+class QueryLogRecord(BaseModel):
+    """Schema for creating a new query log record."""
+    user_query: str = Field(..., description="The normalized user query (with placeholders replaced)")
     character_name: str = Field(..., description="Character name for context")
     campaign_id: str = Field(default="main_campaign", description="Campaign ID")
     predicted_tools: List[ToolPrediction] = Field(..., description="Model's tool predictions")
     predicted_entities: Optional[List[EntityExtraction]] = Field(default=None, description="Extracted entities")
     classifier_backend: str = Field(default="local", description="Backend: 'local' or 'llm'")
     classifier_inference_time_ms: Optional[float] = Field(default=None, description="Inference time in ms")
+    # New fields
+    original_query: Optional[str] = Field(default=None, description="Original query before placeholder normalization")
+    assistant_response: Optional[str] = Field(default=None, description="Full LLM response")
+    context_sources: Optional[ContextSources] = Field(default=None, description="Context sources used")
+    response_time_ms: Optional[float] = Field(default=None, description="Total query-to-response time in ms")
+    model_used: Optional[str] = Field(default=None, description="LLM model used (e.g., 'claude-sonnet-4-20250514')")
 
 
-class RoutingRecordResponse(BaseModel):
-    """Response schema for a routing feedback record."""
+# Backward compatibility alias
+RoutingRecord = QueryLogRecord
+
+
+class QueryLogResponse(BaseModel):
+    """Response schema for a query log record."""
     id: str
     user_query: str
     character_name: str
@@ -51,8 +68,18 @@ class RoutingRecordResponse(BaseModel):
     feedback_notes: Optional[str]
     created_at: Optional[str]
     feedback_at: Optional[str]
+    # New fields
+    original_query: Optional[str] = None
+    assistant_response: Optional[str] = None
+    context_sources: Optional[ContextSources] = None
+    response_time_ms: Optional[float] = None
+    model_used: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# Backward compatibility alias
+RoutingRecordResponse = QueryLogResponse
 
 
 class FeedbackSubmission(BaseModel):
@@ -105,10 +132,14 @@ class TrainingExportResponse(BaseModel):
     confirmed_correct_count: int
 
 
-class FeedbackStats(BaseModel):
-    """Statistics about collected feedback."""
-    total_records: int
-    pending_review: int
-    confirmed_correct: int
-    corrected: int
-    exported: int
+class QueryLogStats(BaseModel):
+    """Statistics about collected query logs."""
+    queries_total: int
+    queries_pending_review: int
+    queries_confirmed_correct: int
+    queries_corrected: int
+    queries_exported: int
+
+
+# Backward compatibility alias
+FeedbackStats = QueryLogStats

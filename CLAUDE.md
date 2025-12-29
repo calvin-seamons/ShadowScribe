@@ -121,11 +121,20 @@ campaigns/{campaign_id}/sessions/{session_id}  (unified SessionDocument model)
   - unresolved_questions, divine_interventions, cliffhanger, etc.
   - date, created_at, updated_at
 
-routing_feedback/{feedback_id}
-  - user_query, predicted_tools, is_correct, corrected_tools, etc.
+query_logs/{log_id}
+  - user_query (normalized with placeholders), original_query (raw before normalization)
+  - character_name, campaign_id
+  - predicted_tools [{tool, intention, confidence}], predicted_entities [{name, text, type, confidence}]
+  - classifier_backend ("local" or "haiku"), classifier_inference_time_ms
+  - assistant_response (full LLM response), response_time_ms, model_used
+  - context_sources {character_fields, rulebook_sections, session_notes}
+  - is_correct (null=pending, true=confirmed, false=corrected)
+  - corrected_tools (user's corrections), feedback_notes
+  - created_at, feedback_at, exported_for_training, exported_at
 
 metadata/stats
   - Counter document for efficient stats (avoids expensive COUNT queries)
+  - queries_total, queries_pending, queries_correct, queries_corrected, queries_exported
 ```
 
 **Important Firestore Patterns:**
@@ -250,8 +259,9 @@ GOOGLE_APPLICATION_CREDENTIALS=./credentials/firebase-service-account.json
 - `POST /api/characters` - Create character
 - `PUT /api/characters/{id}` - Update character
 - `DELETE /api/characters/{id}` - Delete character
-- `GET /api/feedback/stats` - Routing feedback statistics
-- `POST /api/feedback/{id}` - Submit feedback correction
+- `GET /api/query-logs/stats` - Query log statistics
+- `GET /api/query-logs/recent` - Recent query logs
+- `POST /api/query-logs/{id}/feedback` - Submit feedback correction
 
 ### WebSocket
 - `ws://localhost:8000/ws/chat` - Streaming chat
@@ -307,6 +317,45 @@ Run tests:
 uv run pytest tests/ -v                    # All tests
 uv run pytest tests/ -v -k "test_name"     # Specific test
 ```
+
+## Query Logs System (Training Data Collection)
+
+Every chat query is automatically saved to Firestore for training data collection. This enables improving the local classifier over time.
+
+### Checking Query Log Stats
+```bash
+# Via API (fastest)
+curl https://shadowscribe-api-768657256070.us-central1.run.app/api/query-logs/stats
+
+# Response: {"queries_total": N, "queries_pending_review": N, "queries_confirmed_correct": N, "queries_corrected": N, "queries_exported": N}
+```
+
+### API Endpoints
+- `GET /api/query-logs/stats` - Get counts of total, pending, correct, corrected, exported
+- `GET /api/query-logs/recent?limit=50` - Get recent query logs
+- `GET /api/query-logs/pending?limit=50` - Get logs awaiting review
+- `POST /api/query-logs/{id}/feedback` - Submit correction: `{is_correct: bool, corrected_tools?: [...], feedback_notes?: str}`
+- `POST /api/query-logs/export` - Export training data (marks as exported)
+
+### What's Stored Per Query
+Each query saves a `QueryLogDocument` to `query_logs/{id}` containing:
+- `user_query` - Normalized query with entity placeholders (e.g., "What is {CHARACTER}'s AC?")
+- `original_query` - Raw query before placeholder normalization
+- `predicted_tools` - Classifier's routing decisions: `[{tool, intention, confidence}]`
+- `predicted_entities` - Extracted entities: `[{name, text, type, confidence}]`
+- `classifier_backend` - Which classifier was used ("local" or "haiku")
+- `assistant_response` - Full LLM response text
+- `response_time_ms` - Total query-to-response time in milliseconds
+- `model_used` - LLM model used (e.g., "claude-sonnet-4-20250514")
+- `context_sources` - What data was retrieved: `{character_fields, rulebook_sections, session_notes}`
+- `is_correct` - Feedback status: `null`=pending, `true`=confirmed correct, `false`=needs correction
+- `corrected_tools` - User's corrections if `is_correct=false`
+
+### Code Locations
+- **Collection logic**: `api/routers/websocket.py` (after each query)
+- **Repository**: `api/database/repositories/feedback_repo.py` → `QueryLogRepository`
+- **Model**: `api/database/firestore_models.py` → `QueryLogDocument`
+- **Stats counter**: `metadata/stats` document in Firestore
 
 ## Current Project Status
 

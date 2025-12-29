@@ -516,6 +516,15 @@ class CentralEngine:
         print(f"🔧 DEBUG: Step 6 - Streaming final response...")
         step6_start = time.time()
         
+        # Determine model being used for metadata
+        provider = self.config.final_response_llm_provider
+        if provider == "openai":
+            model_used = self.config.openai_final_model
+        elif provider == "anthropic":
+            model_used = self.config.anthropic_final_model
+        else:
+            model_used = None
+        
         # Capture the full response as we stream it
         full_response = ""
         async for chunk in self.generate_final_response_stream(raw_results, user_query):
@@ -528,6 +537,14 @@ class CentralEngine:
         # Emit performance metrics
         if metadata_callback:
             await metadata_callback('performance_metrics', {'timing': timing})
+        
+        # Emit response metadata for query logging
+        if metadata_callback:
+            await metadata_callback('response_metadata', {
+                'assistant_response': full_response,
+                'response_time_ms': timing['total'],
+                'model_used': model_used
+            })
         
         # Add assistant response to conversation history
         self.add_conversation_turn("assistant", full_response)
