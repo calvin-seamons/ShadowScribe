@@ -130,6 +130,7 @@ export type CharacterSectionKey =
   | 'inventory'
   | 'spell_list'
   | 'objectives_and_contracts'
+  | 'notes'
 
 /**
  * SectionName - Alias for CharacterSectionKey (backward compatibility)

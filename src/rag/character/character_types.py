@@ -18,7 +18,7 @@ NOTE: These are Pydantic models (BaseModel) that serve as the single source of t
 TypeScript types are auto-generated from these models using pydantic-to-typescript.
 """
 
-from typing import Dict, List, Optional, Union, Any, Literal
+from typing import Any, Literal
 from datetime import datetime
 from pydantic import BaseModel, Field
 
@@ -59,7 +59,7 @@ class CombatStats(BaseModel):
     armor_class: int
     initiative_bonus: int
     speed: int
-    hit_dice: Optional[Dict[str, str]] = None
+    hit_dice: dict[str, str] | None = None
 
 
 class CharacterBase(BaseModel):
@@ -82,9 +82,9 @@ class CharacterBase(BaseModel):
     total_level: int
     alignment: str
     background: str
-    subrace: Optional[str] = None
-    multiclass_levels: Optional[Dict[str, int]] = None
-    lifestyle: Optional[str] = None
+    subrace: str | None = None
+    multiclass_levels: dict[str, int] | None = None
+    lifestyle: str | None = None
 
 
 class PhysicalCharacteristics(BaseModel):
@@ -111,7 +111,7 @@ class PhysicalCharacteristics(BaseModel):
     skin: str
     age: int
     weight: str  # Include unit (e.g., "180 lb")
-    faith: Optional[str] = None
+    faith: str | None = None
 
 
 class Proficiency(BaseModel):
@@ -161,9 +161,9 @@ class PassiveScores(BaseModel):
     Proficiencies from data.modifiers[category] where type="proficiency" and subType matches skill name
     """
     perception: int
-    investigation: Optional[int] = None
-    insight: Optional[int] = None
-    stealth: Optional[int] = None
+    investigation: int | None = None
+    insight: int | None = None
+    stealth: int | None = None
 
 
 class Senses(BaseModel):
@@ -196,7 +196,7 @@ class Senses(BaseModel):
 
     Values can be integers (ranges in feet) or strings (descriptive values).
     """
-    senses: Dict[str, Union[int, str]] = Field(default_factory=dict)
+    senses: dict[str, int | str] = Field(default_factory=dict)
 
 
 # ===== BACKGROUND AND PERSONALITY TYPES =====
@@ -233,11 +233,11 @@ class BackgroundInfo(BaseModel):
     """
     name: str
     feature: BackgroundFeature
-    skill_proficiencies: List[str] = Field(default_factory=list)
-    tool_proficiencies: List[str] = Field(default_factory=list)
-    language_proficiencies: List[str] = Field(default_factory=list)
-    equipment: List[str] = Field(default_factory=list)
-    feature_description: Optional[str] = None
+    skill_proficiencies: list[str] = Field(default_factory=list)
+    tool_proficiencies: list[str] = Field(default_factory=list)
+    language_proficiencies: list[str] = Field(default_factory=list)
+    equipment: list[str] = Field(default_factory=list)
+    feature_description: str | None = None
 
 
 class PersonalityTraits(BaseModel):
@@ -253,10 +253,10 @@ class PersonalityTraits(BaseModel):
     May contain multiple entries per field separated by \n characters.
     Probably will need to ask LLM to parse into lists.
     """
-    personality_traits: List[str] = Field(default_factory=list)
-    ideals: List[str] = Field(default_factory=list)
-    bonds: List[str] = Field(default_factory=list)
-    flaws: List[str] = Field(default_factory=list)
+    personality_traits: list[str] = Field(default_factory=list)
+    ideals: list[str] = Field(default_factory=list)
+    bonds: list[str] = Field(default_factory=list)
+    flaws: list[str] = Field(default_factory=list)
 
 
 class BackstorySection(BaseModel):
@@ -296,7 +296,7 @@ class FamilyBackstory(BaseModel):
     The backstory is stored as free-form markdown text, not structured data.
     """
     parents: str
-    sections: List[BackstorySection] = Field(default_factory=list)
+    sections: list[BackstorySection] = Field(default_factory=list)
 
 
 class Backstory(BaseModel):
@@ -318,7 +318,7 @@ class Backstory(BaseModel):
     """
     title: str
     family_backstory: FamilyBackstory
-    sections: List[BackstorySection] = Field(default_factory=list)
+    sections: list[BackstorySection] = Field(default_factory=list)
 
 
 class Organization(BaseModel):
@@ -361,7 +361,7 @@ class Ally(BaseModel):
     """
     name: str
     description: str
-    title: Optional[str] = None
+    title: str | None = None
 
 
 class Enemy(BaseModel):
@@ -396,9 +396,9 @@ class ActionActivation(BaseModel):
     - activationTime: actions[].activation.activationTime
     - activationCondition: Parse from action description or activation data
     """
-    activationType: Optional[str] = None  # "action", "bonus_action", "reaction", etc.
-    activationTime: Optional[int] = None  # Number of time units
-    activationCondition: Optional[str] = None  # Special conditions for activation
+    activationType: str | None = None  # "action", "bonus_action", "reaction", etc.
+    activationTime: int | None = None  # Number of time units
+    activationCondition: str | None = None  # Special conditions for activation
 
 
 class ActionUsage(BaseModel):
@@ -409,9 +409,9 @@ class ActionUsage(BaseModel):
     - resetType: Map from actions[].limitedUse.resetType using RESET_TYPE_MAP
     - usesPerActivation: actions[].limitedUse.minNumberConsumed (default 1)
     """
-    maxUses: Optional[int] = None
-    resetType: Optional[str] = None  # "short_rest", "long_rest", "dawn", etc.
-    usesPerActivation: Optional[int] = None
+    maxUses: int | None = None
+    resetType: str | None = None  # "short_rest", "long_rest", "dawn", etc.
+    usesPerActivation: int | None = None
 
 
 class ActionRange(BaseModel):
@@ -424,11 +424,11 @@ class ActionRange(BaseModel):
     - aoeSize: actions[].range.aoeSize
     - rangeDescription: Generated from range/longRange/aoe data
     """
-    range: Optional[int] = None  # Range in feet
-    longRange: Optional[int] = None  # Long range in feet
-    aoeType: Optional[str] = None  # Area of effect type
-    aoeSize: Optional[int] = None  # AOE size in feet
-    rangeDescription: Optional[str] = None  # Human-readable range
+    range: int | None = None  # Range in feet
+    longRange: int | None = None  # Long range in feet
+    aoeType: str | None = None  # Area of effect type
+    aoeSize: int | None = None  # AOE size in feet
+    rangeDescription: str | None = None  # Human-readable range
 
 
 class ActionDamage(BaseModel):
@@ -441,11 +441,11 @@ class ActionDamage(BaseModel):
     - bonusDamage: Additional damage from modifiers
     - criticalHitDice: Special crit dice if applicable
     """
-    diceNotation: Optional[str] = None  # e.g., "1d8+3"
-    damageType: Optional[str] = None  # "slashing", "fire", etc.
-    fixedDamage: Optional[int] = None
-    bonusDamage: Optional[str] = None
-    criticalHitDice: Optional[str] = None
+    diceNotation: str | None = None  # e.g., "1d8+3"
+    damageType: str | None = None  # "slashing", "fire", etc.
+    fixedDamage: int | None = None
+    bonusDamage: str | None = None
+    criticalHitDice: str | None = None
 
 
 class ActionSave(BaseModel):
@@ -457,10 +457,10 @@ class ActionSave(BaseModel):
     - onSuccess: actions[].saveSuccessDescription (clean HTML)
     - onFailure: actions[].saveFailDescription (clean HTML)
     """
-    saveDC: Optional[int] = None
-    saveAbility: Optional[str] = None  # "Dexterity", "Wisdom", etc.
-    onSuccess: Optional[str] = None
-    onFailure: Optional[str] = None
+    saveDC: int | None = None
+    saveAbility: str | None = None  # "Dexterity", "Wisdom", etc.
+    onSuccess: str | None = None
+    onFailure: str | None = None
 
 
 class CharacterAction(BaseModel):
@@ -493,29 +493,29 @@ class CharacterAction(BaseModel):
     - saveStatId: 1="Strength", 2="Dexterity", 3="Constitution", 4="Intelligence", 5="Wisdom", 6="Charisma"
     """
     name: str
-    description: Optional[str] = None
-    shortDescription: Optional[str] = None  # Snippet or summary
+    description: str | None = None
+    shortDescription: str | None = None  # Snippet or summary
 
     # Action mechanics
-    activation: Optional[ActionActivation] = None
-    usage: Optional[ActionUsage] = None
-    actionRange: Optional[ActionRange] = None
-    damage: Optional[ActionDamage] = None
-    save: Optional[ActionSave] = None
+    activation: ActionActivation | None = None
+    usage: ActionUsage | None = None
+    actionRange: ActionRange | None = None
+    damage: ActionDamage | None = None
+    save: ActionSave | None = None
 
     # Classification
-    actionCategory: Optional[str] = None  # "attack", "feature", "item", "spell"
-    source: Optional[str] = None  # "class", "race", "feat", "item", "background"
-    sourceFeature: Optional[str] = None  # Name of the feature/item granting this action
+    actionCategory: str | None = None  # "attack", "feature", "item", "spell"
+    source: str | None = None  # "class", "race", "feat", "item", "background"
+    sourceFeature: str | None = None  # Name of the feature/item granting this action
 
     # Combat details
-    attackBonus: Optional[int] = None
+    attackBonus: int | None = None
     isWeaponAttack: bool = False
     requiresAmmo: bool = False
 
     # Special properties
-    duration: Optional[str] = None
-    materials: Optional[str] = None  # Required items or materials
+    duration: str | None = None
+    materials: str | None = None  # Required items or materials
 
 
 class ActionEconomy(BaseModel):
@@ -545,7 +545,7 @@ class ActionEconomy(BaseModel):
     - Identify passive vs active abilities
     """
     attacks_per_action: int = 1
-    actions: List[CharacterAction] = Field(default_factory=list)
+    actions: list[CharacterAction] = Field(default_factory=list)
 
 
 # ===== FEATURES AND TRAITS TYPES =====
@@ -558,8 +558,8 @@ class FeatureActivation(BaseModel):
     - activationType: Map from actions[].actionType using ACTION_TYPE_MAP
       * 1="action", 2="no_action", 3="bonus_action", 4="reaction", etc.
     """
-    activationTime: Optional[int] = None
-    activationType: Optional[str] = None  # Converted to human-readable string
+    activationTime: int | None = None
+    activationType: str | None = None  # Converted to human-readable string
 
 
 class FeatureRange(BaseModel):
@@ -573,12 +573,12 @@ class FeatureRange(BaseModel):
     - hasAoeSpecialDescription: actions[].range.hasAoeSpecialDescription
     - minimumRange: actions[].range.minimumRange
     """
-    range: Optional[int] = None
-    longRange: Optional[int] = None
-    aoeType: Optional[int] = None
-    aoeSize: Optional[int] = None
-    hasAoeSpecialDescription: Optional[bool] = None
-    minimumRange: Optional[int] = None
+    range: int | None = None
+    longRange: int | None = None
+    aoeType: int | None = None
+    aoeSize: int | None = None
+    hasAoeSpecialDescription: bool | None = None
+    minimumRange: int | None = None
 
 
 class RacialTrait(BaseModel):
@@ -592,9 +592,9 @@ class RacialTrait(BaseModel):
       * 1="trait", 2="action", 3="bonus_action", 4="reaction", etc.
     """
     name: str
-    description: Optional[str] = None
-    creatureRules: Optional[List[Dict[str, Any]]] = None
-    featureType: Optional[str] = None  # Converted to human-readable string
+    description: str | None = None
+    creatureRules: list[dict[str, Any]] | None = None
+    featureType: str | None = None  # Converted to human-readable string
 
 
 class ClassFeature(BaseModel):
@@ -606,7 +606,7 @@ class ClassFeature(BaseModel):
     - description: Corresponding .definition.description (HTML, needs cleaning)
     """
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class LimitedUse(BaseModel):
@@ -619,10 +619,10 @@ class LimitedUse(BaseModel):
       * Map: 1="short_rest", 2="long_rest", 3="dawn", 4="dusk", 5="recharge", 6="turn"
     - resetTypeDescription: inventory[].limitedUse.resetTypeDescription
     """
-    maxUses: Optional[int] = None
-    numberUsed: Optional[int] = None
-    resetType: Optional[str] = None  # Human-readable string
-    resetTypeDescription: Optional[str] = None
+    maxUses: int | None = None
+    numberUsed: int | None = None
+    resetType: str | None = None  # Human-readable string
+    resetTypeDescription: str | None = None
 
 
 class Feat(BaseModel):
@@ -636,10 +636,10 @@ class Feat(BaseModel):
     - isRepeatable: feats[].definition.isRepeatable
     """
     name: str
-    description: Optional[str] = None
-    activation: Optional[FeatureActivation] = None
-    creatureRules: Optional[List[Dict[str, Any]]] = None
-    isRepeatable: Optional[bool] = None
+    description: str | None = None
+    activation: FeatureActivation | None = None
+    creatureRules: list[dict[str, Any]] | None = None
+    isRepeatable: bool | None = None
 
 
 class FeatureAction(BaseModel):
@@ -668,26 +668,26 @@ class FeatureAction(BaseModel):
     - range: Parse from actions[category][].range as FeatureRange
     - activation: Parse from actions[category][].activation as FeatureActivation
     """
-    limitedUse: Optional[LimitedUse] = None
-    name: Optional[str] = None
-    description: Optional[str] = None
-    abilityModifierStatName: Optional[str] = None  # Human readable name
-    onMissDescription: Optional[str] = None
-    saveFailDescription: Optional[str] = None
-    saveSuccessDescription: Optional[str] = None
-    saveStatId: Optional[int] = None
-    fixedSaveDc: Optional[int] = None
-    attackTypeRange: Optional[int] = None
-    actionType: Optional[str] = None  # Converted to human-readable string
-    attackSubtype: Optional[int] = None
-    dice: Optional[Dict[str, Any]] = None
-    value: Optional[int] = None
-    damageTypeId: Optional[int] = None
-    isMartialArts: Optional[bool] = None
-    isProficient: Optional[bool] = None
-    spellRangeType: Optional[int] = None
-    range: Optional[FeatureRange] = None
-    activation: Optional[FeatureActivation] = None
+    limitedUse: LimitedUse | None = None
+    name: str | None = None
+    description: str | None = None
+    abilityModifierStatName: str | None = None  # Human readable name
+    onMissDescription: str | None = None
+    saveFailDescription: str | None = None
+    saveSuccessDescription: str | None = None
+    saveStatId: int | None = None
+    fixedSaveDc: int | None = None
+    attackTypeRange: int | None = None
+    actionType: str | None = None  # Converted to human-readable string
+    attackSubtype: int | None = None
+    dice: dict[str, Any] | None = None
+    value: int | None = None
+    damageTypeId: int | None = None
+    isMartialArts: bool | None = None
+    isProficient: bool | None = None
+    spellRangeType: int | None = None
+    range: FeatureRange | None = None
+    activation: FeatureActivation | None = None
 
 
 class FeatureModifier(BaseModel):
@@ -706,17 +706,17 @@ class FeatureModifier(BaseModel):
     - bonusTypes: modifiers[category][].bonusTypes
     - value: modifiers[category][].value
     """
-    type: Optional[str] = None
-    subType: Optional[str] = None
-    dice: Optional[Dict[str, Any]] = None
-    restriction: Optional[str] = None
-    statId: Optional[int] = None
-    requiresAttunement: Optional[bool] = None
-    duration: Optional[Dict[str, Any]] = None
-    friendlyTypeName: Optional[str] = None
-    friendlySubtypeName: Optional[str] = None
-    bonusTypes: Optional[List[str]] = None
-    value: Optional[int] = None
+    type: str | None = None
+    subType: str | None = None
+    dice: dict[str, Any] | None = None
+    restriction: str | None = None
+    statId: int | None = None
+    requiresAttunement: bool | None = None
+    duration: dict[str, Any] | None = None
+    friendlyTypeName: str | None = None
+    friendlySubtypeName: str | None = None
+    bonusTypes: list[str] | None = None
+    value: int | None = None
 
 
 class FeaturesAndTraits(BaseModel):
@@ -741,10 +741,10 @@ class FeaturesAndTraits(BaseModel):
     NOTE: Character actions are parsed separately by parse_actions.py into CharacterAction objects.
           See ActionEconomy dataclass for the complete action system.
     """
-    racial_traits: List[RacialTrait] = Field(default_factory=list)
-    class_features: Dict[str, Dict[int, List[ClassFeature]]] = Field(default_factory=dict)
-    feats: List[Feat] = Field(default_factory=list)
-    modifiers: Dict[str, List[FeatureModifier]] = Field(default_factory=dict)
+    racial_traits: list[RacialTrait] = Field(default_factory=list)
+    class_features: dict[str, dict[int, list[ClassFeature]]] = Field(default_factory=dict)
+    feats: list[Feat] = Field(default_factory=list)
+    modifiers: dict[str, list[FeatureModifier]] = Field(default_factory=dict)
 
 
 # ===== INVENTORY TYPES =====
@@ -762,14 +762,14 @@ class ItemModifier(BaseModel):
     - fixedValue: inventory[].definition.grantedModifiers[].fixedValue
     - diceString: inventory[].definition.grantedModifiers[].dice.diceString
     """
-    type: Optional[str] = None
-    subType: Optional[str] = None
-    restriction: Optional[str] = None
-    friendlyTypeName: Optional[str] = None
-    friendlySubtypeName: Optional[str] = None
-    duration: Optional[Dict[str, Any]] = None
-    fixedValue: Optional[int] = None
-    diceString: Optional[str] = None
+    type: str | None = None
+    subType: str | None = None
+    restriction: str | None = None
+    friendlyTypeName: str | None = None
+    friendlySubtypeName: str | None = None
+    duration: dict[str, Any] | None = None
+    fixedValue: int | None = None
+    diceString: str | None = None
 
 
 class InventoryItemDefinition(BaseModel):
@@ -797,26 +797,26 @@ class InventoryItemDefinition(BaseModel):
     - isContainer: inventory[].definition.isContainer
     - isCustomItem: inventory[].definition.isCustomItem
     """
-    name: Optional[str] = None
-    type: Optional[str] = None
-    description: Optional[str] = None
-    canAttune: Optional[bool] = None
-    attunementDescription: Optional[str] = None
-    rarity: Optional[str] = None
-    weight: Optional[Union[int, float]] = None
-    capacity: Optional[str] = None
-    capacityWeight: Optional[int] = None
-    canEquip: Optional[bool] = None
-    magic: Optional[bool] = None
-    tags: Optional[List[str]] = None
-    grantedModifiers: Optional[List[ItemModifier]] = None
-    damage: Optional[Dict[str, Any]] = None
-    damageType: Optional[str] = None
-    attackType: Optional[int] = None
-    range: Optional[int] = None
-    longRange: Optional[int] = None
-    isContainer: Optional[bool] = None
-    isCustomItem: Optional[bool] = None
+    name: str | None = None
+    type: str | None = None
+    description: str | None = None
+    canAttune: bool | None = None
+    attunementDescription: str | None = None
+    rarity: str | None = None
+    weight: int | float | None = None
+    capacity: str | None = None
+    capacityWeight: int | None = None
+    canEquip: bool | None = None
+    magic: bool | None = None
+    tags: list[str] | None = None
+    grantedModifiers: list[ItemModifier] | None = None
+    damage: dict[str, Any] | None = None
+    damageType: str | None = None
+    attackType: int | None = None
+    range: int | None = None
+    longRange: int | None = None
+    isContainer: bool | None = None
+    isCustomItem: bool | None = None
 
 
 class InventoryItem(BaseModel):
@@ -833,7 +833,7 @@ class InventoryItem(BaseModel):
     quantity: int
     isAttuned: bool
     equipped: bool
-    limitedUse: Optional[LimitedUse] = None
+    limitedUse: LimitedUse | None = None
 
 
 class Inventory(BaseModel):
@@ -858,9 +858,9 @@ class Inventory(BaseModel):
     """
     total_weight: float
     weight_unit: str = "lb"
-    equipped_items: List[InventoryItem] = Field(default_factory=list)
-    backpack: List[InventoryItem] = Field(default_factory=list)
-    valuables: List[Dict[str, Any]] = Field(default_factory=list)
+    equipped_items: list[InventoryItem] = Field(default_factory=list)
+    backpack: list[InventoryItem] = Field(default_factory=list)
+    valuables: list[dict[str, Any]] = Field(default_factory=list)
 
 
 # ===== SPELL TYPES =====
@@ -890,7 +890,7 @@ class SpellComponents(BaseModel):
     """
     verbal: bool = False
     somatic: bool = False
-    material: Union[bool, str] = False
+    material: bool | str = False
 
 
 class SpellRite(BaseModel):
@@ -974,10 +974,10 @@ class Spell(BaseModel):
     description: str
     concentration: bool = False
     ritual: bool = False
-    tags: List[str] = Field(default_factory=list)
-    area: Optional[str] = None
-    rites: Optional[List[SpellRite]] = None
-    charges: Optional[int] = None
+    tags: list[str] = Field(default_factory=list)
+    area: str | None = None
+    rites: list[SpellRite] | None = None
+    charges: int | None = None
 
 
 class SpellcastingInfo(BaseModel):
@@ -1020,9 +1020,9 @@ class SpellcastingInfo(BaseModel):
     ability: str
     spell_save_dc: int
     spell_attack_bonus: int
-    cantrips_known: List[str] = Field(default_factory=list)
-    spells_known: List[str] = Field(default_factory=list)
-    spell_slots: Dict[int, int] = Field(default_factory=dict)
+    cantrips_known: list[str] = Field(default_factory=list)
+    spells_known: list[str] = Field(default_factory=list)
+    spell_slots: dict[int, int] = Field(default_factory=dict)
 
 
 class SpellList(BaseModel):
@@ -1069,8 +1069,8 @@ class SpellList(BaseModel):
     - Create SpellcastingInfo for each casting class
     - Handle different spell preparation types
     """
-    spellcasting: Dict[str, SpellcastingInfo] = Field(default_factory=dict)
-    spells: Dict[str, Dict[str, List[Spell]]] = Field(default_factory=dict)
+    spellcasting: dict[str, SpellcastingInfo] = Field(default_factory=dict)
+    spells: dict[str, dict[str, list[Spell]]] = Field(default_factory=dict)
 
 
 # ===== OBJECTIVES AND CONTRACTS TYPES =====
@@ -1082,45 +1082,45 @@ class BaseObjective(BaseModel):
     type: str
     status: Literal["Active", "In Progress", "Completed", "Failed", "Suspended", "Abandoned"]
     description: str
-    priority: Optional[Literal["Absolute", "Critical", "High", "Medium", "Low"]] = None
-    objectives: List[str] = Field(default_factory=list)
-    rewards: List[str] = Field(default_factory=list)
-    deadline: Optional[str] = None
-    notes: Optional[str] = None
-    completion_date: Optional[str] = None
-    parties: Optional[str] = None
-    outcome: Optional[str] = None
-    obligations_accepted: List[str] = Field(default_factory=list)
-    lasting_effects: List[str] = Field(default_factory=list)
+    priority: Literal["Absolute", "Critical", "High", "Medium", "Low"] | None = None
+    objectives: list[str] = Field(default_factory=list)
+    rewards: list[str] = Field(default_factory=list)
+    deadline: str | None = None
+    notes: str | None = None
+    completion_date: str | None = None
+    parties: str | None = None
+    outcome: str | None = None
+    obligations_accepted: list[str] = Field(default_factory=list)
+    lasting_effects: list[str] = Field(default_factory=list)
 
 
 class Quest(BaseObjective):
     """Quest-specific fields"""
-    quest_giver: Optional[str] = None
-    location: Optional[str] = None
-    deity: Optional[str] = None
-    purpose: Optional[str] = None
-    signs_received: List[str] = Field(default_factory=list)
-    divine_favor: Optional[str] = None
-    consequences_of_failure: List[str] = Field(default_factory=list)
-    motivation: Optional[str] = None
-    steps: List[str] = Field(default_factory=list)
-    obstacles: List[str] = Field(default_factory=list)
-    importance: Optional[str] = None
+    quest_giver: str | None = None
+    location: str | None = None
+    deity: str | None = None
+    purpose: str | None = None
+    signs_received: list[str] = Field(default_factory=list)
+    divine_favor: str | None = None
+    consequences_of_failure: list[str] = Field(default_factory=list)
+    motivation: str | None = None
+    steps: list[str] = Field(default_factory=list)
+    obstacles: list[str] = Field(default_factory=list)
+    importance: str | None = None
 
 
 class Contract(BaseObjective):
     """Contract-specific fields"""
-    client: Optional[str] = None
-    contractor: Optional[str] = None
-    terms: Optional[str] = None
-    payment: Optional[str] = None
-    penalties: Optional[str] = None
-    special_conditions: List[str] = Field(default_factory=list)
-    parties: Optional[str] = None
-    outcome: Optional[str] = None
-    obligations_accepted: List[str] = Field(default_factory=list)
-    lasting_effects: List[str] = Field(default_factory=list)
+    client: str | None = None
+    contractor: str | None = None
+    terms: str | None = None
+    payment: str | None = None
+    penalties: str | None = None
+    special_conditions: list[str] = Field(default_factory=list)
+    parties: str | None = None
+    outcome: str | None = None
+    obligations_accepted: list[str] = Field(default_factory=list)
+    lasting_effects: list[str] = Field(default_factory=list)
 
 
 class ContractTemplate(BaseModel):
@@ -1133,19 +1133,19 @@ class ContractTemplate(BaseModel):
     quest_giver: str = ""
     location: str = ""
     description: str = ""
-    objectives: List[str] = Field(default_factory=list)
-    rewards: List[str] = Field(default_factory=list)
+    objectives: list[str] = Field(default_factory=list)
+    rewards: list[str] = Field(default_factory=list)
     deadline: str = ""
     notes: str = ""
 
 
 class ObjectivesAndContracts(BaseModel):
     """All character objectives and contracts."""
-    active_contracts: List[Contract] = Field(default_factory=list)
-    current_objectives: List[Quest] = Field(default_factory=list)
-    completed_objectives: List[Union[Quest, Contract]] = Field(default_factory=list)
-    contract_templates: Dict[str, ContractTemplate] = Field(default_factory=dict)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    active_contracts: list[Contract] = Field(default_factory=list)
+    current_objectives: list[Quest] = Field(default_factory=list)
+    completed_objectives: list[Quest | Contract] = Field(default_factory=list)
+    contract_templates: dict[str, ContractTemplate] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 # ===== MAIN CHARACTER CLASS =====
@@ -1162,21 +1162,21 @@ class Character(BaseModel):
     backstory: Backstory
 
     # Optional fields
-    organizations: List[Organization] = Field(default_factory=list)
-    allies: List[Ally] = Field(default_factory=list)
-    enemies: List[Enemy] = Field(default_factory=list)
-    proficiencies: List[Proficiency] = Field(default_factory=list)
-    damage_modifiers: List[DamageModifier] = Field(default_factory=list)
-    passive_scores: Optional[PassiveScores] = None
-    senses: Optional[Senses] = None
-    action_economy: Optional[ActionEconomy] = None
-    features_and_traits: Optional[FeaturesAndTraits] = None
-    inventory: Optional[Inventory] = None
-    spell_list: Optional[SpellList] = None
-    objectives_and_contracts: Optional[ObjectivesAndContracts] = None
-    notes: Dict[str, Any] = Field(default_factory=dict)
-    created_date: Optional[datetime] = None
-    last_updated: Optional[datetime] = None
+    organizations: list[Organization] = Field(default_factory=list)
+    allies: list[Ally] = Field(default_factory=list)
+    enemies: list[Enemy] = Field(default_factory=list)
+    proficiencies: list[Proficiency] = Field(default_factory=list)
+    damage_modifiers: list[DamageModifier] = Field(default_factory=list)
+    passive_scores: PassiveScores | None = None
+    senses: Senses | None = None
+    action_economy: ActionEconomy | None = None
+    features_and_traits: FeaturesAndTraits | None = None
+    inventory: Inventory | None = None
+    spell_list: SpellList | None = None
+    objectives_and_contracts: ObjectivesAndContracts | None = None
+    notes: dict[str, Any] = Field(default_factory=dict)
+    created_date: datetime | None = None
+    last_updated: datetime | None = None
 
 
 # ===== UTILITY FUNCTIONS =====
@@ -1233,7 +1233,7 @@ def create_empty_character(name: str, race: str, character_class: str) -> Charac
 
 # ===== TYPE ALIASES =====
 
-CharacterDict = Dict[str, Any]
+CharacterDict = dict[str, Any]
 SpellLevel = Literal["cantrip", "1st_level", "2nd_level", "3rd_level", "4th_level",
                      "5th_level", "6th_level", "7th_level", "8th_level", "9th_level"]
 ActionType = Literal["action", "bonus_action", "reaction", "no_action", "feature"]

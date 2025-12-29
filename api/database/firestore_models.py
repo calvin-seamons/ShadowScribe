@@ -5,7 +5,7 @@ TypeScript types are auto-generated from these models using pydantic-to-typescri
 """
 from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, Any, List, Dict
+from typing import Optional, Any
 
 
 def _serialize_datetime(dt: Optional[datetime]) -> Optional[str]:
@@ -152,37 +152,37 @@ class SessionDocument(BaseModel):
     summary: str = ''
 
     # Entities (per-session for chronological context)
-    player_characters: List[Dict[str, Any]] = Field(default_factory=list)  # [{name, entity_type, aliases, description, ...}]
-    npcs: List[Dict[str, Any]] = Field(default_factory=list)
-    locations: List[Dict[str, Any]] = Field(default_factory=list)
-    items: List[Dict[str, Any]] = Field(default_factory=list)
+    player_characters: list[dict[str, Any]] = Field(default_factory=list)  # [{name, entity_type, aliases, description, ...}]
+    npcs: list[dict[str, Any]] = Field(default_factory=list)
+    locations: list[dict[str, Any]] = Field(default_factory=list)
+    items: list[dict[str, Any]] = Field(default_factory=list)
 
     # Structured RAG fields
-    key_events: List[Dict[str, Any]] = Field(default_factory=list)
-    combat_encounters: List[Dict[str, Any]] = Field(default_factory=list)
-    spells_abilities_used: List[Dict[str, Any]] = Field(default_factory=list)
-    character_decisions: List[Dict[str, Any]] = Field(default_factory=list)
-    character_statuses: Dict[str, Any] = Field(default_factory=dict)  # {character_name: status_dict}
-    memories_visions: List[Dict[str, Any]] = Field(default_factory=list)
-    quest_updates: List[Dict[str, Any]] = Field(default_factory=list)
-    loot_obtained: Dict[str, Any] = Field(default_factory=dict)  # {character: [items]}
-    deaths: List[Dict[str, Any]] = Field(default_factory=list)
-    revivals: List[Dict[str, Any]] = Field(default_factory=list)
-    party_conflicts: List[str] = Field(default_factory=list)
-    party_bonds: List[str] = Field(default_factory=list)
-    quotes: List[Dict[str, Any]] = Field(default_factory=list)  # [{speaker, quote, context}]
-    funny_moments: List[str] = Field(default_factory=list)
-    puzzles_encountered: Dict[str, Any] = Field(default_factory=dict)  # {puzzle: solution/status}
-    mysteries_revealed: List[str] = Field(default_factory=list)
-    unresolved_questions: List[str] = Field(default_factory=list)
-    divine_interventions: List[str] = Field(default_factory=list)
-    religious_elements: List[str] = Field(default_factory=list)
-    rules_clarifications: List[str] = Field(default_factory=list)
-    dice_rolls: List[Dict[str, Any]] = Field(default_factory=list)
+    key_events: list[dict[str, Any]] = Field(default_factory=list)
+    combat_encounters: list[dict[str, Any]] = Field(default_factory=list)
+    spells_abilities_used: list[dict[str, Any]] = Field(default_factory=list)
+    character_decisions: list[dict[str, Any]] = Field(default_factory=list)
+    character_statuses: dict[str, Any] = Field(default_factory=dict)  # {character_name: status_dict}
+    memories_visions: list[dict[str, Any]] = Field(default_factory=list)
+    quest_updates: list[dict[str, Any]] = Field(default_factory=list)
+    loot_obtained: dict[str, Any] = Field(default_factory=dict)  # {character: [items]}
+    deaths: list[dict[str, Any]] = Field(default_factory=list)
+    revivals: list[dict[str, Any]] = Field(default_factory=list)
+    party_conflicts: list[str] = Field(default_factory=list)
+    party_bonds: list[str] = Field(default_factory=list)
+    quotes: list[dict[str, Any]] = Field(default_factory=list)  # [{speaker, quote, context}]
+    funny_moments: list[str] = Field(default_factory=list)
+    puzzles_encountered: dict[str, Any] = Field(default_factory=dict)  # {puzzle: solution/status}
+    mysteries_revealed: list[str] = Field(default_factory=list)
+    unresolved_questions: list[str] = Field(default_factory=list)
+    divine_interventions: list[str] = Field(default_factory=list)
+    religious_elements: list[str] = Field(default_factory=list)
+    rules_clarifications: list[str] = Field(default_factory=list)
+    dice_rolls: list[dict[str, Any]] = Field(default_factory=list)
     cliffhanger: Optional[str] = None
     next_session_hook: Optional[str] = None
-    dm_notes: List[str] = Field(default_factory=list)
-    raw_sections: Dict[str, Any] = Field(default_factory=dict)  # {section_name: text}
+    dm_notes: list[str] = Field(default_factory=list)
+    raw_sections: dict[str, Any] = Field(default_factory=dict)  # {section_name: text}
 
     # Timestamps
     date: Optional[datetime] = None  # In-game or real session date
@@ -314,7 +314,7 @@ class CharacterDocument(BaseModel):
     id: str
     user_id: str
     name: str
-    data: Dict[str, Any]  # Full character dataclass serialized
+    data: dict[str, Any]  # Full character dataclass serialized
     campaign_id: str  # Required - all characters belong to a campaign
     race: Optional[str] = None
     character_class: Optional[str] = None
@@ -383,13 +383,13 @@ class RoutingFeedbackDocument(BaseModel):
     id: str
     user_query: str
     character_name: str
-    predicted_tools: List[Dict[str, Any]]  # List of {tool, intention, confidence}
+    predicted_tools: list[dict[str, Any]]  # List of {tool, intention, confidence}
     campaign_id: str = 'main_campaign'
-    predicted_entities: Optional[List[Dict[str, Any]]] = None
+    predicted_entities: Optional[list[dict[str, Any]]] = None
     classifier_backend: str = 'local'
     classifier_inference_time_ms: Optional[float] = None
     is_correct: Optional[bool] = None
-    corrected_tools: Optional[List[Dict[str, Any]]] = None
+    corrected_tools: Optional[list[dict[str, Any]]] = None
     feedback_notes: Optional[str] = None
     created_at: Optional[datetime] = None
     feedback_at: Optional[datetime] = None

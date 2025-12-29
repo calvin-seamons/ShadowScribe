@@ -124,22 +124,12 @@ export interface RoutingRecordResponse {
   user_query: string;
   character_name: string;
   campaign_id: string;
-  predicted_tools: {
-    [k: string]: unknown;
-  }[];
-  predicted_entities:
-    | {
-        [k: string]: unknown;
-      }[]
-    | null;
+  predicted_tools: ToolPrediction[];
+  predicted_entities: EntityExtraction[] | null;
   classifier_backend: string;
   classifier_inference_time_ms: number | null;
   is_correct: boolean | null;
-  corrected_tools:
-    | {
-        [k: string]: unknown;
-      }[]
-    | null;
+  corrected_tools: ToolCorrection[] | null;
   feedback_notes: string | null;
   created_at: string | null;
   feedback_at: string | null;

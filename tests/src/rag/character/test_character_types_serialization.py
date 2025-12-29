@@ -7,7 +7,7 @@ the conversion to verify no breaking changes.
 """
 import pytest
 from dataclasses import asdict
-from datetime import datetime
+from datetime import datetime, timezone
 
 from src.rag.character.character_types import (
     # Core types
@@ -848,8 +848,8 @@ class TestFullCharacter:
             ),
             objectives_and_contracts=ObjectivesAndContracts(),
             notes={"dm_notes": "Interesting character"},
-            created_date=datetime(2024, 1, 1, 12, 0, 0),
-            last_updated=datetime(2024, 6, 15, 18, 30, 0)
+            created_date=datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+            last_updated=datetime(2024, 6, 15, 18, 30, 0, tzinfo=timezone.utc)
         )
 
         result = serialize(char)

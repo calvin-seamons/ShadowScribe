@@ -32,6 +32,14 @@ SOURCES = [
 ]
 
 
+def find_pydantic2ts():
+    """Find the pydantic2ts executable."""
+    pydantic2ts = shutil.which("pydantic2ts")
+    if pydantic2ts:
+        return pydantic2ts
+    return None
+
+
 def find_json2ts():
     """
     Locate the `json2ts` executable by checking the project's frontend local node_modules first, then the system PATH.
@@ -58,6 +66,13 @@ def main():
     
     Runs pydantic2ts for each module listed in SOURCES, writes generated .ts files into GENERATED_DIR, and if at least one file is produced writes an index.ts that re-exports the generated modules (excluding firestore.ts). Prints progress and error output for each module. Exits the process with status 1 if json2ts cannot be found or if not all sources were successfully generated.
     """
+    # Find pydantic2ts
+    pydantic2ts_cmd = find_pydantic2ts()
+    if not pydantic2ts_cmd:
+        print("Error: pydantic2ts not found. Install it with:")
+        print("  uv add pydantic-to-typescript")
+        sys.exit(1)
+
     # Find json2ts
     json2ts_cmd = find_json2ts()
     if not json2ts_cmd:
@@ -69,6 +84,7 @@ def main():
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 
     print(f"Generating TypeScript types to: {GENERATED_DIR}")
+    print(f"Using pydantic2ts: {pydantic2ts_cmd}")
     print(f"Using json2ts: {json2ts_cmd}")
 
     success_count = 0
@@ -79,7 +95,7 @@ def main():
         try:
             result = subprocess.run(
                 [
-                    "pydantic2ts",
+                    pydantic2ts_cmd,
                     "--module", module,
                     "--output", str(output_path),
                     "--json2ts-cmd", json2ts_cmd,

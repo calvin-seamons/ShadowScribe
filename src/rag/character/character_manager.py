@@ -8,8 +8,10 @@ Supports both database (primary) and pickle file (fallback) storage.
 import json
 import pickle
 from pathlib import Path
-from typing import Optional, Any
+from typing import Optional
 from datetime import datetime
+
+from google.cloud.firestore_v1 import AsyncClient
 
 import dacite
 
@@ -22,7 +24,7 @@ class CharacterManager:
     def __init__(
         self,
         save_directory: str = "knowledge_base/saved_characters",
-        db_session: Optional[Any] = None
+        db_session: Optional[AsyncClient] = None
     ):
         """
         Create a CharacterManager that persists Character objects to disk and optionally to a database.

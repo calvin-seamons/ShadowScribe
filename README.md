@@ -12,7 +12,7 @@ A D&D character management system with RAG (Retrieval-Augmented Generation) capa
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────┐     ┌─────────────────────┐     ┌─────────────────────┐
 │   Next.js Frontend  │     │   FastAPI Backend   │     │                     │
 │   (Vercel)          │────▶│   (Cloud Run)       │────▶│   CentralEngine     │
@@ -48,6 +48,7 @@ A D&D character management system with RAG (Retrieval-Augmented Generation) capa
 2. **Node.js 18+** for frontend
 3. **Google Cloud credentials** for Firestore access
 4. **API Keys** in `.env`:
+
    ```bash
    OPENAI_API_KEY=sk-...
    ANTHROPIC_API_KEY=sk-ant-...
@@ -57,12 +58,14 @@ A D&D character management system with RAG (Retrieval-Augmented Generation) capa
 ### Local Development
 
 **Backend:**
+
 ```bash
 # Start API server
 uv run uvicorn api.main:app --reload
 ```
 
 **Frontend:**
+
 ```bash
 cd frontend
 npm install
@@ -199,7 +202,7 @@ Session notes use a unified `SessionDocument` model that serves both Firestore s
 
 ### Firestore Structure
 
-```
+```text
 campaigns/{campaign_id}/sessions/{session_id}
 ├── session_number, session_name, title, summary
 ├── raw_content (original transcript)
