@@ -1,6 +1,6 @@
 [project]
 name = "shadowscribe"
-version = "1.0.7"
+version = "1.0.8"
 description = "Comprehensive D&D/RPG character management system with RAG-powered knowledge base"
 requires-python = "==3.12.*"
 dependencies = [
