@@ -253,56 +253,56 @@ class SessionDocument(BaseModel):
     def from_firestore(cls, doc_id: str, campaign_id: str, data: dict) -> 'SessionDocument':
         """
         Create a SessionDocument instance from Firestore document data.
-        
+
         Constructs a SessionDocument with id set to `doc_id` and campaign_id set to `campaign_id`, populating all session fields from `data`. Missing keys are filled with sensible defaults (empty strings, empty lists/dicts, or zeros) and the `date`, `created_at`, and `updated_at` fields are converted using _parse_datetime.
-        
+
         Parameters:
             doc_id (str): Firestore document identifier to use as the session `id`.
             campaign_id (str): Campaign identifier to associate with the session.
             data (dict): Firestore document data containing session fields.
-        
+
         Returns:
             SessionDocument: A populated SessionDocument instance.
         """
         return cls(
             id=doc_id,
             campaign_id=campaign_id,
-            user_id=data.get('user_id', ''),
-            session_number=data.get('session_number', 0),
-            session_name=data.get('session_name', ''),
-            raw_content=data.get('raw_content', ''),
-            processed_markdown=data.get('processed_markdown', ''),
-            title=data.get('title', ''),
-            summary=data.get('summary', ''),
-            player_characters=data.get('player_characters', []),
-            npcs=data.get('npcs', []),
-            locations=data.get('locations', []),
-            items=data.get('items', []),
-            key_events=data.get('key_events', []),
-            combat_encounters=data.get('combat_encounters', []),
-            spells_abilities_used=data.get('spells_abilities_used', []),
-            character_decisions=data.get('character_decisions', []),
-            character_statuses=data.get('character_statuses', {}),
-            memories_visions=data.get('memories_visions', []),
-            quest_updates=data.get('quest_updates', []),
-            loot_obtained=data.get('loot_obtained', {}),
-            deaths=data.get('deaths', []),
-            revivals=data.get('revivals', []),
-            party_conflicts=data.get('party_conflicts', []),
-            party_bonds=data.get('party_bonds', []),
-            quotes=data.get('quotes', []),
-            funny_moments=data.get('funny_moments', []),
-            puzzles_encountered=data.get('puzzles_encountered', {}),
-            mysteries_revealed=data.get('mysteries_revealed', []),
-            unresolved_questions=data.get('unresolved_questions', []),
-            divine_interventions=data.get('divine_interventions', []),
-            religious_elements=data.get('religious_elements', []),
-            rules_clarifications=data.get('rules_clarifications', []),
-            dice_rolls=data.get('dice_rolls', []),
+            user_id=data.get('user_id') or '',
+            session_number=data.get('session_number') or 0,
+            session_name=data.get('session_name') or '',
+            raw_content=data.get('raw_content') or '',
+            processed_markdown=data.get('processed_markdown') or '',
+            title=data.get('title') or '',
+            summary=data.get('summary') or '',
+            player_characters=data.get('player_characters') or [],
+            npcs=data.get('npcs') or [],
+            locations=data.get('locations') or [],
+            items=data.get('items') or [],
+            key_events=data.get('key_events') or [],
+            combat_encounters=data.get('combat_encounters') or [],
+            spells_abilities_used=data.get('spells_abilities_used') or [],
+            character_decisions=data.get('character_decisions') or [],
+            character_statuses=data.get('character_statuses') or {},
+            memories_visions=data.get('memories_visions') or [],
+            quest_updates=data.get('quest_updates') or [],
+            loot_obtained=data.get('loot_obtained') or {},
+            deaths=data.get('deaths') or [],
+            revivals=data.get('revivals') or [],
+            party_conflicts=data.get('party_conflicts') or [],
+            party_bonds=data.get('party_bonds') or [],
+            quotes=data.get('quotes') or [],
+            funny_moments=data.get('funny_moments') or [],
+            puzzles_encountered=data.get('puzzles_encountered') or {},
+            mysteries_revealed=data.get('mysteries_revealed') or [],
+            unresolved_questions=data.get('unresolved_questions') or [],
+            divine_interventions=data.get('divine_interventions') or [],
+            religious_elements=data.get('religious_elements') or [],
+            rules_clarifications=data.get('rules_clarifications') or [],
+            dice_rolls=data.get('dice_rolls') or [],
             cliffhanger=data.get('cliffhanger'),
             next_session_hook=data.get('next_session_hook'),
-            dm_notes=data.get('dm_notes', []),
-            raw_sections=data.get('raw_sections', {}),
+            dm_notes=data.get('dm_notes') or [],
+            raw_sections=data.get('raw_sections') or {},
             date=_parse_datetime(data.get('date')),
             created_at=_parse_datetime(data.get('created_at')),
             updated_at=_parse_datetime(data.get('updated_at')),

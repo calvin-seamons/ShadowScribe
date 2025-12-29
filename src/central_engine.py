@@ -1184,59 +1184,73 @@ class CentralEngine:
         return entity_context
     
     def _get_session_notes_entity_context(self, entity_name: str, section: str) -> Optional[str]:
-        """Get raw session notes context for an entity."""
+        """Get raw session notes context for an entity by searching all sessions."""
         if not self.campaign_session_notes:
             return None
-        
-        # Get entity from storage
-        entity = self.campaign_session_notes.get_entity(entity_name)
-        if not entity:
-            return None
-        
-        # Collect context from all sessions where this entity appears
+
+        entity_lower = entity_name.lower()
         context_parts = []
-        
-        # Get first appearance session
-        first_session = entity.first_mentioned if hasattr(entity, 'first_mentioned') else entity.first_appearance if hasattr(entity, 'first_appearance') else None
-        
-        # Get all sessions where entity appears
-        sessions_appeared = entity.sessions_appeared if hasattr(entity, 'sessions_appeared') else [first_session] if first_session else []
-        
-        for session_num in sessions_appeared:
-            # Try both integer and string keys (sessions may be stored as 'session_40' or 40)
-            session = self.campaign_session_notes.sessions.get(session_num)
-            if not session:
-                session = self.campaign_session_notes.sessions.get(f'session_{session_num}')
-            if not session:
-                continue
-            
-            # Determine which raw section to pull based on entity type
-            section_key = section.split('.')[-1] if '.' in section else section.replace('session_notes_', '')
-            
-            # Map section types to raw_sections keys
-            section_key_map = {
-                'non_player_character': 'NPCs Encountered',
-                'npc': 'NPCs Encountered',
-                'player_character': 'Player Characters Present',
-                'pc': 'Player Characters Present',
-                'location': 'Locations Visited',
-                'event': 'Key Events',
-                'combat': 'Combat Encounters',
-                'quest': 'Quest Tracking'
-            }
-            
-            raw_section_key = section_key_map.get(section_key, 'Summary')
 
-            # SessionDocument has raw_sections directly
-            raw_sections = getattr(session, 'raw_sections', {})
+        # Map section types to raw_sections keys
+        section_key = section.split('.')[-1] if '.' in section else section.replace('session_notes_', '')
+        section_key_map = {
+            'non_player_character': 'NPCs Encountered',
+            'npc': 'NPCs Encountered',
+            'player_character': 'Player Characters Present',
+            'pc': 'Player Characters Present',
+            'location': 'Locations Visited',
+            'event': 'Key Events',
+            'combat': 'Combat Encounters',
+            'quest': 'Quest Tracking'
+        }
+        raw_section_key = section_key_map.get(section_key, 'Summary')
 
-            if raw_sections and raw_section_key in raw_sections:
-                section_content = raw_sections[raw_section_key]
-                # Only include parts that mention this entity
-                if entity_name.lower() in section_content.lower():
+        # Search through all sessions for entity mentions
+        for session in self.campaign_session_notes.get_sessions_sorted():
+            session_num = session.session_number
+
+            # Check if entity appears in this session's entity lists
+            entity_found = self._session_has_entity(session, entity_lower)
+
+            # Also check raw_sections for entity mention
+            raw_sections = session.raw_sections or {}
+            section_content = raw_sections.get(raw_section_key, '')
+
+            if entity_found or (section_content and entity_lower in section_content.lower()):
+                if section_content and entity_lower in section_content.lower():
                     context_parts.append(f"Session {session_num} - {raw_section_key}:\n{section_content}")
-        
+                elif entity_found and session.summary and entity_lower in session.summary.lower():
+                    # Fallback to summary if entity found but not in specific section
+                    context_parts.append(f"Session {session_num} - Summary:\n{session.summary}")
+
         return "\n\n".join(context_parts) if context_parts else None
+
+    def _session_has_entity(self, session, entity_lower: str) -> bool:
+        """Check if a session contains references to an entity in its entity lists."""
+        all_entities = (
+            (session.player_characters or []) +
+            (session.npcs or []) +
+            (session.locations or []) +
+            (session.items or [])
+        )
+
+        for entity in all_entities:
+            if not isinstance(entity, dict):
+                continue
+
+            # Check name
+            name = entity.get('name', '').lower()
+            if entity_lower in name or name in entity_lower:
+                return True
+
+            # Check aliases
+            aliases = entity.get('aliases', [])
+            for alias in aliases:
+                alias_lower = alias.lower() if isinstance(alias, str) else ''
+                if entity_lower in alias_lower or alias_lower in entity_lower:
+                    return True
+
+        return False
     
     def _get_character_entity_context(self, entity_name: str, section: str) -> Optional[str]:
         """Get raw character data context for an entity."""
