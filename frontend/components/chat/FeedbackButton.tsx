@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useFeedbackStore } from '@/lib/stores/feedbackStore'
 import { feedbackService } from '@/lib/services/feedbackService'
 import type { ToolPrediction } from '@/lib/types/feedback'
+import { ThumbsUp, ThumbsDown, Check } from 'lucide-react'
 
 interface FeedbackButtonProps {
   feedbackId: string;
@@ -56,9 +57,7 @@ export default function FeedbackButton({ feedbackId, predictedTools, onOpenModal
   if (status === 'correct') {
     return (
       <span className="text-xs text-green-500 flex items-center gap-1">
-        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-        </svg>
+        <Check className="w-3 h-3" />
         Thanks!
       </span>
     )
@@ -80,10 +79,9 @@ export default function FeedbackButton({ feedbackId, predictedTools, onOpenModal
         disabled={isSubmitting}
         className="p-1 text-muted-foreground hover:text-green-500 transition-colors disabled:opacity-50"
         title="Routing was correct"
+        aria-label="Mark routing as correct"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-        </svg>
+        <ThumbsUp className="w-4 h-4" />
       </button>
       
       {/* Thumbs down - opens modal */}
@@ -92,10 +90,9 @@ export default function FeedbackButton({ feedbackId, predictedTools, onOpenModal
         disabled={isSubmitting}
         className="p-1 text-muted-foreground hover:text-red-500 transition-colors disabled:opacity-50"
         title="Suggest better routing"
+        aria-label="Suggest better routing"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5" />
-        </svg>
+        <ThumbsDown className="w-4 h-4" />
       </button>
     </div>
   )
