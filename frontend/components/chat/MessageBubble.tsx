@@ -1,6 +1,8 @@
 'use client'
 
+import { memo } from 'react'
 import { Message } from '@/lib/types/conversation'
+import { ToolInfo } from '@/lib/types/metadata'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { MarkdownRenderer } from '@/components/markdown/MarkdownRenderer'
@@ -13,13 +15,23 @@ interface MessageBubbleProps {
   isStreaming?: boolean
 }
 
-export default function MessageBubble({ message, isStreaming = false }: MessageBubbleProps) {
-  const isUser = message.role === 'user'
-  const { getFeedbackIdForMessage, getRoutingToolsForMessage } = useMetadataStore()
+// Stable empty array to prevent unnecessary re-renders when selecting routing tools
+const EMPTY_TOOLS: ToolInfo[] = []
 
-  // Get feedback info for this message
-  const feedbackId = !isUser ? getFeedbackIdForMessage(message.id) : undefined
-  const routingTools = !isUser ? getRoutingToolsForMessage(message.id) : []
+function MessageBubble({ message, isStreaming = false }: MessageBubbleProps) {
+  const isUser = message.role === 'user'
+
+  // Optimize store subscriptions to only select what this component needs.
+  // This prevents re-renders when unrelated parts of the store change.
+  const feedbackId = useMetadataStore(state =>
+    !isUser ? state.messageFeedbackIds.get(message.id) : undefined
+  )
+
+  const routingTools = useMetadataStore(state => {
+    if (isUser) return EMPTY_TOOLS
+    const metadata = state.messageMetadata.get(message.id)
+    return metadata?.routing?.tools_needed || EMPTY_TOOLS
+  })
 
   return (
     <div
@@ -109,3 +121,7 @@ export default function MessageBubble({ message, isStreaming = false }: MessageB
     </div>
   )
 }
+
+// Memoize the component to prevent re-renders when parent re-renders
+// (e.g. during streaming when MessageList re-renders)
+export default memo(MessageBubble)
