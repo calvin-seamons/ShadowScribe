@@ -177,7 +177,8 @@ async def create_character(
 async def update_character(
     character_id: str,
     request: CharacterUpdateRequest,
-    db: AsyncClient = Depends(get_db)
+    db: AsyncClient = Depends(get_db),
+    current_user: UserDocument = Depends(get_current_user)
 ):
     """
     Perform full character update (replace entire character).
@@ -189,6 +190,7 @@ async def update_character(
         character_id: Character ID to update
         request: Request containing complete Character data
         db: Firestore client
+        current_user: Authenticated user
 
     Returns:
         Updated character with new timestamps
@@ -197,6 +199,16 @@ async def update_character(
         HTTPException: If character not found or update fails
     """
     try:
+        repo = CharacterRepository(db)
+
+        # Check ownership
+        existing_char = await repo.get_by_id(character_id)
+        if not existing_char:
+            raise HTTPException(status_code=404, detail="Character not found")
+
+        if existing_char.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Cannot update another user's character")
+
         # Convert dict to Character dataclass with lenient type checking
         character = from_dict(
             data_class=Character,
@@ -208,7 +220,6 @@ async def update_character(
         )
 
         # Update in database
-        repo = CharacterRepository(db)
         db_character = await repo.update(character_id, character)
 
         if not db_character:
@@ -230,7 +241,8 @@ async def update_character_section(
     character_id: str,
     section: str,
     request: SectionUpdateRequest,
-    db: AsyncClient = Depends(get_db)
+    db: AsyncClient = Depends(get_db),
+    current_user: UserDocument = Depends(get_current_user)
 ):
     """
     Perform partial section update for incremental saves.
@@ -274,6 +286,15 @@ async def update_character_section(
     """
     try:
         repo = CharacterRepository(db)
+
+        # Check ownership
+        existing_char = await repo.get_by_id(character_id)
+        if not existing_char:
+            raise HTTPException(status_code=404, detail="Character not found")
+
+        if existing_char.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Cannot update another user's character")
+
         db_character = await repo.update_section(character_id, section, request.data)
 
         if not db_character:
