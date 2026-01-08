@@ -30,6 +30,8 @@ export function ContextSources({ sources }: ContextSourcesProps) {
           <button
             onClick={() => toggleSection('character')}
             className="flex items-center gap-2 w-full text-left mb-2 hover:text-primary transition-colors"
+            aria-expanded={expandedSections.character}
+            aria-controls="character-fields-content"
           >
             <User className="w-4 h-4" />
             <span className="text-sm font-medium">
@@ -37,7 +39,7 @@ export function ContextSources({ sources }: ContextSourcesProps) {
             </span>
           </button>
           {expandedSections.character && (
-            <div className="ml-6 space-y-1">
+            <div id="character-fields-content" className="ml-6 space-y-1">
               {sources.character_fields.map((field, idx) => (
                 <div key={idx} className="text-xs px-2 py-1 bg-muted rounded">
                   {field}
@@ -54,6 +56,8 @@ export function ContextSources({ sources }: ContextSourcesProps) {
           <button
             onClick={() => toggleSection('rulebook')}
             className="flex items-center gap-2 w-full text-left mb-2 hover:text-primary transition-colors"
+            aria-expanded={expandedSections.rulebook}
+            aria-controls="rulebook-sections-content"
           >
             <Book className="w-4 h-4" />
             <span className="text-sm font-medium">
@@ -61,7 +65,7 @@ export function ContextSources({ sources }: ContextSourcesProps) {
             </span>
           </button>
           {expandedSections.rulebook && (
-            <div className="ml-6 space-y-2">
+            <div id="rulebook-sections-content" className="ml-6 space-y-2">
               {sources.rulebook_sections.map((section, idx) => (
                 <div key={idx} className="text-xs">
                   <div className="font-medium">{section.title}</div>
@@ -81,6 +85,8 @@ export function ContextSources({ sources }: ContextSourcesProps) {
           <button
             onClick={() => toggleSection('sessions')}
             className="flex items-center gap-2 w-full text-left mb-2 hover:text-primary transition-colors"
+            aria-expanded={expandedSections.sessions}
+            aria-controls="session-notes-content"
           >
             <ScrollText className="w-4 h-4" />
             <span className="text-sm font-medium">
@@ -88,7 +94,7 @@ export function ContextSources({ sources }: ContextSourcesProps) {
             </span>
           </button>
           {expandedSections.sessions && (
-            <div className="ml-6 space-y-2">
+            <div id="session-notes-content" className="ml-6 space-y-2">
               {sources.session_notes.map((note, idx) => (
                 <div key={idx} className="text-xs">
                   <div className="font-medium">Session {note.session_number}</div>

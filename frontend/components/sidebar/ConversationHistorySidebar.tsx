@@ -182,6 +182,7 @@ export function ConversationHistorySidebar({ characterName, onConversationSelect
                     onClick={(e) => handleDeleteConversation(conv.id, e)}
                     className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/10 rounded-lg transition-all"
                     title="Delete conversation"
+                    aria-label={`Delete conversation ${getConversationPreview(conv)}`}
                   >
                     <Trash2 className="w-3.5 h-3.5 text-destructive" />
                   </button>
