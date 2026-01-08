@@ -151,6 +151,8 @@ function Section({ title, subtitle, expanded, onToggle, children, accentColor = 
     muted: 'text-muted-foreground',
   };
 
+  const contentId = `${title.toLowerCase().replace(/\s+/g, '-')}-content`;
+
   return (
     <div className={cn(
       'rounded-xl border bg-card/50 overflow-hidden transition-colors',
@@ -159,6 +161,8 @@ function Section({ title, subtitle, expanded, onToggle, children, accentColor = 
       <button
         onClick={onToggle}
         className="w-full flex items-center gap-3 p-3 hover:bg-muted/30 transition-colors"
+        aria-expanded={expanded}
+        aria-controls={contentId}
       >
         <div className={cn(
           'w-5 h-5 flex items-center justify-center transition-transform',
@@ -174,7 +178,7 @@ function Section({ title, subtitle, expanded, onToggle, children, accentColor = 
         </div>
       </button>
       {expanded && (
-        <div className="px-3 pb-3 pt-0 border-t border-border/30">
+        <div id={contentId} className="px-3 pb-3 pt-0 border-t border-border/30">
           <div className="pt-3">
             {children}
           </div>
