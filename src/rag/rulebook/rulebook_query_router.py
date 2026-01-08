@@ -60,7 +60,7 @@ class EmbeddingCache:
     
     def _hash_text(self, text: str) -> str:
         """Create hash key for text"""
-        return hashlib.md5(text.encode('utf-8')).hexdigest()
+        return hashlib.md5(text.encode('utf-8'), usedforsecurity=False).hexdigest()
     
     def get(self, text: str) -> Optional[List[float]]:
         """Get embedding from cache"""

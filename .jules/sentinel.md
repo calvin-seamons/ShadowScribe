@@ -2,3 +2,8 @@
 **Vulnerability:** Insecure Direct Object Reference (IDOR) and Broken Access Control in `update_character` and `update_character_section` endpoints.
 **Learning:** Adding authentication middleware (`Depends(get_current_user)`) is not enough; explicit ownership checks against the resource being modified are mandatory.
 **Prevention:** Always verify `resource.user_id == current_user.id` before performing any write/delete operations on user-owned resources.
+
+## 2026-01-08 - Addressed Weak Hashing in ID Generation
+**Vulnerability:** Use of `hashlib.md5` without `usedforsecurity=False` flagged as a high-severity issue by Bandit (B324).
+**Learning:** Even when hashing is used for non-cryptographic purposes (like deterministic ID generation), security tools will flag it unless explicitly marked.
+**Prevention:** Use `hashlib.md5(..., usedforsecurity=False)` when generating non-security hashes to clarify intent and satisfy SAST tools.

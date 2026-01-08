@@ -128,7 +128,7 @@ class RulebookSection:
     def generate_id(self) -> str:
         """Generate a unique ID based on title and parent"""
         text = f"{self.parent_id or 'root'}_{self.title}"
-        return hashlib.md5(text.encode()).hexdigest()[:12]
+        return hashlib.md5(text.encode(), usedforsecurity=False).hexdigest()[:12]
 
 
 @dataclass
