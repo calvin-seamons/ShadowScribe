@@ -40,13 +40,24 @@ async def list_characters(
 
 
 @router.get("/characters/{character_id}", response_model=CharacterResponse)
-async def get_character(character_id: str, db: AsyncClient = Depends(get_db)):
-    """Get character by ID."""
+async def get_character(
+    character_id: str,
+    db: AsyncClient = Depends(get_db),
+    current_user: UserDocument = Depends(get_current_user)
+):
+    """
+    Get character by ID.
+
+    Restricted to the character's owner.
+    """
     repo = CharacterRepository(db)
     character = await repo.get_by_id(character_id)
 
     if not character:
         raise HTTPException(status_code=404, detail="Character not found")
+
+    if character.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Cannot access another user's character")
 
     return character.to_response()
 
