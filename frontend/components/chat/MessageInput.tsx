@@ -57,6 +57,7 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
               ? "Ask about your character, spells, or the rules..."
               : "Waiting for backend to initialize..."}
             disabled={isDisabled}
+            aria-label="Message input"
             className="flex-1 bg-transparent px-3 py-2 text-[15px] resize-none focus:outline-none disabled:opacity-50 placeholder:text-muted-foreground/60 min-h-[44px] max-h-[150px]"
             rows={1}
           />
