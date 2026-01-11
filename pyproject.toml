@@ -45,4 +45,5 @@ packages = ["src"]
 dev = [
     "pytest>=9.0.2",
     "pydantic-to-typescript>=1.0.10",
+    "pytest-asyncio>=1.3.0",
 ]
