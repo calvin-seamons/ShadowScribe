@@ -50,6 +50,7 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
           {/* Textarea */}
           <textarea
             ref={textareaRef}
+            aria-label="Message input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -78,19 +79,23 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
 
         {/* Helper text */}
         <div className="flex items-center justify-between mt-2 px-2 text-xs text-muted-foreground/60">
-          <span>Press Enter to send, Shift+Enter for new line</span>
-          {!isBackendReady && !isStreaming && (
-            <span className="flex items-center gap-1.5 text-amber-500">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-              Backend initializing...
-            </span>
-          )}
-          {isStreaming && (
-            <span className="flex items-center gap-1.5 text-primary">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              Generating response...
-            </span>
-          )}
+          <span>
+            Press <kbd className="px-1 py-0.5 rounded border bg-muted font-mono text-[10px]">Enter</kbd> to send, <kbd className="px-1 py-0.5 rounded border bg-muted font-mono text-[10px]">Shift+Enter</kbd> for new line
+          </span>
+          <div role="status" aria-live="polite" className="flex items-center justify-end">
+            {!isBackendReady && !isStreaming && (
+              <span className="flex items-center gap-1.5 text-amber-500">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                Backend initializing...
+              </span>
+            )}
+            {isStreaming && (
+              <span className="flex items-center gap-1.5 text-primary">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                Generating response...
+              </span>
+            )}
+          </div>
         </div>
       </form>
     </div>
