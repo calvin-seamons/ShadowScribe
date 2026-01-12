@@ -1,8 +1,9 @@
 """
 Character Manager
 
-A class for saving and loading Character objects from database or pickle files.
-Supports both database (primary) and pickle file (fallback) storage.
+A class for saving and loading Character objects from database or files.
+Supports both database (primary) and JSON file (fallback) storage.
+Legacy pickle support included for backward compatibility.
 """
 
 import logging
@@ -32,7 +33,7 @@ class CharacterManager:
         Create a CharacterManager that persists Character objects to disk and optionally to a database.
         
         Parameters:
-            save_directory (str): Filesystem path where pickle files will be stored; the directory is created if it does not exist.
+            save_directory (str): Filesystem path where character files will be stored; the directory is created if it does not exist.
             db_session (Optional[Any]): Optional database session; if provided a CharacterRepository is instantiated for database operations.
         """
         self.save_directory = Path(save_directory)
@@ -198,7 +199,7 @@ class CharacterManager:
     
     async def load_character_async(self, name: str) -> Character:
         """
-        Load a Character object from database (preferred) or pickle file (fallback).
+        Load a Character object from database (preferred) or file (fallback).
         
         Args:
             name: The character name to load
@@ -215,12 +216,12 @@ class CharacterManager:
             if character:
                 return character
         
-        # Fallback to pickle file
+        # Fallback to file
         return self.load_character(name)
     
     def save_character(self, character: Character, filename: Optional[str] = None) -> str:
         """
-        Save a Character object to a pickle file.
+        Save a Character object to a JSON file (preferred).
         
         Args:
             character: The Character object to save
@@ -232,24 +233,27 @@ class CharacterManager:
         if filename is None:
             # Use character name as filename, sanitized for filesystem
             safe_name = "".join(c for c in character.character_base.name if c.isalnum() or c in (' ', '-', '_')).rstrip()
-            filename = f"{safe_name}.pkl"
+            filename = f"{safe_name}.json"
         
-        if not filename.endswith('.pkl'):
-            filename += '.pkl'
+        # Force .json extension
+        if filename.endswith('.pkl'):
+            filename = filename[:-4] + '.json'
+        elif not filename.endswith('.json'):
+            filename += '.json'
             
         filepath = self.save_directory / filename
         
         # Update the last_updated timestamp
         character.last_updated = datetime.now()
         
-        with open(filepath, 'wb') as f:
-            pickle.dump(character, f)
+        with open(filepath, 'w') as f:
+            f.write(character.model_dump_json(indent=2))
             
         return str(filepath)
     
     def load_character(self, filename: str) -> Character:
         """
-        Load a Character object from a pickle file.
+        Load a Character object from a file (JSON preferred, pickle supported).
         
         Args:
             filename: The filename to load from
@@ -260,31 +264,42 @@ class CharacterManager:
         Raises:
             FileNotFoundError: If the file doesn't exist
         """
-        if not filename.endswith('.pkl'):
-            filename += '.pkl'
+        # Handle extension if provided
+        base_filename = filename
+        if filename.endswith('.pkl'):
+            base_filename = filename[:-4]
+        elif filename.endswith('.json'):
+            base_filename = filename[:-5]
             
-        filepath = self.save_directory / filename
+        json_path = self.save_directory / f"{base_filename}.json"
+        pkl_path = self.save_directory / f"{base_filename}.pkl"
         
-        if not filepath.exists():
-            raise FileNotFoundError(f"Character file not found: {filepath}")
+        # Try JSON first
+        if json_path.exists():
+            with open(json_path, 'r') as f:
+                return Character.model_validate_json(f.read())
         
-        with open(filepath, 'rb') as f:
-            character = pickle.load(f)
-            
-        return character
+        # Try PKL
+        if pkl_path.exists():
+            with open(pkl_path, 'rb') as f:
+                return pickle.load(f)
+
+        raise FileNotFoundError(f"Character file not found: {filename}")
     
     def list_saved_characters(self) -> list[str]:
         """
         List all saved character files.
         
         Returns:
-            List of character filenames (without .pkl extension)
+            List of character filenames (without extension)
         """
-        character_files = []
+        character_files = set()
         for pkl_file in self.save_directory.glob("*.pkl"):
-            character_files.append(pkl_file.stem)
+            character_files.add(pkl_file.stem)
+        for json_file in self.save_directory.glob("*.json"):
+            character_files.add(json_file.stem)
         
-        return sorted(character_files)
+        return sorted(list(character_files))
     
     def delete_character(self, filename: str) -> bool:
         """
@@ -296,13 +311,20 @@ class CharacterManager:
         Returns:
             True if deleted successfully, False if file didn't exist
         """
-        if not filename.endswith('.pkl'):
-            filename += '.pkl'
+        base_name = filename
+        if filename.endswith('.json') or filename.endswith('.pkl'):
+            base_name = filename.rsplit('.', 1)[0]
             
-        filepath = self.save_directory / filename
+        deleted = False
         
-        if filepath.exists():
-            filepath.unlink()
-            return True
-        
-        return False
+        json_path = self.save_directory / f"{base_name}.json"
+        if json_path.exists():
+            json_path.unlink()
+            deleted = True
+
+        pkl_path = self.save_directory / f"{base_name}.pkl"
+        if pkl_path.exists():
+            pkl_path.unlink()
+            deleted = True
+
+        return deleted
