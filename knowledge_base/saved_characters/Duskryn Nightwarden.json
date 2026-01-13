@@ -1,0 +1,3908 @@
+{
+  "character_base": {
+    "name": "Duskryn Nightwarden",
+    "race": "Hill Dwarf",
+    "character_class": "Warlock",
+    "total_level": 13,
+    "alignment": "Lawful Neutral",
+    "background": "Acolyte",
+    "subrace": "Hill",
+    "multiclass_levels": {
+      "Warlock": 5,
+      "Paladin": 8
+    },
+    "lifestyle": null
+  },
+  "characteristics": {
+    "alignment": "Lawful Neutral",
+    "gender": "Male",
+    "eyes": "Gold",
+    "size": "Large",
+    "height": "5'2\" ft",
+    "hair": "Long white hair, with beard",
+    "skin": "Light blue skin",
+    "age": 105,
+    "weight": "180 lb",
+    "faith": "Ethernea, The Mediator"
+  },
+  "ability_scores": {
+    "strength": 14,
+    "dexterity": 12,
+    "constitution": 16,
+    "intelligence": 14,
+    "wisdom": 20,
+    "charisma": 24
+  },
+  "combat_stats": {
+    "max_hp": 129,
+    "armor_class": 20,
+    "initiative_bonus": 1,
+    "speed": 25,
+    "hit_dice": {
+      "Warlock": "5d8",
+      "Paladin": "8d10"
+    }
+  },
+  "background_info": {
+    "name": "Acolyte",
+    "feature": {
+      "name": "Shelter of the Faithful",
+      "description": "As an acolyte, you command the respect of those who share your faith, and you can perform the religious ceremonies of your deity. You and your adventuring companions can expect to receive free healing and care at a temple, shrine, or other established presence of your faith, though you must provide any material components needed for spells. Those who share your religion will support you (but only you) at a modest lifestyle. You might also have ties to a specific temple dedicated to your chosen deity or pantheon, and you have a residence there. This could be the temple where you used to serve, if you remain on good terms with it, or a temple where you have found a new home. While near your temple, you can call upon the priests for assistance, provided the assistance you ask for is not hazardous and you remain in good standing with your temple."
+    },
+    "skill_proficiencies": [
+      "Insight",
+      "Religion"
+    ],
+    "tool_proficiencies": [],
+    "language_proficiencies": [],
+    "equipment": [
+      "a holy symbol (a gift to you when you entered the priesthood)",
+      "a prayer book or prayer wheel",
+      "5 sticks of incense",
+      "vestments",
+      "a set of common clothes",
+      "a pouch containing 15 gp"
+    ],
+    "feature_description": "As an acolyte, you command the respect of those who share your faith, and you can perform the religious ceremonies of your deity. You and your adventuring companions can expect to receive free healing and care at a temple, shrine, or other established presence of your faith, though you must provide any material components needed for spells. Those who share your religion will support you (but only you) at a modest lifestyle. You might also have ties to a specific temple dedicated to your chosen deity or pantheon, and you have a residence there. This could be the temple where you used to serve, if you remain on good terms with it, or a temple where you have found a new home. While near your temple, you can call upon the priests for assistance, provided the assistance you ask for is not hazardous and you remain in good standing with your temple."
+  },
+  "personality": {
+    "personality_traits": [
+      "I quote (or misquote) sacred texts and proverbs in almost every situation.",
+      "I see omens in every event and action. The gods try to speak to us, we just need to listen.",
+      "I am tolerant of other faiths and respect the worship of other gods.",
+      "I've enjoyed fine food, drink, and high society among my temple's elite. Rough living grates on me."
+    ],
+    "ideals": [
+      "Tradition. The ancient traditions of worship and sacrifice must be preserved and upheld. (Lawful)",
+      "Power. To control the equilibrium of light and darkness itself"
+    ],
+    "bonds": [
+      "I will do anything to protect the temple where I served."
+    ],
+    "flaws": [
+      "Overly Focused on Balance: Duskryn's obsession with maintaining balance between light and darkness can sometimes make him indecisive or slow to act in situations where a clear stance is needed. This can lead to frustration among his allies and missed opportunities in battle or diplomacy."
+    ]
+  },
+  "backstory": {
+    "title": "The Battle of Shadow's Edge",
+    "family_backstory": {
+      "parents": "Unknown",
+      "sections": []
+    },
+    "sections": [
+      {
+        "heading": "The Battle of Shadow's Edge",
+        "content": "Under the tutelage of High Acolyte Aldric, Duskryn Nightwarden had risen through the ranks of the Holy Knights of Kluntul, his dedication to Ethernea and her principles of balance and justice unwavering. One fateful day, the tranquility of Kluntul was shattered by the emergence of an exceptionally powerful and malevolent entity, known as Xurmurrin, The Voiceless One. Xurmurrin sought to plunge the realm into darkness, upsetting the delicate balance Ethernea had strived to maintain."
+      },
+      {
+        "heading": "The Call to Arms",
+        "content": "High Acolyte Aldric, recognizing the gravity of the threat, entrusted Duskryn with the command of a formidable battalion of Holy Knights. Their mission was clear: to defend the sacred land of Kluntul and to vanquish the Voiceless One. The battalion, inspired by Duskryn's unwavering faith and strategic acumen, marched towards the heart of the threat\u2014the Shadow's Edge, a place where the Veil between light and dark was weakest."
+      },
+      {
+        "heading": "The Battle",
+        "content": "As they approached Shadow's Edge, the skies darkened, and an eerie silence enveloped the land. The air crackled with dark energy, a palpable sign of Xurmurrin's presence. Duskryn, standing at the forefront, raised his hammer high, invoking Ethernea's blessing. His presence radiated a calming light, instilling courage in his soldiers. The clash was fierce, with Xurmurrin's shadowy minions assailing the Holy Knights from all sides.\n\nIn the midst of the chaos, Duskryn found himself facing Xurmurrin directly. The Voiceless One's power was immense, a swirling vortex of darkness that threatened to consume everything. Drawing upon Ethernea's teachings, Duskryn channeled both light and dark magic, creating a barrier that shielded his troops and weakened Xurmurrin's attacks. The battle raged on, with neither side gaining a clear advantage."
+      },
+      {
+        "heading": "The Turning Point",
+        "content": "In a desperate bid to tip the scales, Xurmurrin unleashed a devastating wave of dark energy, overwhelming the battalion. In that critical moment, Duskryn felt a surge of power within him, a gift from Ethernea herself. The mystical boundary of the Veil opened before him, revealing the secrets of balance. Embracing this newfound power, Duskryn unleashed a blinding light infused with shadows, a manifestation of Ethernea's essence. The force of this power obliterated Xurmurrin's minions and struck the Voiceless One with unparalleled intensity."
+      },
+      {
+        "heading": "The Retreat",
+        "content": "Xurmurrin, weakened and vulnerable, saw his army fall before the might of Duskryn and the Holy Knights. Recognizing the futility of continued conflict, Xurmurrin retreated into the shadows, vowing to return and exact his revenge. The retreat of the Voiceless One sent ripples through the realm, disrupting the balance of light and darkness. The excessive power of light began to overwhelm the land, creating a new imbalance. Duskryn, realizing the consequences of their partial victory, vowed to restore the equilibrium that Ethernea so dearly cherished.\n\nReturning to Kluntul as a hero, Duskryn was lauded for his bravery and leadership. However, he knew that his true task had just begun. With the blessing and guidance of High Acolyte Aldric, Duskryn embarked on a new quest to restore the delicate balance between light and darkness, ensuring that Ethernea's legacy of harmony would endure."
+      }
+    ]
+  },
+  "organizations": [
+    {
+      "name": "The Holy Knights of Kluntul",
+      "role": "high-ranking officer",
+      "description": "As a high-ranking officer, Duskryn plays a significant role in this military order dedicated to defending Kluntul and upholding the principles of justice and balance."
+    },
+    {
+      "name": "The Clergy of Ethernea",
+      "role": "devoted follower",
+      "description": "As a devoted follower of Ethernea, Duskryn is actively involved in the religious community that worships and upholds the teachings of Ethernea, ensuring the balance between light and darkness."
+    },
+    {
+      "name": "The Sacred Holds of Kluntul",
+      "role": "member",
+      "description": "By extension of his military and religious roles, Duskryn is part of the broader theocratic structure of Kluntul, contributing to the governance and protection of the realm."
+    }
+  ],
+  "allies": [
+    {
+      "name": "Aldric",
+      "description": "His mentor and leader of the Holy Knights of Kluntul. Aldric is a trusted advisor and a powerful figure in Duskryn's life.",
+      "title": "High Acolyte"
+    },
+    {
+      "name": "Fellow Holy Knights",
+      "description": "Comrades-in-arms who have fought alongside Duskryn in battles and share his devotion to protecting Kluntul and maintaining balance.",
+      "title": null
+    },
+    {
+      "name": "Priests and Priestesses of Ethernea",
+      "description": "Religious leaders and followers who support Duskryn's mission and share his faith in Ethernea, The Mediator.",
+      "title": null
+    },
+    {
+      "name": "Other High Acolytes",
+      "description": "Especially those who see the value in Duskryn's balanced approach, such as High Acolyte Elara, who oversees religious ceremonies and rituals.",
+      "title": "High Acolyte"
+    },
+    {
+      "name": "Scholars of the Order of the Scribes",
+      "description": "Those who study the history and knowledge related to the Cal' Thum pantheon, aiding Duskryn in understanding the deeper aspects of balance.",
+      "title": null
+    },
+    {
+      "name": "The Party",
+      "description": "His adventuring companions, who respect his experience and leadership, even if they occasionally clash with his stubbornness or obsession with balance.",
+      "title": null
+    }
+  ],
+  "enemies": [
+    {
+      "name": "Xurmurrin, The Voiceless One",
+      "description": ""
+    },
+    {
+      "name": "Anyone who is an enemy of Etherena",
+      "description": ""
+    }
+  ],
+  "proficiencies": [
+    {
+      "type": "tool",
+      "name": "Poisoner's Kit"
+    },
+    {
+      "type": "weapon",
+      "name": "Warhammer"
+    },
+    {
+      "type": "tool",
+      "name": "Smith's Tools"
+    },
+    {
+      "type": "tool",
+      "name": "Herbalism Kit"
+    },
+    {
+      "type": "tool",
+      "name": "Tinker's Tools"
+    },
+    {
+      "type": "saving_throw",
+      "name": "Wisdom Saving Throws"
+    },
+    {
+      "type": "saving_throw",
+      "name": "Charisma Saving Throws"
+    },
+    {
+      "type": "skill",
+      "name": "Investigation"
+    },
+    {
+      "type": "skill",
+      "name": "History"
+    },
+    {
+      "type": "skill",
+      "name": "Deception"
+    },
+    {
+      "type": "skill",
+      "name": "Persuasion"
+    },
+    {
+      "type": "skill",
+      "name": "Insight"
+    },
+    {
+      "type": "skill",
+      "name": "Religion"
+    }
+  ],
+  "damage_modifiers": [
+    {
+      "damage_type": "poison",
+      "modifier_type": "resistance"
+    },
+    {
+      "damage_type": "disease",
+      "modifier_type": "immunity"
+    },
+    {
+      "damage_type": "acid",
+      "modifier_type": "resistance"
+    },
+    {
+      "damage_type": "cold",
+      "modifier_type": "immunity"
+    }
+  ],
+  "passive_scores": {
+    "perception": 15,
+    "investigation": 17,
+    "insight": 20,
+    "stealth": null
+  },
+  "senses": {
+    "senses": {
+      "darkvision": 60
+    }
+  },
+  "action_economy": {
+    "attacks_per_action": 2,
+    "actions": [
+      {
+        "name": "Aura of the Guardian",
+        "description": "",
+        "shortDescription": "When a creature within {{scalevalue}} ft. of you takes damage, you can use your reaction to magically take that damage instead.",
+        "activation": {
+          "activationType": "reaction",
+          "activationTime": 1,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "feature",
+        "source": "class",
+        "sourceFeature": null,
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Call Lightning",
+        "description": "A storm cloud appears in the shape of a cylinder that is 10 feet tall with a 60-foot radius, centered on a point you can see within range directly above you. The spell fails if you can\u2019t see a point in the air where the storm cloud could appear (for example, if you are in a room that can\u2019t accommodate the cloud). When you cast the spell, choose a point you can see under the cloud. A bolt of lightning flashes down from the cloud to that point. Each creature within 5 feet of that point must make a Dexterity saving throw. A creature takes 3d10 lightning damage on a failed save, or half as much damage on a successful one. On each of your turns until the spell ends, you can use your action to call down lightning in this way again, targeting the same point or a different one. If you are outdoors in stormy conditions when you cast this spell, the spell gives you control over the existing storm instead of creating a new one. Under such conditions, the spell\u2019s damage increases by 1d10. At Higher Levels. When you cast this spell using a spell slot of 4th or higher level, the damage increases by 1d10 for each slot level above 3rd.",
+        "shortDescription": "level 3 Conjuration spell",
+        "activation": {
+          "activationType": "action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "spell",
+        "source": "item",
+        "sourceFeature": "Eldaryth of Regret (I)",
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": "Concentration, 10 Minute",
+        "materials": null
+      },
+      {
+        "name": "Channel Divinity",
+        "description": "",
+        "shortDescription": "Your oath allows you to channel divine energy to fuel magical effects. When you use your Channel Divinity, you choose which option to use. You must then finish a short or long rest to use your Channel Divinity again. Some Channel Divinity effects require saving throws (DC {{savedc:cha}}).",
+        "activation": {
+          "activationType": "bonus_action",
+          "activationTime": 1,
+          "activationCondition": null
+        },
+        "usage": {
+          "maxUses": 1,
+          "resetType": "short_rest",
+          "usesPerActivation": 1
+        },
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "feature",
+        "source": "class",
+        "sourceFeature": null,
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Channel Divinity: Emissary of Peace",
+        "description": "You can use your Channel Divinity to augment your presence with divine power. As a bonus action, you grant yourself a +5 bonus to Charisma ([skill]Persuasion[/skill]) checks for the next 10 minutes.",
+        "shortDescription": "As a bonus action, you grant yourself a +5 bonus to Charisma (Persuasion) checks for the next 10 minutes.",
+        "activation": {
+          "activationType": "bonus_action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "feature",
+        "source": "class",
+        "sourceFeature": null,
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Channel Divinity: Rebuke the Violent",
+        "description": "You can use your Channel Divinity to rebuke those who use violence. Immediately after an attacker within 30 feet of you deals damage with an attack against a creature other than you, you can use your reaction to force the attacker to make a Wisdom saving throw. On a failed save, the attacker takes radiant damage equal to the damage it just dealt. On a successful save, it takes half as much damage.",
+        "shortDescription": "Immediately after an attacker within 30 ft. deals damage with an attack against a creature other than you, you can use your reaction to force the attacker to make a WIS saving throw (DC {{savedc:cha}}). On failure, the attacker takes radiant damage equal to the damage it just dealt, or half damage on success.",
+        "activation": {
+          "activationType": "reaction",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "feature",
+        "source": "class",
+        "sourceFeature": null,
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Create Pact Weapon",
+        "description": "",
+        "shortDescription": "As an action, you can create a pact weapon in your hand (you choose the form, you're proficient with it, and it counts as magical). You can also transform a magic weapon into your pact weapon by performing a special ritual.",
+        "activation": {
+          "activationType": "action",
+          "activationTime": 1,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "feature",
+        "source": "class",
+        "sourceFeature": null,
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Dagger Attack (Unequipped)",
+        "description": "Proficiency with a Dagger allows you to add your proficiency bonus to the attack roll for any attack you make with it. This weapon has the following mastery property. To use this property, you must have a feature that lets you use it. Nick. When you make the extra attack of the Light property, you can make it as part of the Attack action instead of as a Bonus Action. You can make this extra attack only once per turn.",
+        "shortDescription": "Requires drawing Dagger first (free object interaction or action).",
+        "activation": {
+          "activationType": "action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": {
+          "range": 20,
+          "longRange": 60,
+          "aoeType": null,
+          "aoeSize": null,
+          "rangeDescription": "20 feet (long: 60 feet)"
+        },
+        "damage": {
+          "diceNotation": "1d4",
+          "damageType": "piercing",
+          "fixedDamage": null,
+          "bonusDamage": null,
+          "criticalHitDice": null
+        },
+        "save": null,
+        "actionCategory": "unequipped_weapon",
+        "source": "item",
+        "sourceFeature": "Dagger",
+        "attackBonus": null,
+        "isWeaponAttack": true,
+        "requiresAmmo": true,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Detect Thoughts",
+        "description": "For the duration, you can read the thoughts of certain creatures. When you cast the spell and as your action on each turn until the spell ends, you can focus your mind on any one creature that you can see within 30 feet of you. If the creature you choose has an Intelligence of 3 or lower or doesn\u2019t speak any language, the creature is unaffected. You initially learn the surface thoughts of the creature&mdash;what is most on its mind in that moment. As an action, you can either shift your attention to another creature\u2019s thoughts or attempt to probe deeper into the same creature\u2019s mind. If you probe deeper, the target must make a Wisdom saving throw. If it fails, you gain insight into its reasoning (if any), its emotional state, and something that looms large in its mind (such as something it worries over, loves, or hates). If it succeeds, the spell ends. Either way, the target knows that you are probing into its mind, and unless you shift your attention to another creature\u2019s thoughts, the creature can use its action on its turn to make an Intelligence check contested by your Intelligence check; if it succeeds, the spell ends. Questions verbally directed at the target creature naturally shape the course of its thoughts, so this spell is particularly effective as part of an interrogation. You can also use this spell to detect the presence of thinking creatures you can\u2019t see. When you cast the spell or as your action during the duration, you can search for thoughts within 30 feet of you. The spell can penetrate barriers, but 2 feet of rock, 2 inches of any metal other than lead, or a thin sheet of lead blocks you. You can\u2019t detect a creature with an Intelligence of 3 or lower or one that doesn\u2019t speak any language. Once you detect the presence of a creature in this way, you can read its thoughts for the rest of the duration as described above, even if you can\u2019t see it, but it must still be within range.",
+        "shortDescription": "level 2 Divination spell",
+        "activation": {
+          "activationType": "action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "spell",
+        "source": "item",
+        "sourceFeature": "Helm of Telepathy",
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": "Concentration, 1 Minute",
+        "materials": "a copper piece"
+      },
+      {
+        "name": "Detection and Location Prevention",
+        "description": "Cast from Amulet of Proof against Detection and Location",
+        "shortDescription": null,
+        "activation": {
+          "activationType": null,
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": {
+          "maxUses": null,
+          "resetType": null,
+          "usesPerActivation": null
+        },
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "spell",
+        "source": "item",
+        "sourceFeature": "Amulet of Proof against Detection and Location",
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Divine Sense",
+        "description": "The presence of strong evil registers on your senses like a noxious odor, and powerful good rings like heavenly music in your ears. As an action, you can open your awareness to detect such forces. Until the end of your next turn, you know the location of any celestial, fiend, or undead within 60 feet of you that is not behind total cover. You know the type (celestial, fiend, or undead) of any being whose presence you sense, but not its identity (the vampire Count Strahd von Zarovich, for instance). Within the same radius, you also detect the presence of any place or object that has been consecrated or desecrated, as with the [spell]hallow[/spell] spell. You can use this feature a number of times equal to 1 + your Charisma modifier. When you finish a long rest, you regain all expended uses.",
+        "shortDescription": "As an action, you can detect good and evil. Until the end of your next turn, you can sense anything affected by the hallow spell or know the location of any celestial, fiend, undead within 60 ft. that is not behind total cover. You can use this feature {{(modifier:cha)+1#unsigned}} times per long rest.",
+        "activation": {
+          "activationType": "action",
+          "activationTime": 1,
+          "activationCondition": null
+        },
+        "usage": {
+          "maxUses": 1,
+          "resetType": "long_rest",
+          "usesPerActivation": 1
+        },
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "feature",
+        "source": "class",
+        "sourceFeature": null,
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Divine Smite",
+        "description": "Starting at 2nd level, when you hit a creature with a melee weapon attack, you can expend one spell slot to deal radiant damage to the target, in addition to the weapon's damage. The extra damage is 2d8 for a 1st-level spell slot, plus 1d8 for each spell level higher than 1st, to a maximum of 5d8. The damage increases by 1d8 if the target is an undead or a fiend, to a maximum of 6d8.",
+        "shortDescription": "When you hit with a melee weapon attack, you can expend one spell slot to deal 2d8 extra radiant damage to the target plus 1d8 for each spell level higher than 1st (max 5d8) and plus 1d8 against undead or fiends.",
+        "activation": {
+          "activationType": "bonus_action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "feature",
+        "source": "class",
+        "sourceFeature": null,
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Divine Word",
+        "description": "You utter a divine word, imbued with the power that shaped the world at the dawn of creation. Choose any number of creatures you can see within range. Each creature that can hear you must make a Charisma saving throw. On a failed save, a creature suffers an effect based on its current hit points: 50 hit points or fewer: deafened for 1 minute 40 hit points or fewer: deafened and blinded for 10 minutes 30 hit points or fewer: blinded, deafened, and stunned for 1 hour 20 hit points or fewer: killed instantly Regardless of its current hit points, a celestial, an elemental, a fey, or a fiend that fails its save is forced back to its plane of origin (if it isn't there already) and can't return to your current plane for 24 hours by any means short of a wish spell.",
+        "shortDescription": "level 7 Evocation spell",
+        "activation": {
+          "activationType": "bonus_action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "spell",
+        "source": "item",
+        "sourceFeature": "Eldaryth of Regret (I)",
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Eldaryth of Regret (I) Attack",
+        "description": "When [REDACTED] grew in power, he appointed an evil and ruthless lieutenant, [REDACTED], to act as his bodyguard and right hand. This despicable villain served as advisor, warlord, and assassin. His successes earned him [REDACTED] admiration and a reward: a sword with as dark a pedigree as the man who would wield it. For a long time, [REDACTED] faithfully served the [REDACTED], but as [REDACTED] power grew, so did his hubris. He aimed to supplant [REDACTED], so that they could rule the [REDACTED] empire in [REDACTED] stead. Legend says [REDACTED] destruction came at [REDACTED] hand, but [REDACTED] also wrought his rebellious lieutenant\u2019s doom, leaving only [REDACTED] sword behind. The world was made brighter thereby. The Eldaryth of Regret is a magic longsword that grants a +3 bonus to attack and damage rolls made with it. It scores a critical hit on a roll of 19 or 20, and deals an extra 2d10 slashing damage. If the sword isn\u2019t bathed in tears or blood within 1 minute of being drawn from its scabbard, its wielder must make a DC 20 Charisma saving throw. On a successful save, the wielder take 3d6 psychic damage. On a failed save, the wielder is dominated by the sword, as if by the dominate monster spell, and the sword demands that it be bathed in blood or tears. The spell effect ends when the sword\u2019s demand is met. Random Properties. The Eldaryth of Regret has the following random properties: While attuned to the Eldaryth of Regret you are immune to cold damage. While attuned to the Eldaryth of Regret your Charisma score is increased by 2 to a maximum of 24. While attuned to the Eldaryth of Regret you cannot smell. While attuned to the Eldaryth of Regret all magical potions within 10 feet of the user become diluted and non-magical and all magical scrolls within 10 feet of the user become erased. Spirit of Regret. While the sword is on your person, you add a d10 to your initiative at the start of every combat. In addition, when you use an action to attack with the sword, you can transfer some or all of its attack bonus to your Armor Class instead. The adjusted bonuses remain in effect until the start of your next turn. When doing so under the first iteration of the Eldaryth of Regret, the user must make a DC 20 Charisma Saving throw. On a successful save the user is able to convert their choice of attack bonus to their armor class without complication. On a failed save, the sword begins to weep and emit water and compels the user to sheath it until the beginning of their next turn. Spells. While the sword is on your person, you can use an action to cast one of the following spells (save DC 18) from it: call lightning, divine word, or finger of death. Once you use the sword to cast a spell, you can\u2019t cast that spell again from it until the next dawn.",
+        "shortDescription": null,
+        "activation": {
+          "activationType": "action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": {
+          "range": 5,
+          "longRange": 5,
+          "aoeType": null,
+          "aoeSize": null,
+          "rangeDescription": "5 feet (long: 5 feet)"
+        },
+        "damage": {
+          "diceNotation": "1d8",
+          "damageType": "slashing",
+          "fixedDamage": null,
+          "bonusDamage": null,
+          "criticalHitDice": null
+        },
+        "save": null,
+        "actionCategory": "attack",
+        "source": "item",
+        "sourceFeature": "Eldaryth of Regret (I)",
+        "attackBonus": null,
+        "isWeaponAttack": true,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Extra Attack",
+        "description": "",
+        "shortDescription": "You can attack twice, instead of once, whenever you take the Attack action on your turn.",
+        "activation": {
+          "activationType": "bonus_action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "feature",
+        "source": "class",
+        "sourceFeature": null,
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Finger of Death",
+        "description": "You send negative energy coursing through a creature that you can see within range, causing it searing pain. The target must make a Constitution saving throw. It takes 7d8 + 30 necrotic damage on a failed save, or half as much damage on a successful one. A humanoid killed by this spell rises at the start of your next turn as a zombie that is permanently under your command, following your verbal orders to the best of its ability.",
+        "shortDescription": "level 7 Necromancy spell",
+        "activation": {
+          "activationType": "action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "spell",
+        "source": "item",
+        "sourceFeature": "Eldaryth of Regret (I)",
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Greater Invisibility",
+        "description": "A creature you touch has the Invisible condition until the spell ends.",
+        "shortDescription": "level 4 Illusion spell",
+        "activation": {
+          "activationType": "action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "spell",
+        "source": "item",
+        "sourceFeature": "Mantle of Shadow",
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": "Concentration, 1 Minute",
+        "materials": null
+      },
+      {
+        "name": "Harness Divine Power",
+        "description": "3rd-level paladin featureYou can expend a use of your Channel Divinity to fuel your spells. As a bonus action, you touch your holy symbol, utter a prayer, and regain one expended spell slot, the level of which can be no higher than half your proficiency bonus (rounded up). The number of times you can use this feature is based on the level you've reached in this class: 3rd level, once; 7th level, twice; and 15th level, thrice. You regain all expended uses when you finish a long rest.",
+        "shortDescription": "You can expend a use of your Channel Divinity to fuel your spells. As a bonus action, you touch your holy symbol, utter a prayer, and regain one expended spell slot, which can be no higher than level {{(proficiency/2)@roundup#unsigned}}. You regain all expended uses when you finish a long rest.",
+        "activation": {
+          "activationType": "bonus_action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": {
+          "maxUses": 2,
+          "resetType": "long_rest",
+          "usesPerActivation": 1
+        },
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "feature",
+        "source": "class",
+        "sourceFeature": null,
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Hex Warrior",
+        "description": "",
+        "shortDescription": "You gain proficiency with medium armor, shields, and martial weapons. Whenever you finish a long rest, you can touch one weapon that you are proficient with and that lacks the two-handed property. With that weapon, you can use your CHA modifier for the attack and damage rolls until you finish your next long rest. You can also use your CHA modifier for the attack and damage rolls for any of your pact weapons if you have that feature.",
+        "activation": {
+          "activationType": "bonus_action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "feature",
+        "source": "class",
+        "sourceFeature": null,
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Hexblade\u2019s Curse",
+        "description": "Starting at 1st level, you gain the ability to place a baleful curse on someone. As a bonus action, choose one creature you can see within 30 feet of you. The target is cursed for 1 minute. The curse ends early if the target dies, you die, or you are [condition]incapacitated[/condition]. Until the curse ends, you gain the following benefits: You gain a bonus to damage rolls against the cursed target. The bonus equals your proficiency bonus. Any attack roll you make against the cursed target is a critical hit on a roll of 19 or 20 on the d20. If the cursed target dies, you regain hit points equal to your warlock level + your Charisma modifier (minimum of 1 hit point). You can't use this feature again until you finish a short or long rest.",
+        "shortDescription": "Once per short rest, as a bonus action, choose one creature you can see within 30 ft. to curse it for 1 minute (or until the target dies, you die, or you are incapacitated). Against the cursed target, you gain a {{proficiency#signed}} bonus to damage rolls, score a critical hit on a roll of 19 or 20, and you regain {{(classlevel+modifier:cha)@min:1#unsigned}} HP if it dies.",
+        "activation": {
+          "activationType": "bonus_action",
+          "activationTime": 1,
+          "activationCondition": null
+        },
+        "usage": {
+          "maxUses": 1,
+          "resetType": "short_rest",
+          "usesPerActivation": 1
+        },
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "feature",
+        "source": "class",
+        "sourceFeature": null,
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Lay on Hands Pool",
+        "description": "Your blessed touch can heal wounds. You have a pool of healing power that replenishes when you take a long rest. With that pool, you can restore a total number of hit points equal to your paladin level &times; 5. As an action, you can touch a creature and draw power from the pool to restore a number of hit points to that creature, up to the maximum amount remaining in your pool. Alternatively, you can expend 5 hit points from your pool of healing to cure the target of one disease or neutralize one poison affecting it. You can cure multiple diseases and neutralize multiple poisons with a single use of Lay on Hands, expending hit points separately for each one. This feature has no effect on undead and constructs.",
+        "shortDescription": "You have a pool of healing power that can restore {{classlevel*5#unsigned}} HP per long rest. As an action, you can touch a creature to restore any number of HP remaining in the pool, or 5 HP to either cure a disease or neutralize a poison affecting the creature.",
+        "activation": {
+          "activationType": "action",
+          "activationTime": 1,
+          "activationCondition": null
+        },
+        "usage": {
+          "maxUses": 40,
+          "resetType": "long_rest",
+          "usesPerActivation": 1
+        },
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "feature",
+        "source": "class",
+        "sourceFeature": null,
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Lucky",
+        "description": "",
+        "shortDescription": "You have 3 luck points per long rest. Whenever you make an attack roll, an ability check, or a saving throw (or when an attack roll is made against you), you can spend one to roll an additional d20 and you choose which die to use. You can choose to spend luck points after you roll the die, but before the outcome is determined.",
+        "activation": {
+          "activationType": "bonus_action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": {
+          "maxUses": 3,
+          "resetType": "long_rest",
+          "usesPerActivation": 1
+        },
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "feature",
+        "source": "feat",
+        "sourceFeature": null,
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Nightwarden's Hammer Attack (Unequipped)",
+        "description": "You gain a +2 bonus to attack rolls and damage rolls made with this magic weapon. Life Stealing. The weapon has 1d8 + 1 charges. When you attack a creature that has fewer than 100 hit points with this weapon and roll a 20 on the d20 for the attack roll, the creature must succeed on a DC 15 Constitution saving throw or be slain instantly as the sword tears its life force from its body. Constructs and Undead succeed on the save automatically. The weapon loses 1 charge if the creature is slain. When the weapon has no charges remaining, it loses this property. Runic Focus. This magic hammer has 4 charges. As a bonus action, you can expend 1 charge and slam this hammer on the ground, creating a 15-foot-radius circle of glowing runes centered on the point of impact. While you\u2019re inside that area, your hammer glows with matching runes, and you gain a +3 bonus to attack and damage rolls made with this hammer. The rune circle disappears after 1 minute, when you create another rune circle, or when you dismiss the rune circle as a bonus action. This hammer regains 1d4 expended charges daily at dawn. Amesite Imbuement. This hammer has been imbued with a large Obsidian-colored Amesite Gem in the center. As an action, the user can cast Eldritch Blast using their spellcasting modifier as normal. If used inside Runic Focus, the same bonus to attack and damage rolls can be applied.",
+        "shortDescription": "Requires drawing Nightwarden's Hammer first (free object interaction or action).",
+        "activation": {
+          "activationType": "action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": {
+          "range": 5,
+          "longRange": 5,
+          "aoeType": null,
+          "aoeSize": null,
+          "rangeDescription": "5 feet (long: 5 feet)"
+        },
+        "damage": {
+          "diceNotation": "1d8",
+          "damageType": "bludgeoning",
+          "fixedDamage": null,
+          "bonusDamage": null,
+          "criticalHitDice": null
+        },
+        "save": null,
+        "actionCategory": "unequipped_weapon",
+        "source": "item",
+        "sourceFeature": "Nightwarden's Hammer",
+        "attackBonus": null,
+        "isWeaponAttack": true,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      },
+      {
+        "name": "Plane Shift",
+        "description": "You and up to eight willing creatures who link hands in a circle are transported to a different plane of existence. You can specify a target destination in general terms, such as the City of Brass on the Elemental Plane of Fire or the palace of Dispater on the second level of the Nine Hells, and you appear in or near that destination. If you are trying to reach the City of Brass, for example, you might arrive in its Street of Steel, before its Gate of Ashes, or looking at the city from across the Sea of Fire, at the GM's discretion. Alternatively, if you know the sigil sequence of a teleportation circle on another plane of existence, this spell can take you to that circle. If the teleportation circle is too small to hold all the creatures you transported, they appear in the closest unoccupied spaces next to the circle. You can use this spell to banish an unwilling creature to another plane. Choose a creature within your reach and make a melee spell attack against it. On a hit, the creature must make a Charisma saving throw. If the creature fails this save, it is transported to a random location on the plane of existence you specify. A creature so transported must find its own way back to your current plane of existence.",
+        "shortDescription": "level 7 Conjuration spell",
+        "activation": {
+          "activationType": "action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "spell",
+        "source": "item",
+        "sourceFeature": "Amulet of Ethernea",
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": "a forked, metal rod worth at least 250 gp, attuned to a particular plane of existence"
+      },
+      {
+        "name": "Suggestion",
+        "description": "You suggest a course of activity (limited to a sentence or two) and magically influence a creature you can see within range that can hear and understand you. Creatures that can't be charmed are immune to this effect. The suggestion must be worded in such a manner as to make the course of action sound reasonable. Asking the creature to stab itself, throw itself onto a spear, immolate itself, or do some other obviously harmful act ends the spell. The target must make a Wisdom saving throw. On a failed save, it pursues the course of action you described to the best of its ability. The suggested course of action can continue for the entire duration. If the suggested activity can be completed in a shorter time, the spell ends when the subject finishes what it was asked to do. You can also specify conditions that will trigger a special activity during the duration. For example, you might suggest that a knight give her warhorse to the first beggar she meets. If the condition isn't met before the spell expires, the activity isn't performed. If you or any of your companions damage the target, the spell ends.",
+        "shortDescription": "level 2 Enchantment spell",
+        "activation": {
+          "activationType": "action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": null,
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "spell",
+        "source": "item",
+        "sourceFeature": "Helm of Telepathy",
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": "Concentration, 8 Hour",
+        "materials": "a snake's tongue and either a bit of honeycomb or a drop of sweet oil"
+      },
+      {
+        "name": "Warlock Spell Slot Recovery",
+        "description": "Cast from Rod of the Pact Keeper, +2",
+        "shortDescription": null,
+        "activation": {
+          "activationType": "action",
+          "activationTime": null,
+          "activationCondition": null
+        },
+        "usage": {
+          "maxUses": 1,
+          "resetType": "long_rest",
+          "usesPerActivation": null
+        },
+        "actionRange": null,
+        "damage": null,
+        "save": null,
+        "actionCategory": "spell",
+        "source": "item",
+        "sourceFeature": "Rod of the Pact Keeper, +2",
+        "attackBonus": null,
+        "isWeaponAttack": false,
+        "requiresAmmo": false,
+        "duration": null,
+        "materials": null
+      }
+    ]
+  },
+  "features_and_traits": {
+    "racial_traits": [
+      {
+        "name": "Darkvision",
+        "description": "Accustomed to life underground, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can\u2019t discern color in darkness, only shades of gray.",
+        "creatureRules": null,
+        "featureType": "trait"
+      },
+      {
+        "name": "Dwarven Resilience",
+        "description": "You have advantage on saving throws against poison, and you have resistance against poison damage (explained in the \"Combat\" section).",
+        "creatureRules": null,
+        "featureType": "trait"
+      },
+      {
+        "name": "Dwarven Combat Training",
+        "description": "You have proficiency with the battleaxe, handaxe, light hammer, and warhammer.",
+        "creatureRules": null,
+        "featureType": "trait"
+      },
+      {
+        "name": "Tool Proficiency",
+        "description": "You gain proficiency with the artisan\u2019s tools of your choice: smith\u2019s tools, brewer\u2019s supplies, or mason\u2019s tools.",
+        "creatureRules": null,
+        "featureType": "trait"
+      },
+      {
+        "name": "Stonecunning",
+        "description": "Whenever you make an Intelligence (History) check related to the origin of stonework, you are considered proficient in the History skill and add double your proficiency bonus to the check, instead of your normal proficiency bonus.",
+        "creatureRules": null,
+        "featureType": "trait"
+      },
+      {
+        "name": "Languages",
+        "description": "You can speak, read, and write Common and Dwarvish. Dwarvish is full of hard consonants and guttural sounds, and those characteristics spill over into whatever other language a dwarf might speak.",
+        "creatureRules": null,
+        "featureType": "trait"
+      },
+      {
+        "name": "Age",
+        "description": "Dwarves mature at the same rate as humans, but they\u2019re considered young until they reach the age of 50. On average, they live about 350 years.",
+        "creatureRules": null,
+        "featureType": "trait"
+      },
+      {
+        "name": "Size",
+        "description": "Dwarves stand between 4 and 5 feet tall and average about 150 pounds. Your size is Medium.",
+        "creatureRules": null,
+        "featureType": "trait"
+      },
+      {
+        "name": "Speed",
+        "description": "Your base walking speed is 25 feet. Your speed is not reduced by wearing heavy armor.",
+        "creatureRules": null,
+        "featureType": "trait"
+      },
+      {
+        "name": "Dwarven Toughness",
+        "description": "Your hit point maximum increases by 1, and it increases by 1 every time you gain a level.",
+        "creatureRules": null,
+        "featureType": "trait"
+      }
+    ],
+    "class_features": {
+      "Warlock": {
+        "1": [
+          {
+            "name": "Otherworldly Patron",
+            "description": "At 1st level, you have struck a bargain with an otherworldly being of your choice: the Fiend, which is detailed at the end of the class description, or one from another source. Your choice grants you features at 1st level and again at 6th, 10th, and 14th level."
+          },
+          {
+            "name": "Pact Magic",
+            "description": "Your arcane research and the magic bestowed on you by your patron have given you facility with spells. See Spells Rules for the general rules of spellcasting and the Spells Listing for the warlock spell list. Cantrips You know two cantrips of your choice from the warlock spell list. You learn additional warlock cantrips of your choice at higher levels, as shown in the Cantrips Known column of the Warlock table. Spell Slots The Warlock table shows how many spell slots you have to cast your warlock spells of 1st through 5th level. The table also shows what the level of those slots is; all of your spell slots are the same level. To cast one of your warlock spells of 1st level or higher, you must expend a spell slot. You regain all expended Pact Magic spell slots when you finish a short or long rest. For example, when you are 5th level, you have two 3rd-level spell slots. To cast the 1st-level spell witch bolt, you must spend one of those slots, and you cast it as a 3rd-level spell. Spells Known of 1st Level and Higher At 1st level, you know two 1st-level spells of your choice from the warlock spell list. The Spells Known column of the Warlock table shows when you learn more warlock spells of your choice of 1st level and higher. A spell you choose must be of a level no higher than what\u2019s shown in the table\u2019s Slot Level column for your level. When you reach 6th level, for example, you learn a new warlock spell, which can be 1st, 2nd, or 3rd level. Additionally, when you gain a level in this class, you can choose one of the warlock spells you know and replace it with another spell from the warlock spell list, which also must be of a level for which you have spell slots. Spellcasting Ability Charisma is your spellcasting ability for your warlock spells, so you use your Charisma whenever a spell refers to your spellcasting ability. In addition, you use your Charisma modifier when setting the saving throw DC for a warlock spell you cast and when making an attack roll with one. Spell save DC = 8 + your proficiency bonus + your Charisma modifier Spell attack modifier = your proficiency bonus + your Charisma modifier Spellcasting Focus You can use an arcane focus (see the Adventuring Gear section) as a spellcasting focus for your warlock spells."
+          },
+          {
+            "name": "Proficiencies",
+            "description": "Armor: Light armorWeapons: Simple weaponsTools: NoneSaving Throws: Wisdom, CharismaSkills: Choose two skills from Arcana, Deception, History, Intimidation, Investigation, Nature, and Religion"
+          },
+          {
+            "name": "Hit Points",
+            "description": "Hit Dice: 1d8 per warlock levelHit Points at 1st Level: 8 + your Constitution modifierHit Points at Higher Levels: 1d8 (or 5) + your Constitution modifier per warlock level after 1st"
+          },
+          {
+            "name": "Expanded Spell List",
+            "description": "The Hexblade lets you choose from an expanded list of spells when you learn a warlock spell. The following spells are added to the warlock spell list for you. Hexblade Expanded Spells Spell Level Spells 1st shield, wrathful smite 2nd blur, branding smite 3rd blink, elemental weapon 4th phantasmal killer, staggering smite 5th banishing smite, cone of cold"
+          },
+          {
+            "name": "Hexblade\u2019s Curse",
+            "description": "Starting at 1st level, you gain the ability to place a baleful curse on someone. As a bonus action, choose one creature you can see within 30 feet of you. The target is cursed for 1 minute. The curse ends early if the target dies, you die, or you are incapacitated. Until the curse ends, you gain the following benefits: You gain a bonus to damage rolls against the cursed target. The bonus equals your proficiency bonus. Any attack roll you make against the cursed target is a critical hit on a roll of 19 or 20 on the d20. If the cursed target dies, you regain hit points equal to your warlock level + your Charisma modifier (minimum of 1 hit point). You can\u2019t use this feature again until you finish a short or long rest."
+          },
+          {
+            "name": "Hex Warrior",
+            "description": "At 1st level, you acquire the training necessary to effectively arm yourself for battle. You gain proficiency with medium armor, shields, and martial weapons. The influence of your patron also allows you to mystically channel your will through a particular weapon. Whenever you finish a long rest, you can touch one weapon that you are proficient with and that lacks the two-handed property. When you attack with that weapon, you can use your Charisma modifier, instead of Strength or Dexterity, for the attack and damage rolls. This benefit lasts until you finish a long rest. If you later gain the Pact of the Blade feature, this benefit extends to every pact weapon you conjure with that feature, no matter the weapon\u2019s type."
+          }
+        ],
+        "2": [
+          {
+            "name": "Eldritch Invocations",
+            "description": "In your study of occult lore, you have unearthed eldritch invocations, fragments of forbidden knowledge that imbue you with an abiding magical ability. At 2nd level, you gain two eldritch invocations of your choice. Your invocation options are detailed at the end of the class description. When you gain certain warlock levels, you gain additional invocations of your choice, as shown in the Invocations Known column of the Warlock table. Additionally, when you gain a level in this class, you can choose one of the invocations you know and replace it with another invocation that you could learn at that level. If an eldritch invocation has prerequisites, you must meet them to learn it. You can learn the invocation at the same time that you meet its prerequisites. A level prerequisite refers to your level in this class."
+          }
+        ],
+        "3": [
+          {
+            "name": "Pact Boon",
+            "description": "At 3rd level, your otherworldly patron bestows a gift upon you for your loyal service. You gain one of the following features of your choice."
+          }
+        ]
+      },
+      "Paladin": {
+        "1": [
+          {
+            "name": "Divine Sense",
+            "description": "The presence of strong evil registers on your senses like a noxious odor, and powerful good rings like heavenly music in your ears. As an action, you can open your awareness to detect such forces. Until the end of your next turn, you know the location of any celestial, fiend, or undead within 60 feet of you that is not behind total cover. You know the type (celestial, fiend, or undead) of any being whose presence you sense, but not its identity (the vampire Count Strahd von Zarovich, for instance). Within the same radius, you also detect the presence of any place or object that has been consecrated or desecrated, as with the hallow spell. You can use this feature a number of times equal to 1 + your Charisma modifier. When you finish a long rest, you regain all expended uses."
+          },
+          {
+            "name": "Lay on Hands",
+            "description": "Your blessed touch can heal wounds. You have a pool of healing power that replenishes when you take a long rest. With that pool, you can restore a total number of hit points equal to your paladin level &times; 5. As an action, you can touch a creature and draw power from the pool to restore a number of hit points to that creature, up to the maximum amount remaining in your pool. Alternatively, you can expend 5 hit points from your pool of healing to cure the target of one disease or neutralize one poison affecting it. You can cure multiple diseases and neutralize multiple poisons with a single use of Lay on Hands, expending hit points separately for each one. This feature has no effect on undead and constructs."
+          },
+          {
+            "name": "Proficiencies",
+            "description": "Armor: All armor, shieldsWeapons: Simple weapons, martial weaponsTools: NoneSaving Throws: Wisdom, CharismaSkills: Choose two from Athletics, Insight, Intimidation, Medicine, Persuasion, and Religion"
+          },
+          {
+            "name": "Hit Points",
+            "description": "Hit Dice: 1d10 per paladin levelHit Points at 1st Level: 10 + your Constitution modifierHit Points at Higher Levels: 1d10 (or 6) + your Constitution modifier per paladin level after 1st"
+          }
+        ],
+        "2": [
+          {
+            "name": "Fighting Style",
+            "description": "At 2nd level, you adopt a style of fighting as your specialty. Choose one of the following options. You can\u2019t take a Fighting Style option more than once, even if you later get to choose again."
+          },
+          {
+            "name": "Spellcasting",
+            "description": "By 2nd level, you have learned to draw on divine magic through meditation and prayer to cast spells as a cleric does. See Spells Rules for the general rules of spellcasting and the Spells Listing for the paladin spell list. Preparing and Casting Spells The Paladin table shows how many spell slots you have to cast your paladin spells. To cast one of your paladin spells of 1st level or higher, you must expend a slot of the spell\u2019s level or higher. You regain all expended spell slots when you finish a long rest. You prepare the list of paladin spells that are available for you to cast, choosing from the paladin spell list. When you do so, choose a number of paladin spells equal to your Charisma modifier + half your paladin level, rounded down (minimum of one spell). The spells must be of a level for which you have spell slots. For example, if you are a 5th-level paladin, you have four 1st-level and two 2nd-level spell slots. With a Charisma of 14, your list of prepared spells can include four spells of 1st or 2nd level, in any combination. If you prepare the 1st-level spell cure wounds, you can cast it using a 1st-level or a 2nd-level slot. Casting the spell doesn\u2019t remove it from your list of prepared spells. You can change your list of prepared spells when you finish a long rest. Preparing a new list of paladin spells requires time spent in prayer and meditation: at least 1 minute per spell level for each spell on your list. Spellcasting Ability Charisma is your spellcasting ability for your paladin spells, since their power derives from the strength of your convictions. You use your Charisma whenever a spell refers to your spellcasting ability. In addition, you use your Charisma modifier when setting the saving throw DC for a paladin spell you cast and when making an attack roll with one. Spell save DC = 8 + your proficiency bonus + your Charisma modifier Spell attack modifier = your proficiency bonus + your Charisma modifier Spellcasting Focus You can use a holy symbol (see the Adventuring Gear section) as a spellcasting focus for your paladin spells."
+          },
+          {
+            "name": "Divine Smite",
+            "description": "Starting at 2nd level, when you hit a creature with a melee weapon attack, you can expend one spell slot to deal radiant damage to the target, in addition to the weapon\u2019s damage. The extra damage is 2d8 for a 1st-level spell slot, plus 1d8 for each spell level higher than 1st, to a maximum of 5d8. The damage increases by 1d8 if the target is an undead or a fiend, to a maximum of 6d8."
+          }
+        ],
+        "3": [
+          {
+            "name": "Divine Health",
+            "description": "By 3rd level, the divine magic flowing through you makes you immune to disease."
+          },
+          {
+            "name": "Sacred Oath",
+            "description": "When you reach 3rd level, you swear the oath that binds you as a paladin forever. Up to this time you have been in a preparatory stage, committed to the path but not yet sworn to it. Now you choose the Oath of Devotion detailed at the end of the class description or one from another source. Your choice grants you features at 3rd level and again at 7th, 15th, and 20th level. Those features include oath spells and the Channel Divinity feature. Oath Spells Each oath has a list of associated spells. You gain access to these spells at the levels specified in the oath description. Once you gain access to an oath spell, you always have it prepared. Oath spells don\u2019t count against the number of spells you can prepare each day. If you gain an oath spell that doesn\u2019t appear on the paladin spell list, the spell is nonetheless a paladin spell for you. Channel Divinity Your oath allows you to channel divine energy to fuel magical effects. Each Channel Divinity option provided by your oath explains how to use it. When you use your Channel Divinity, you choose which option to use. You must then finish a short or long rest to use your Channel Divinity again. Some Channel Divinity effects require saving throws. When you use such an effect from this class, the DC equals your paladin spell save DC."
+          },
+          {
+            "name": "Oath Spells",
+            "description": "You gain oath spells at the paladin levels listed in the Oath of Redemption Spells table. See the Sacred Oath class feature for how oath spells work. Oath of Redemption Spells Paladin Level Spells 3rd sanctuary, sleep 5th calm emotions, hold person 9th counterspell, hypnotic pattern 13th Otiluke\u2019s resilient sphere, stoneskin 17th hold monster, wall of force"
+          },
+          {
+            "name": "Channel Divinity",
+            "description": "When you take this oath at 3rd level, you gain the following two Channel Divinity options. Emissary of Peace. You can use your Channel Divinity to augment your presence with divine power. As a bonus action, you grant yourself a +5 bonus to Charisma (Persuasion) checks for the next 10 minutes. Rebuke the Violent. You can use your Channel Divinity to rebuke those who use violence. Immediately after an attacker within 30 feet of you deals damage with an attack against a creature other than you, you can use your reaction to force the attacker to make a Wisdom saving throw. On a failed save, the attacker takes radiant damage equal to the damage it just dealt. On a successful save, it takes half as much damage."
+          }
+        ],
+        "5": [
+          {
+            "name": "Extra Attack",
+            "description": "Beginning at 5th level, you can attack twice, instead of once, whenever you take the Attack action on your turn."
+          }
+        ],
+        "6": [
+          {
+            "name": "Aura of Protection",
+            "description": "Starting at 6th level, whenever you or a friendly creature within 10 feet of you must make a saving throw, the creature gains a bonus to the saving throw equal to your Charisma modifier (with a minimum bonus of +1). You must be conscious to grant this bonus. At 18th level, the range of this aura increases to 30 feet."
+          }
+        ],
+        "7": [
+          {
+            "name": "Aura of the Guardian",
+            "description": "Starting at 7th level, you can shield others from harm at the cost of your own health. When a creature within 10 feet of you takes damage, you can use your reaction to magically take that damage, instead of that creature taking it. This feature doesn\u2019t transfer any other effects that might accompany the damage, and this damage can\u2019t be reduced in any way. At 18th level, the range of this aura increases to 30 feet."
+          }
+        ]
+      }
+    },
+    "feats": [
+      {
+        "name": "Lucky",
+        "description": "You have inexplicable luck that seems to kick in at just the right moment. You have 3 luck points. Whenever you make an attack roll, an ability check, or a saving throw, you can spend one luck point to roll an additional d20. You can choose to spend one of your luck points after you roll the die, but before the outcome is determined. You choose which of the d20s is used for the attack roll, ability check, or saving throw. You can also spend one luck point when an attack roll is made against you. Roll a d20, and then choose whether the attack uses the attacker's roll or yours. If more than one creature spends a luck point to influence the outcome of a roll, the points cancel each other out; no additional dice are rolled. You regain your expended luck points when you finish a long rest.",
+        "activation": null,
+        "creatureRules": null,
+        "isRepeatable": false
+      },
+      {
+        "name": "Fey Touched",
+        "description": "Your exposure to the Feywild\u2019s magic has changed you, granting you the following benefits: Increase your Intelligence, Wisdom, or Charisma score by 1, to a maximum of 20. You learn the misty step spell and one 1st-level spell of your choice. The 1st-level spell must be from the divination or enchantment school of magic. You can cast each of these spells without expending a spell slot. Once you cast either of these spells in this way, you can\u2019t cast that spell in this way again until you finish a long rest. You can also cast these spells using spell slots you have of the appropriate level. The spells\u2019 spellcasting ability is the ability increased by this feat.",
+        "activation": null,
+        "creatureRules": null,
+        "isRepeatable": false
+      }
+    ],
+    "modifiers": {
+      "race": [
+        {
+          "type": "set-base",
+          "subType": "darkvision",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Set Base",
+          "friendlySubtypeName": "Darkvision",
+          "bonusTypes": null,
+          "value": 60
+        },
+        {
+          "type": "advantage",
+          "subType": "saving-throws",
+          "dice": null,
+          "restriction": "Against Poison",
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Advantage",
+          "friendlySubtypeName": "Saving Throws",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "resistance",
+          "subType": "poison",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Resistance",
+          "friendlySubtypeName": "Poison",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "ignore",
+          "subType": "heavy-armor-speed-reduction",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Ignore",
+          "friendlySubtypeName": "Heavy Armor Speed Reduction",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "bonus",
+          "subType": "hit-points-per-level",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Hit Points per Level",
+          "bonusTypes": null,
+          "value": 1
+        },
+        {
+          "type": "proficiency",
+          "subType": "poisoners-kit",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Poisoner's Kit",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "warhammer",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Warhammer",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "smiths-tools",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Smith's Tools",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "herbalism-kit",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Herbalism Kit",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "tinkers-tools",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Tinker's Tools",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "bonus",
+          "subType": "wisdom-score",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Wisdom Score",
+          "bonusTypes": null,
+          "value": 2
+        },
+        {
+          "type": "bonus",
+          "subType": "strength-score",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Strength Score",
+          "bonusTypes": null,
+          "value": 1
+        },
+        {
+          "type": "language",
+          "subType": "common",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Language",
+          "friendlySubtypeName": "Common",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "language",
+          "subType": "dwarvish",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Language",
+          "friendlySubtypeName": "Dwarvish",
+          "bonusTypes": null,
+          "value": null
+        }
+      ],
+      "class": [
+        {
+          "type": "bonus",
+          "subType": "choose-an-ability-score",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Choose an Ability Score",
+          "bonusTypes": null,
+          "value": 1
+        },
+        {
+          "type": "bonus",
+          "subType": "choose-an-ability-score",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Choose an Ability Score",
+          "bonusTypes": null,
+          "value": 1
+        },
+        {
+          "type": "set",
+          "subType": "subclass",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Set",
+          "friendlySubtypeName": "Subclass",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "light-armor",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Light Armor",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "simple-weapons",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Simple Weapons",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "wisdom-saving-throws",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Wisdom Saving Throws",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "charisma-saving-throws",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Charisma Saving Throws",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "investigation",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Investigation",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "history",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "History",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "medium-armor",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Medium Armor",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "shields",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Shields",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "martial-weapons",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Martial Weapons",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "enable-feature",
+          "subType": "enable-hex-weapon",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Enable Feature",
+          "friendlySubtypeName": "Enable Hex Weapon",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "replace-weapon-ability",
+          "subType": "charisma-score",
+          "dice": null,
+          "restriction": null,
+          "statId": 6,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Replace Weapon Ability",
+          "friendlySubtypeName": "Charisma Score",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "immunity",
+          "subType": "disease",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Immunity",
+          "friendlySubtypeName": "Disease",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "set",
+          "subType": "subclass",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Set",
+          "friendlySubtypeName": "Subclass",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "bonus",
+          "subType": "intelligence-score",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Intelligence Score",
+          "bonusTypes": null,
+          "value": 1
+        },
+        {
+          "type": "bonus",
+          "subType": "intelligence-score",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Intelligence Score",
+          "bonusTypes": null,
+          "value": 1
+        },
+        {
+          "type": "set",
+          "subType": "extra-attacks",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Set",
+          "friendlySubtypeName": "Extra Attacks",
+          "bonusTypes": null,
+          "value": 1
+        },
+        {
+          "type": "bonus",
+          "subType": "saving-throws",
+          "dice": null,
+          "restriction": null,
+          "statId": 6,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Saving Throws",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "bonus",
+          "subType": "constitution-score",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Constitution Score",
+          "bonusTypes": null,
+          "value": 1
+        },
+        {
+          "type": "bonus",
+          "subType": "constitution-score",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Constitution Score",
+          "bonusTypes": null,
+          "value": 1
+        },
+        {
+          "type": "proficiency",
+          "subType": "light-armor",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Light Armor",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "medium-armor",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Medium Armor",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "heavy-armor",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Heavy Armor",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "shields",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Shields",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "wisdom-saving-throws",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Wisdom Saving Throws",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "charisma-saving-throws",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Charisma Saving Throws",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "choose-a-paladin-skill",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Choose a Paladin Skill",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "choose-a-paladin-skill",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Choose a Paladin Skill",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "simple-weapons",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Simple Weapons",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "martial-weapons",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Martial Weapons",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "damage",
+          "subType": "one-handed-melee-attacks",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Damage",
+          "friendlySubtypeName": "One-Handed Melee Attacks",
+          "bonusTypes": null,
+          "value": 2
+        },
+        {
+          "type": "eldritch-blast",
+          "subType": "bonus-damage",
+          "dice": null,
+          "restriction": null,
+          "statId": 6,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Eldritch Blast",
+          "friendlySubtypeName": "Bonus Damage",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "deception",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Deception",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "persuasion",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Persuasion",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "enable-feature",
+          "subType": "enable-pact-weapon",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Enable Feature",
+          "friendlySubtypeName": "Enable Pact Weapon",
+          "bonusTypes": null,
+          "value": null
+        }
+      ],
+      "background": [
+        {
+          "type": "proficiency",
+          "subType": "insight",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Insight",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "language",
+          "subType": "celestial",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Language",
+          "friendlySubtypeName": "Celestial",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "language",
+          "subType": "elvish",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Language",
+          "friendlySubtypeName": "Elvish",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "proficiency",
+          "subType": "religion",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Proficiency",
+          "friendlySubtypeName": "Religion",
+          "bonusTypes": null,
+          "value": null
+        }
+      ],
+      "item": [
+        {
+          "type": "set",
+          "subType": "strength-score",
+          "dice": null,
+          "restriction": "if not already higher",
+          "statId": null,
+          "requiresAttunement": true,
+          "duration": null,
+          "friendlyTypeName": "Set",
+          "friendlySubtypeName": "Strength Score",
+          "bonusTypes": null,
+          "value": 19
+        },
+        {
+          "type": "bonus",
+          "subType": "hit-points",
+          "dice": {
+            "diceCount": 4,
+            "diceValue": 4,
+            "diceMultiplier": null,
+            "fixedValue": 4,
+            "diceString": "4d4 + 4"
+          },
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Hit Points",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "damage",
+          "subType": "necrotic",
+          "dice": {
+            "diceCount": 10,
+            "diceValue": 6,
+            "diceMultiplier": null,
+            "fixedValue": null,
+            "diceString": "10d6"
+          },
+          "restriction": "DC 13 Constitution Save for Half Damage",
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Damage",
+          "friendlySubtypeName": "Necrotic",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "bonus",
+          "subType": "armor-class",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Armor Class",
+          "bonusTypes": null,
+          "value": 1
+        },
+        {
+          "type": "resistance",
+          "subType": "acid",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": {
+            "durationInterval": 1,
+            "durationUnit": "Hour"
+          },
+          "friendlyTypeName": "Resistance",
+          "friendlySubtypeName": "Acid",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "bonus",
+          "subType": "warlock-spell-attacks",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": true,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Warlock Spell Attacks",
+          "bonusTypes": null,
+          "value": 2
+        },
+        {
+          "type": "bonus",
+          "subType": "warlock-spell-save-dc",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": true,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Warlock Spell Save DC",
+          "bonusTypes": null,
+          "value": 2
+        },
+        {
+          "type": "bonus",
+          "subType": "magic",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": true,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Magic",
+          "bonusTypes": null,
+          "value": 2
+        },
+        {
+          "type": "bonus",
+          "subType": "magic",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": true,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Magic",
+          "bonusTypes": null,
+          "value": 3
+        },
+        {
+          "type": "bonus",
+          "subType": "initiative",
+          "dice": {
+            "diceCount": 1,
+            "diceValue": 10,
+            "diceMultiplier": null,
+            "fixedValue": null,
+            "diceString": "1d10"
+          },
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": true,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Initiative",
+          "bonusTypes": null,
+          "value": null
+        },
+        {
+          "type": "immunity",
+          "subType": "cold",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": true,
+          "duration": null,
+          "friendlyTypeName": "Immunity",
+          "friendlySubtypeName": "Cold",
+          "bonusTypes": null,
+          "value": null
+        }
+      ],
+      "feat": [
+        {
+          "type": "bonus",
+          "subType": "wisdom-score",
+          "dice": null,
+          "restriction": null,
+          "statId": null,
+          "requiresAttunement": false,
+          "duration": null,
+          "friendlyTypeName": "Bonus",
+          "friendlySubtypeName": "Wisdom Score",
+          "bonusTypes": null,
+          "value": 1
+        }
+      ]
+    }
+  },
+  "inventory": {
+    "total_weight": 171.5,
+    "weight_unit": "lb",
+    "equipped_items": [
+      {
+        "definition": {
+          "name": "Amulet of Proof against Detection and Location",
+          "type": "Wondrous item",
+          "description": "While wearing this amulet, you can\u2019t be targeted by Divination spells or perceived through magical scrying sensors unless you allow it.",
+          "canAttune": true,
+          "attunementDescription": null,
+          "rarity": "Uncommon",
+          "weight": 0,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": true,
+          "tags": [
+            "Deception",
+            "Jewelry"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": true,
+        "equipped": true,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Bag of Beans",
+          "type": "Wondrous item",
+          "description": "Inside this heavy cloth bag are 3d4 dry beans. The bag weighs 1/2 pound plus 1/4 pound for each bean it contains. If you dump the bag's contents out on the ground, they explode in a 10-foot radius, extending from the beans. Each creature in the area, including you, must make a DC 15 Dexterity saving throw, taking 5d4 fire damage on a failed save, or half as much damage on a successful one. The fire ignites flammable objects in the area that aren't being worn or carried. If you remove a bean from the bag, plant it in dirt or sand, and then water it, the bean produces an effect 1 minute later from the ground where it was planted. The GM can choose an effect from the following table, determine it randomly, or create an effect. d100 Effect 01 5d4 toadstools sprout. If a creature eats a toadstool, roll any die. On an odd roll, the eater must succeed on a DC 15 Constitution saving throw or take 5d6 poison damage and become poisoned for 1 hour. On an even roll, the eater gains 5d6 temporary hit points for 1 hour. 02-10 A geyser erupts and spouts water, beer, berry juice, tea, vinegar, wine, or oil (GM's choice) 30 feet into the air for 1d12 rounds. 11-20 A treant sprouts. There's a 50 percent chance that the treant is chaotic evil and attacks. 21-30 An animate, immobile stone statue in your likeness rises. It makes verbal threats against you. If you leave it and others come near, it describes you as the most heinous of villains and directs the newcomers to find and attack you. If you are on the same plane of existence as the statue, it knows where you are. The statue becomes inanimate after 24 hours. 31-40 A campfire with blue flames springs forth and burns for 24 hours (or until it is extinguished). 41-50 1d6 + 6 shriekers sprout 51-60 1d4 + 8 bright pink toads crawl forth. Whenever a toad is touched, it transforms into a Large or smaller monster of the GM's choice. The monster remains for 1 minute, then disappears in a puff of bright pink smoke. 61-70 A hungry bulette burrows up and attacks. 71-80 A fruit tree grows. It has 1d10 + 20 fruit, 1d8 of which act as randomly determined magic potions, while one acts as an ingested poison of the GM's choice. The tree vanishes after 1 hour. Picked fruit remains, retaining any magic for 30 days. 81-90 A nest of 1d4 + 3 eggs springs up. Any creature that eats an egg must make a DC 20 Constitution saving throw. On a successful save, a creature permanently increases its lowest ability score by 1, randomly choosing among equally low scores. On a failed save, the creature takes 10d6 force damage from an internal magical explosion. 91-99 A pyramid with a 60-foot\u2010square base bursts upward. Inside is a sarcophagus containing a mummy lord. The pyramid is treated as the mummy lord's lair, and its sarcophagus contains treasure of the GM's choice. 00 A giant beanstalk sprouts, growing to a height of the GM's choice. The top leads where the GM chooses, such as to a great view, a cloud giant's castle, or a different plane of existence.",
+          "canAttune": false,
+          "attunementDescription": "",
+          "rarity": "Rare",
+          "weight": 0.5,
+          "capacity": "",
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": true,
+          "tags": [
+            "Damage",
+            "Control",
+            "Utility",
+            "Combat"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": true,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Dust of Dryness",
+          "type": "Wondrous item",
+          "description": "This small packet contains 1d6 + 4 pinches of dust. You can use an action to sprinkle a pinch of it over water. The dust turns a cube of water 15 feet on a side into one marble-sized pellet, which floats or rests near where the dust was sprinkled. The pellet's weight is negligible. Someone can use an action to smash the pellet against a hard surface, causing the pellet to shatter and release the water the dust absorbed. Doing so ends that pellet's magic. An elemental composed mostly of water that is exposed to a pinch of the dust must make a DC 13 Constitution saving throw, taking 10d6 necrotic damage on a failed save, or half as much damage on a successful one.",
+          "canAttune": false,
+          "attunementDescription": "",
+          "rarity": "Uncommon",
+          "weight": 0,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": true,
+          "tags": [
+            "Damage",
+            "Control",
+            "Combat",
+            "Consumable"
+          ],
+          "grantedModifiers": [
+            {
+              "type": "damage",
+              "subType": "necrotic",
+              "restriction": "DC 13 Constitution Save for Half Damage",
+              "friendlyTypeName": "Damage",
+              "friendlySubtypeName": "Necrotic",
+              "duration": null,
+              "fixedValue": null,
+              "diceString": "10d6"
+            }
+          ],
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": true,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Eversmoking Bottle",
+          "type": "Wondrous item",
+          "description": "Smoke leaks from the lead-stoppered mouth of this brass bottle, which weighs 1 pound. When you use an action to remove the stopper, a cloud of thick smoke pours out in a 60-foot radius from the bottle. The cloud's area is heavily obscured. Each minute the bottle remains open and within the cloud, the radius increases by 10 feet until it reaches its maximum radius of 120 feet. The cloud persists as long as the bottle is open. Closing the bottle requires you to speak its command word as an action. Once the bottle is closed, the cloud disperses after 10 minutes. A moderate wind (11 to 20 miles per hour) can also disperse the smoke after 1 minute, and a strong wind (21 or more miles per hour) can do so after 1 round.",
+          "canAttune": false,
+          "attunementDescription": "",
+          "rarity": "Uncommon",
+          "weight": 1,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": true,
+          "tags": [
+            "Control",
+            "Utility",
+            "Deception"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": true,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Helm of Telepathy",
+          "type": "Wondrous item",
+          "description": "While wearing this helm, you can use an action to cast the detect thoughts spell (save DC 13) from it. As long as you maintain concentration on the spell, you can use a bonus action to send a telepathic message to a creature you are focused on. It can reply--using a bonus action to do so--while your focus on it continues. While focusing on a creature with detect thoughts, you can use an action to cast the suggestion spell (save DC 13) from the helm on that creature. Once used, the suggestion property can't be used again until the next dawn.",
+          "canAttune": true,
+          "attunementDescription": "",
+          "rarity": "Uncommon",
+          "weight": 0,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": true,
+          "tags": [
+            "Communication",
+            "Detection",
+            "Headwear"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": true,
+        "limitedUse": {
+          "maxUses": 1,
+          "numberUsed": null,
+          "resetType": "Dawn",
+          "resetTypeDescription": "Suggestion"
+        }
+      },
+      {
+        "definition": {
+          "name": "Mantle of Shadow",
+          "type": "Wondrous item",
+          "description": "Mantle of Shadows Wondrous Item, Very Rare (requires attunement by a warlock or a character bound to a Patron) This black and shimmering mantle seems to drink in the light around it, its edges shifting as though alive with shadow. When donned, it binds the wearer to their Patron\u2019s will, granting abilities that blur the line between light and darkness. Features of the Mantle Veil of Obscurity The Mantle cloaks you from detection. You are immune to divination magic from creatures of CR 10 or below unless they are explicitly empowered by the Patron. Creatures attempting to track or find you through magical means must succeed on a DC 18 Intelligence (Arcana) check. Failure alerts the seeker to a faint whisper of your Patron\u2019s presence. Gift of Shadows You gain abilities that reflect your Patron\u2019s power and purpose. These abilities evolve over time at the Patron\u2019s discretion. Invisibility of the Void: You can cast Greater Invisibility at will without expending a spell slot. This can be used twice per long rest. Eclipse of Mortality When you are reduced to 0 hit points but not killed outright, the Mantle pulses with dark energy. You drop to 1 hit point instead. Once this feature is used, it can\u2019t be used again until the Patron deems you worthy (DM discretion, often requiring a quest or act of balance). Balance\u2019s Price Any action taken in defiance of the Patron\u2019s will risks their wrath. The Patron may revoke one or all Mantle features temporarily if the wearer acts against the purpose of balance. This power returns after atonement or the completion of a task set by the Patron. Misuse or neglect also draws the attention of powerful beings of light or darkness (DM's choice). These entities may attempt to influence or attack the wearer. Beacon of Power While cloaked from lesser entities, the Mantle radiates faint divine energy that can attract greater beings. At the DM\u2019s discretion, entities of CR 15 or higher may sense the Mantle\u2019s presence and investigate its source.",
+          "canAttune": false,
+          "attunementDescription": "",
+          "rarity": "Very Rare",
+          "weight": 0,
+          "capacity": "",
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": true,
+          "tags": [],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": true,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Ring of Water Walking",
+          "type": "Ring",
+          "description": "While wearing this ring, you can stand on and move across any liquid surface as if it were solid ground.",
+          "canAttune": false,
+          "attunementDescription": "",
+          "rarity": "Uncommon",
+          "weight": 0,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": true,
+          "tags": [
+            "Movement",
+            "Jewelry"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": true,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Splint, +1",
+          "type": null,
+          "description": "You have a +1 bonus to AC while wearing this armor.",
+          "canAttune": false,
+          "attunementDescription": "",
+          "rarity": "Rare",
+          "weight": 60,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": true,
+          "tags": [
+            "Combat",
+            "Warding"
+          ],
+          "grantedModifiers": [
+            {
+              "type": "bonus",
+              "subType": "armor-class",
+              "restriction": "",
+              "friendlyTypeName": "Bonus",
+              "friendlySubtypeName": "Armor Class",
+              "duration": null,
+              "fixedValue": 1,
+              "diceString": null
+            }
+          ],
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": true,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Rod of the Pact Keeper, +2",
+          "type": "Rod",
+          "description": "While holding this rod, you gain a +2 bonus to spell attack rolls and to the saving throw DCs of your warlock spells. In addition, you can regain 1 warlock spell slot as an action while holding the rod. You can\u2019t use this property again until you finish a long rest.",
+          "canAttune": true,
+          "attunementDescription": "Warlock",
+          "rarity": "Rare",
+          "weight": 0,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": true,
+          "tags": [
+            "Buff"
+          ],
+          "grantedModifiers": [
+            {
+              "type": "bonus",
+              "subType": "warlock-spell-attacks",
+              "restriction": "",
+              "friendlyTypeName": "Bonus",
+              "friendlySubtypeName": "Warlock Spell Attacks",
+              "duration": null,
+              "fixedValue": 2,
+              "diceString": null
+            },
+            {
+              "type": "bonus",
+              "subType": "warlock-spell-save-dc",
+              "restriction": "",
+              "friendlyTypeName": "Bonus",
+              "friendlySubtypeName": "Warlock Spell Save DC",
+              "duration": null,
+              "fixedValue": 2,
+              "diceString": null
+            }
+          ],
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": true,
+        "equipped": true,
+        "limitedUse": {
+          "maxUses": 1,
+          "numberUsed": null,
+          "resetType": "LongRest",
+          "resetTypeDescription": ""
+        }
+      },
+      {
+        "definition": {
+          "name": "Shield",
+          "type": "Shield",
+          "description": "Shields require the Utilize action to Don or Doff. You gain the Armor Class benefit of a Shield only if you have training with it.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 6,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": false,
+          "tags": [
+            "Warding"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": true,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Chain Mail",
+          "type": "Heavy Armor",
+          "description": "Made of interlocking metal rings, chain mail includes a layer of quilted fabric worn underneath the mail to prevent chafing and to cushion the impact of blows. The suit includes gauntlets.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 55,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": false,
+          "tags": [
+            "Warding"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": true,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Eldaryth of Regret (I)",
+          "type": "Longsword",
+          "description": "When [REDACTED]&nbsp;grew in power, he appointed an evil and ruthless lieutenant, [REDACTED], to act as his bodyguard and right hand. This despicable villain served as advisor, warlord, and assassin. His successes earned him [REDACTED] admiration and a reward: a sword with as dark a pedigree as the man who would wield it. For a long time, [REDACTED] faithfully served the [REDACTED], but as [REDACTED] power grew, so did his hubris. He aimed to supplant [REDACTED], so that they could rule the [REDACTED] empire in [REDACTED] stead. Legend says [REDACTED] destruction came at [REDACTED] hand, but [REDACTED] also wrought his rebellious lieutenant\u2019s doom, leaving only [REDACTED] sword behind. The world was made brighter thereby. The Eldaryth of Regret&nbsp;is a magic longsword that grants a +3 bonus to attack and damage rolls made with it. It scores a critical hit on a roll of 19 or 20, and deals an extra 2d10 slashing damage. If the sword isn\u2019t bathed in tears or blood within 1 minute of being drawn from its scabbard, its wielder must make a DC 20 Charisma saving throw. On a successful save, the wielder take 3d6 psychic damage. On a failed save, the wielder is dominated by the sword, as if by the dominate monster spell, and the sword demands that it be bathed in blood or tears. The spell effect ends when the sword\u2019s demand is met. Random Properties. The Eldaryth of Regret&nbsp;has the following random properties: While attuned to the&nbsp;Eldaryth of Regret you are immune to cold damage. While attuned to the&nbsp;Eldaryth of Regret your Charisma score is increased by 2 to a maximum of 24.&nbsp; While attuned to the&nbsp;Eldaryth of Regret you cannot smell. While attuned to the&nbsp;Eldaryth of Regret&nbsp;all magical potions within 10 feet of the user become diluted and non-magical and all magical scrolls within 10 feet of the user become erased. Spirit of Regret. While the sword is on your person, you add a d10 to your initiative at the start of every combat. In addition, when you use an action to attack with the sword, you can transfer some or all of its attack bonus to your Armor Class instead. The adjusted bonuses remain in effect until the start of your next turn. When doing so under the first iteration of the&nbsp;Eldaryth of Regret, the user must make a DC 20 Charisma Saving throw. On a successful save the user is able to convert their choice of attack bonus to their armor class without complication. On a failed save, the sword begins to weep and emit water and compels the user to sheath it until the beginning of their next turn. Spells. While the sword is on your person, you can use an action to cast one of the following spells (save DC 18) from it: call lightning, divine word, or finger of death. Once you use the sword to cast a spell, you can\u2019t cast that spell again from it until the next dawn. &nbsp;",
+          "canAttune": true,
+          "attunementDescription": "Attunement Process: \u201cUndo the Moment\u201d To attune to the Sword of Regret, the character must:  Enter a memory\u2014real or magically induced\u2014of a deep personal mistake or betrayal. Re-experience the moment and attempt to change the outcome. No matter what they choose, they awaken with blood on their hands and the sword bound to them.",
+          "rarity": "Artifact",
+          "weight": 3,
+          "capacity": "",
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": true,
+          "tags": [
+            "Damage",
+            "Buff",
+            "Debuff",
+            "Combat",
+            "Cursed"
+          ],
+          "grantedModifiers": [
+            {
+              "type": "bonus",
+              "subType": "magic",
+              "restriction": "",
+              "friendlyTypeName": "Bonus",
+              "friendlySubtypeName": "Magic",
+              "duration": null,
+              "fixedValue": 3,
+              "diceString": null
+            },
+            {
+              "type": "bonus",
+              "subType": "initiative",
+              "restriction": "",
+              "friendlyTypeName": "Bonus",
+              "friendlySubtypeName": "Initiative",
+              "duration": null,
+              "fixedValue": null,
+              "diceString": "1d10"
+            },
+            {
+              "type": "immunity",
+              "subType": "cold",
+              "restriction": "",
+              "friendlyTypeName": "Immunity",
+              "friendlySubtypeName": "Cold",
+              "duration": null,
+              "fixedValue": null,
+              "diceString": null
+            }
+          ],
+          "damage": {
+            "diceCount": 1,
+            "diceValue": 8,
+            "diceMultiplier": null,
+            "fixedValue": null,
+            "diceString": "1d8"
+          },
+          "damageType": "Slashing",
+          "attackType": 1,
+          "range": 5,
+          "longRange": 5,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": true,
+        "equipped": true,
+        "limitedUse": {
+          "maxUses": 3,
+          "numberUsed": null,
+          "resetType": "Dawn",
+          "resetTypeDescription": "Cast each available spell once per day"
+        }
+      }
+    ],
+    "backpack": [
+      {
+        "definition": {
+          "name": "Bag of Holding",
+          "type": "Wondrous item",
+          "description": "This bag has an interior space considerably larger than its outside dimensions, roughly 2 feet in diameter at the mouth and 4 feet deep. The bag can hold up to 500 pounds, not exceeding a volume of 64 cubic feet. The bag weighs 15 pounds, regardless of its contents. Retrieving an item from the bag requires an action. If the bag is overloaded, pierced, or torn, it ruptures and is destroyed, and its contents are scattered in the Astral Plane. If the bag is turned inside out, its contents spill forth, unharmed, but the bag must be put right before it can be used again. Breathing creatures inside the bag can survive up to a number of minutes equal to 10 divided by the number of creatures (minimum 1 minute), after which time they begin to suffocate. Placing a bag of holding inside an extradimensional space created by a handy haversack, portable hole, or similar item instantly destroys both items and opens a gate to the Astral Plane. The gate originates where the one item was placed inside the other. Any creature within 10 feet of the gate is sucked through it to a random location on the Astral Plane. The gate then closes. The gate is one-way only and can\u2019t be reopened.",
+          "canAttune": false,
+          "attunementDescription": "",
+          "rarity": "Uncommon",
+          "weight": 15,
+          "capacity": "",
+          "capacityWeight": 500,
+          "canEquip": true,
+          "magic": true,
+          "tags": [
+            "Utility",
+            "Container"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": true,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Dust of Sneezing and Choking",
+          "type": "Wondrous item",
+          "description": "Found in a small container, this powder resembles very fine sand. It appears to be dust of disappearance, and an identify spell reveals it to be such. There is enough of it for one use. When you use an action to throw a handful of the dust into the air, you and each creature that needs to breathe within 30 feet of you must succeed on a DC 15 Constitution saving throw or become unable to breathe, while sneezing uncontrollably. A creature affected in this way is incapacitated and suffocating. As long as it is conscious, a creature can repeat the saving throw at the end of each of its turns, ending the effect on it on a success. The lesser restoration spell can also end the effect on a creature.",
+          "canAttune": false,
+          "attunementDescription": "",
+          "rarity": "Uncommon",
+          "weight": 0,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": true,
+          "tags": [
+            "Control",
+            "Debuff"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": {
+          "maxUses": 1,
+          "numberUsed": null,
+          "resetType": "Consumable",
+          "resetTypeDescription": ""
+        }
+      },
+      {
+        "definition": {
+          "name": "Gauntlets of Ogre Power",
+          "type": "Wondrous item",
+          "description": "Your Strength score is 19 while you wear these gauntlets. They have no effect on you if your Strength is 19 or higher without them.",
+          "canAttune": true,
+          "attunementDescription": "",
+          "rarity": "Uncommon",
+          "weight": 0,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": true,
+          "tags": [
+            "Buff",
+            "Handwear"
+          ],
+          "grantedModifiers": [
+            {
+              "type": "set",
+              "subType": "strength-score",
+              "restriction": "if not already higher",
+              "friendlyTypeName": "Set",
+              "friendlySubtypeName": "Strength Score",
+              "duration": null,
+              "fixedValue": 19,
+              "diceString": null
+            }
+          ],
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Potion of Acid Resistance",
+          "type": "Potion",
+          "description": "When you drink this potion, you gain resistance to acid damage for 1 hour.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Uncommon",
+          "weight": 0,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": false,
+          "magic": true,
+          "tags": [
+            "Warding",
+            "Consumable"
+          ],
+          "grantedModifiers": [
+            {
+              "type": "resistance",
+              "subType": "acid",
+              "restriction": "",
+              "friendlyTypeName": "Resistance",
+              "friendlySubtypeName": "Acid",
+              "duration": {
+                "durationInterval": 1,
+                "durationUnit": "Hour"
+              },
+              "fixedValue": null,
+              "diceString": null
+            }
+          ],
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": {
+          "maxUses": 1,
+          "numberUsed": null,
+          "resetType": "Consumable",
+          "resetTypeDescription": ""
+        }
+      },
+      {
+        "definition": {
+          "name": "Potion of Healing (Greater)",
+          "type": "Potion",
+          "description": "You regain 4d4 + 4 Hit Points when you drink this potion. Whatever its potency, the potion\u2019s red liquid glimmers when agitated.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Uncommon",
+          "weight": 0.5,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": false,
+          "magic": true,
+          "tags": [
+            "Healing",
+            "Consumable"
+          ],
+          "grantedModifiers": [
+            {
+              "type": "bonus",
+              "subType": "hit-points",
+              "restriction": "",
+              "friendlyTypeName": "Bonus",
+              "friendlySubtypeName": "Hit Points",
+              "duration": null,
+              "fixedValue": 4,
+              "diceString": "4d4 + 4"
+            }
+          ],
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": {
+          "maxUses": 1,
+          "numberUsed": null,
+          "resetType": "Consumable",
+          "resetTypeDescription": ""
+        }
+      },
+      {
+        "definition": {
+          "name": "Amulet of Ethernea",
+          "type": "Wondrous item",
+          "description": "The Amulet of Ethernea is a stunning piece of jewelry, crafted from an unknown, otherworldly metal that shimmers with a ghostly iridescence. In its center rests a perfect, spherical gem that glows with an ethereal light purple light, seemingly containing a swirling mist within. The amulet hangs from a delicate chain of the same mysterious metal, its links shaped like intertwined souls. History: The Amulet of Ethernea is said to have been crafted by a powerful sorcerer who sought to bridge the gap between the living and the dead. The sorcerer, touched by the goddess of the balance, Ethernea, imbued the amulet with the power to traverse the boundaries of life and death. Legends tell that the amulet holds a fragment of Ethernea\u2019s own essence, granting its wearer a fraction of her divine power. Attunement: To attune to the Amulet of Ethernea, the wearer must spend a short rest meditating on the mysteries of light and dark, during which they may glimpse fleeting visions of the Umbral Plane and hear the whispers of departed souls. Properties: Access to the Umbral Plane: Plane Shift (1/day): Once per day, the wearer can use the amulet to cast the Plane Shift spell on themselves, but only to travel to or from the Umbral Plane, a shadowy realm where the souls of the departed linger for up to 10 minutes. Umbral Communication: While in the Umbral Plane, the wearer can communicate with any soul present, understanding their language and being understood in return, regardless of language barriers. Speak with the Departed: Speak with Dead (3 charges): The amulet holds 3 charges. By expending a charge, the wearer can cast the Speak with Dead spell without needing material components. The amulet regains 1d3 expended charges daily at dawn. Call Upon Ethernea\u2019s Power: Ethereal Guardian: By invoking the power of Ethernea, the wearer can summon an Ethereal Guardian for 10 minutes. The guardian is a spectral, incorporeal entity that appears in an unoccupied space within 30 feet of the wearer. It has the following attributes: AC: 15 HP: 30 (regains 1d10 HP each round while active) Speed: 30 ft. Attributes: STR 16, DEX 12, CON 14, INT 8, WIS 10, CHA 8 Attack: Ethereal Strike. Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 2d8 + 3 force damage. Traits: Incorporeal Movement: The guardian can move through other creatures and objects as if they were difficult terrain. It takes 1d10 force damage if it ends its turn inside an object. Ethereal Sight: The guardian can see 60 feet into the Ethereal Plane when it is on the Material Plane, and vice versa. Summoning Limit: The Ethereal Guardian can be summoned once per long rest. Ethereal Protection: Ghostly Veil (1/day): As an action, the wearer can shroud themselves in a ghostly veil, becoming incorporeal for 1 minute. During this time, they gain resistance to all damage except force damage, and can move through other creatures and objects as if they were difficult terrain. They take 1d10 force damage if they end their turn inside an object. This ability can be used once per day. &nbsp;",
+          "canAttune": true,
+          "attunementDescription": "Can only be attuned by a Cleric or Paladin of Ethernea",
+          "rarity": "Very Rare",
+          "weight": 0,
+          "capacity": "",
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": true,
+          "tags": [],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": {
+          "maxUses": 3,
+          "numberUsed": null,
+          "resetType": "Dawn",
+          "resetTypeDescription": ""
+        }
+      },
+      {
+        "definition": {
+          "name": "Backpack",
+          "type": "Gear",
+          "description": "A backpack is a leather pack carried on the back, typically with straps to secure it. A backpack can hold&nbsp;1 cubic foot/ 30 pounds of gear. You can also strap items, such as a bedroll or a coil of rope, to the outside of a backpack.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 5,
+          "capacity": "",
+          "capacityWeight": 30,
+          "canEquip": true,
+          "magic": false,
+          "tags": [
+            "Container"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": true,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Alms Box",
+          "type": "Gear",
+          "description": "A small box for alms, typically found in a priest's pack.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 0,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": false,
+          "tags": [
+            "Utility"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": true,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Dagger",
+          "type": "Dagger",
+          "description": "Proficiency with a Dagger allows you to add your proficiency bonus to the attack roll for any attack you make with it. This weapon has the following mastery property. To use this property, you must have a feature that lets you use it. Nick. When you make the extra attack of the Light property, you can make it as part of the Attack action instead of as a Bonus Action. You can make this extra attack only once per turn.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 1,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": false,
+          "tags": [
+            "Damage",
+            "Combat"
+          ],
+          "grantedModifiers": null,
+          "damage": {
+            "diceCount": 1,
+            "diceValue": 4,
+            "diceMultiplier": null,
+            "fixedValue": null,
+            "diceString": "1d4"
+          },
+          "damageType": "Piercing",
+          "attackType": 1,
+          "range": 20,
+          "longRange": 60,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Amulet",
+          "type": "Gear",
+          "description": "A holy symbol is a representation of a god or pantheon. A cleric or paladin can use a holy symbol as a spellcasting focus, as described in the Spellcasting section. To use the symbol in this way, the caster must hold it in hand, wear it visibly, or bear it on a shield.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 1,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": false,
+          "magic": false,
+          "tags": [
+            "Utility"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 2,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Vestments",
+          "type": "Gear",
+          "description": "Religious clothing, typically found in a priest's pack.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 0,
+          "capacity": "",
+          "capacityWeight": 0,
+          "canEquip": false,
+          "magic": false,
+          "tags": [
+            "Social",
+            "Utility"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 2,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Clothes, Common",
+          "type": "Gear",
+          "description": "This set of clothes could consist of a loose shirt and baggy breeches, or a loose shirt and skirt or overdress. Cloth wrappings are used for shoes.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 3,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": false,
+          "magic": false,
+          "tags": [
+            "Social",
+            "Outerwear"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Potion of Healing",
+          "type": "Gear",
+          "description": "A character who drinks the magical red fluid in this vial regains 2d4 + 2 hit points. Drinking or administering a potion takes an action.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 0.5,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": false,
+          "magic": false,
+          "tags": [
+            "Healing",
+            "Combat",
+            "Consumable"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 3,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Nightwarden's Hammer",
+          "type": "Warhammer",
+          "description": "You gain a +2 bonus to attack rolls and damage rolls made with this magic weapon. Life Stealing. The weapon has 1d8 + 1 charges. When you attack a creature that has fewer than 100 hit points with this weapon and roll a 20 on the d20 for the attack roll, the creature must succeed on a DC 15 Constitution saving throw or be slain instantly as the sword tears its life force from its body. Constructs and Undead succeed on the save automatically. The weapon loses 1 charge if the creature is slain. When the weapon has no charges remaining, it loses this property. Runic Focus. This magic hammer has 4 charges. As a bonus action, you can expend 1 charge and slam this hammer on the ground, creating a 15-foot-radius circle of glowing runes centered on the point of impact. While you\u2019re inside that area, your hammer glows with matching runes, and you gain a +3 bonus to attack and damage rolls made with this hammer. The rune circle disappears after 1 minute, when you create another rune circle, or when you dismiss the rune circle as a bonus action. This hammer regains 1d4 expended charges daily at dawn. Amesite Imbuement.&nbsp;This hammer has been imbued with a large Obsidian-colored Amesite Gem in the center. As an action, the user can cast Eldritch Blast using their spellcasting modifier as normal. If used inside&nbsp;Runic Focus,&nbsp;the same bonus to attack and damage rolls can be applied.",
+          "canAttune": true,
+          "attunementDescription": "The user must be bound by blood to the smith who originally crafted this weapon.",
+          "rarity": "Artifact",
+          "weight": 5,
+          "capacity": "",
+          "capacityWeight": 0,
+          "canEquip": true,
+          "magic": true,
+          "tags": [
+            "Damage",
+            "Combat"
+          ],
+          "grantedModifiers": [
+            {
+              "type": "bonus",
+              "subType": "magic",
+              "restriction": "",
+              "friendlyTypeName": "Bonus",
+              "friendlySubtypeName": "Magic",
+              "duration": null,
+              "fixedValue": 2,
+              "diceString": null
+            }
+          ],
+          "damage": {
+            "diceCount": 1,
+            "diceValue": 8,
+            "diceMultiplier": null,
+            "fixedValue": null,
+            "diceString": "1d8"
+          },
+          "damageType": "Bludgeoning",
+          "attackType": 1,
+          "range": 5,
+          "longRange": 5,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": {
+          "maxUses": 4,
+          "numberUsed": null,
+          "resetType": "Dawn",
+          "resetTypeDescription": "Has 1d4+1 charges with a maximum of 4. When the weapon has no charges remaining, it loses the Life Stealing property."
+        }
+      },
+      {
+        "definition": {
+          "name": "Blanket",
+          "type": "Gear",
+          "description": "A thick, quilted, blanket made to keep you warm in cold weather.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 3,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": false,
+          "magic": false,
+          "tags": [
+            "Utility"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Candle",
+          "type": "Gear",
+          "description": "For 1 hour, a candle sheds bright light in a 5-foot radius and dim light for an additional 5 feet.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 0,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": false,
+          "magic": false,
+          "tags": [
+            "Utility",
+            "Exploration",
+            "Consumable"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 10,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Rations (1 day)",
+          "type": "Gear",
+          "description": "Rations consist of dry foods suitable for extended travel, including jerky, dried fruit, hardtack, and nuts.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 2,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": false,
+          "magic": false,
+          "tags": [
+            "Social",
+            "Utility",
+            "Consumable"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 2,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Tinderbox",
+          "type": "Gear",
+          "description": "This small container holds flint, fire steel, and tinder (usually dry cloth soaked in light oil) used to kindle a fire. Using it to light a torch -- or anything else with abundant, exposed fuel -- takes an action. Lighting any other fire takes 1 minute. &nbsp;",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 1,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": false,
+          "magic": false,
+          "tags": [
+            "Utility",
+            "Exploration"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Waterskin",
+          "type": "Gear",
+          "description": "A waterskin can hold&nbsp;4 pints of liquid.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 5,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": false,
+          "magic": false,
+          "tags": [
+            "Container"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Block of Incense",
+          "type": "Gear",
+          "description": "A block of incense, typically found in a priest's pack.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 0,
+          "capacity": "",
+          "capacityWeight": 0,
+          "canEquip": false,
+          "magic": false,
+          "tags": [
+            "Social",
+            "Utility"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 2,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Censer",
+          "type": "Gear",
+          "description": "A censer, typically found in a priest's pack.",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 0,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": false,
+          "magic": false,
+          "tags": [
+            "Utility"
+          ],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 1,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      },
+      {
+        "definition": {
+          "name": "Obsidian",
+          "type": "Gear",
+          "description": "An opaque black gemstone worth 10 gold pieces",
+          "canAttune": false,
+          "attunementDescription": null,
+          "rarity": "Common",
+          "weight": 0,
+          "capacity": null,
+          "capacityWeight": 0,
+          "canEquip": false,
+          "magic": false,
+          "tags": [],
+          "grantedModifiers": null,
+          "damage": null,
+          "damageType": null,
+          "attackType": null,
+          "range": null,
+          "longRange": null,
+          "isContainer": false,
+          "isCustomItem": false
+        },
+        "quantity": 17,
+        "isAttuned": false,
+        "equipped": false,
+        "limitedUse": null
+      }
+    ],
+    "valuables": []
+  },
+  "spell_list": {
+    "spellcasting": {
+      "Warlock": {
+        "ability": "charisma",
+        "spell_save_dc": 20,
+        "spell_attack_bonus": 12,
+        "cantrips_known": [
+          "Infestation",
+          "Prestidigitation",
+          "Eldritch Blast"
+        ],
+        "spells_known": [
+          "Hex",
+          "Witch Bolt",
+          "Charm Person",
+          "Hellish Rebuke",
+          "Counterspell",
+          "Intellect Fortress",
+          "Detect Thoughts",
+          "Suggestion",
+          "Plane Shift",
+          "Greater Invisibility",
+          "Call Lightning",
+          "Divine Word",
+          "Finger of Death",
+          "Misty Step",
+          "Bane"
+        ],
+        "spell_slots": {
+          "3": 2
+        }
+      },
+      "Paladin": {
+        "ability": "charisma",
+        "spell_save_dc": 20,
+        "spell_attack_bonus": 12,
+        "cantrips_known": [],
+        "spells_known": [
+          "Zone of Truth",
+          "Shining Smite",
+          "Shield of Faith",
+          "Find Steed",
+          "Prayer of Healing",
+          "Detect Magic",
+          "Detect Poison and Disease",
+          "Locate Object",
+          "Ceremony"
+        ],
+        "spell_slots": {
+          "1": 4,
+          "2": 3
+        }
+      }
+    },
+    "spells": {
+      "Warlock": {
+        "1st_level": [
+          {
+            "name": "Hex",
+            "level": 1,
+            "school": "Enchantment",
+            "casting_time": "1 reaction",
+            "range": "90 feet",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": "the petrified eye of a newt"
+            },
+            "duration": "Concentration, up to 1 hour",
+            "description": "You place a curse on a creature that you can see within range. Until the spell ends, you deal an extra 1d6 Necrotic damage to the target whenever you hit it with an attack roll. Also, choose one ability when you cast the spell. The target has Disadvantage on ability checks made with the chosen ability. If the target drops to 0 Hit Points before this spell ends, you can take a Bonus Action on a later turn to curse a new creature. Using a Higher-Level Spell Slot. Your Concentration can last longer with a spell slot of level 2 (up to 4 hours), 3\u20134 (up to 8 hours), or 5+ (24 hours).",
+            "concentration": true,
+            "ritual": false,
+            "tags": [
+              "Damage",
+              "Debuff"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Witch Bolt",
+            "level": 1,
+            "school": "Evocation",
+            "casting_time": "1 action",
+            "range": "30 feet",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": "a twig from a tree that has been struck by lightning"
+            },
+            "duration": "Concentration, up to 1 minute",
+            "description": "A beam of crackling, blue energy lances out toward a creature within range, forming a sustained arc of lightning between you and the target. Make a ranged spell attack against that creature. On a hit, the target takes 1d12 lightning damage, and on each of your turns for the duration, you can use your action to deal 1d12 lightning damage to the target automatically. The spell ends if you use your action to do anything else. The spell also ends if the target is ever outside the spell\u2019s range or if it has total cover from you. At Higher Levels. When you cast this spell using a spell slot of 2nd level or higher, the initial damage increases by 1d12 for each slot level above 1st.",
+            "concentration": true,
+            "ritual": false,
+            "tags": [
+              "Damage"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Charm Person",
+            "level": 1,
+            "school": "Enchantment",
+            "casting_time": "1 action",
+            "range": "30 feet",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            },
+            "duration": "1 hour",
+            "description": "One Humanoid you can see within range makes a Wisdom saving throw. It does so with Advantage if you or your allies are fighting it. On a failed save, the target has the Charmed condition until the spell ends or until you or your allies damage it. The Charmed creature is Friendly to you. When the spell ends, the target knows it was Charmed by you. Using a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 1.",
+            "concentration": false,
+            "ritual": false,
+            "tags": [
+              "Control",
+              "Social"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Hellish Rebuke",
+            "level": 1,
+            "school": "Evocation",
+            "casting_time": "0 minute",
+            "range": "60 feet",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            },
+            "duration": "instantaneous",
+            "description": "The creature that damaged you is momentarily surrounded by green flames. It makes a Dexterity saving throw, taking 2d10 Fire damage on a failed save or half as much damage on a successful one. Using a Higher-Level Spell Slot. The damage increases by 1d10 for each spell slot level above 1.",
+            "concentration": false,
+            "ritual": false,
+            "tags": [
+              "Damage"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Bane",
+            "level": 1,
+            "school": "Enchantment",
+            "casting_time": "1 action",
+            "range": "30 feet",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": "a drop of blood"
+            },
+            "duration": "Concentration, up to 1 minute",
+            "description": "Up to three creatures of your choice that you can see within range must make Charisma saving throws. Whenever a target that fails this saving throw makes an attack roll or a saving throw before the spell ends, the target must roll a d4 and subtract the number rolled from the attack roll or saving throw. At Higher Levels. When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st.",
+            "concentration": true,
+            "ritual": false,
+            "tags": [
+              "Debuff"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          }
+        ],
+        "cantrip": [
+          {
+            "name": "Infestation",
+            "level": 0,
+            "school": "Conjuration",
+            "casting_time": "1 action",
+            "range": "30 feet",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": "a living flea"
+            },
+            "duration": "instantaneous",
+            "description": "You cause a cloud of mites, fleas, and other parasites to appear momentarily on one creature you can see within range. The target must succeed on a Constitution saving throw, or it takes 1d6 poison damage and moves 5 feet in a random direction if it can move and its speed is at least 5 feet. Roll a d4 for the direction: 1, north; 2, south; 3, east; or 4, west. This movement doesn\u2019t provoke opportunity attacks, and if the direction rolled is blocked, the target doesn\u2019t move. The spell\u2019s damage increases by 1d6 when you reach 5th level (2d6), 11th level (3d6), and 17th level (4d6).",
+            "concentration": false,
+            "ritual": false,
+            "tags": [
+              "Summoning",
+              "Damage",
+              "Control"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Prestidigitation",
+            "level": 0,
+            "school": "Transmutation",
+            "casting_time": "1 action",
+            "range": "10 feet",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            },
+            "duration": "1 hour",
+            "description": "You create a magical effect within range. Choose the effect from the options below. If you cast this spell multiple times, you can have up to three of its non-instantaneous effects active at a time. Sensory Effect. You create an instantaneous, harmless sensory effect, such as a shower of sparks, a puff of wind, faint musical notes, or an odd odor. Fire Play. You instantaneously light or snuff out a candle, a torch, or a small campfire. Clean or Soil. You instantaneously clean or soil an object no larger than 1 cubic foot. Minor Sensation. You chill, warm, or flavor up to 1 cubic foot of nonliving material for 1 hour. Magic Mark. You make a color, a small mark, or a symbol appear on an object or a surface for 1 hour. Minor Creation. You create a nonmagical trinket or an illusory image that can fit in your hand. It lasts until the end of your next turn. A trinket can deal no damage and has no monetary worth.",
+            "concentration": false,
+            "ritual": false,
+            "tags": [
+              "Utility"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Eldritch Blast",
+            "level": 0,
+            "school": "Evocation",
+            "casting_time": "1 action",
+            "range": "120 feet",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            },
+            "duration": "instantaneous",
+            "description": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade. The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+            "concentration": false,
+            "ritual": false,
+            "tags": [
+              "Damage"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          }
+        ],
+        "3rd_level": [
+          {
+            "name": "Counterspell",
+            "level": 3,
+            "school": "Abjuration",
+            "casting_time": "1 minute",
+            "range": "60 feet",
+            "components": {
+              "verbal": false,
+              "somatic": true,
+              "material": false
+            },
+            "duration": "instantaneous",
+            "description": "You attempt to interrupt a creature in the process of casting a spell. The creature makes a Constitution saving throw. On a failed save, the spell dissipates with no effect, and the action, Bonus Action, or Reaction used to cast it is wasted. If that spell was cast with a spell slot, the slot isn\u2019t expended.",
+            "concentration": false,
+            "ritual": false,
+            "tags": [
+              "Negation"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Intellect Fortress",
+            "level": 3,
+            "school": "Abjuration",
+            "casting_time": "1 action",
+            "range": "30 feet",
+            "components": {
+              "verbal": true,
+              "somatic": false,
+              "material": false
+            },
+            "duration": "Concentration, up to 1 hour",
+            "description": "For the duration, you or one willing creature you can see within range has resistance to psychic damage, as well as advantage on Intelligence, Wisdom, and Charisma saving throws. At Higher Levels. When you cast this spell using a spell slot of 4th level or higher, you can target one additional creature for each slot level above 3rd. The creatures must be within 30 feet of each other when you target them.",
+            "concentration": true,
+            "ritual": false,
+            "tags": [
+              "Buff"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Call Lightning",
+            "level": 3,
+            "school": "Conjuration",
+            "casting_time": "1 action",
+            "range": "120 feet (60-foot cylinder)",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            },
+            "duration": "Concentration, up to 10 minutes",
+            "description": "A storm cloud appears in the shape of a cylinder that is 10 feet tall with a 60-foot radius, centered on a point you can see within range directly above you. The spell fails if you can\u2019t see a point in the air where the storm cloud could appear (for example, if you are in a room that can\u2019t accommodate the cloud). When you cast the spell, choose a point you can see under the cloud. A bolt of lightning flashes down from the cloud to that point. Each creature within 5 feet of that point must make a Dexterity saving throw. A creature takes 3d10 lightning damage on a failed save, or half as much damage on a successful one. On each of your turns until the spell ends, you can use your action to call down lightning in this way again, targeting the same point or a different one. If you are outdoors in stormy conditions when you cast this spell, the spell gives you control over the existing storm instead of creating a new one. Under such conditions, the spell\u2019s damage increases by 1d10. At Higher Levels. When you cast this spell using a spell slot of 4th or higher level, the damage increases by 1d10 for each slot level above 3rd.",
+            "concentration": true,
+            "ritual": false,
+            "tags": [
+              "Damage"
+            ],
+            "area": "60-foot cylinder",
+            "rites": null,
+            "charges": null
+          }
+        ],
+        "2nd_level": [
+          {
+            "name": "Detect Thoughts",
+            "level": 2,
+            "school": "Divination",
+            "casting_time": "1 action",
+            "range": "Self",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": "a copper piece"
+            },
+            "duration": "Concentration, up to 1 minute",
+            "description": "For the duration, you can read the thoughts of certain creatures. When you cast the spell and as your action on each turn until the spell ends, you can focus your mind on any one creature that you can see within 30 feet of you. If the creature you choose has an Intelligence of 3 or lower or doesn\u2019t speak any language, the creature is unaffected. You initially learn the surface thoughts of the creature\u2014what is most on its mind in that moment. As an action, you can either shift your attention to another creature\u2019s thoughts or attempt to probe deeper into the same creature\u2019s mind. If you probe deeper, the target must make a Wisdom saving throw. If it fails, you gain insight into its reasoning (if any), its emotional state, and something that looms large in its mind (such as something it worries over, loves, or hates). If it succeeds, the spell ends. Either way, the target knows that you are probing into its mind, and unless you shift your attention to another creature\u2019s thoughts, the creature can use its action on its turn to make an Intelligence check contested by your Intelligence check; if it succeeds, the spell ends. Questions verbally directed at the target creature naturally shape the course of its thoughts, so this spell is particularly effective as part of an interrogation. You can also use this spell to detect the presence of thinking creatures you can\u2019t see. When you cast the spell or as your action during the duration, you can search for thoughts within 30 feet of you. The spell can penetrate barriers, but 2 feet of rock, 2 inches of any metal other than lead, or a thin sheet of lead blocks you. You can\u2019t detect a creature with an Intelligence of 3 or lower or one that doesn\u2019t speak any language. Once you detect the presence of a creature in this way, you can read its thoughts for the rest of the duration as described above, even if you can\u2019t see it, but it must still be within range.",
+            "concentration": true,
+            "ritual": false,
+            "tags": [
+              "Social",
+              "Detection"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Suggestion",
+            "level": 2,
+            "school": "Enchantment",
+            "casting_time": "1 action",
+            "range": "30 feet",
+            "components": {
+              "verbal": true,
+              "somatic": false,
+              "material": "a snake's tongue and either a bit of honeycomb or a drop of sweet oil"
+            },
+            "duration": "Concentration, up to 8 hours",
+            "description": "You suggest a course of activity (limited to a sentence or two) and magically influence a creature you can see within range that can hear and understand you. Creatures that can't be charmed are immune to this effect. The suggestion must be worded in such a manner as to make the course of action sound reasonable. Asking the creature to stab itself, throw itself onto a spear, immolate itself, or do some other obviously harmful act ends the spell. The target must make a Wisdom saving throw. On a failed save, it pursues the course of action you described to the best of its ability. The suggested course of action can continue for the entire duration. If the suggested activity can be completed in a shorter time, the spell ends when the subject finishes what it was asked to do. You can also specify conditions that will trigger a special activity during the duration. For example, you might suggest that a knight give her warhorse to the first beggar she meets. If the condition isn't met before the spell expires, the activity isn't performed. If you or any of your companions damage the target, the spell ends.",
+            "concentration": true,
+            "ritual": false,
+            "tags": [
+              "Control",
+              "Social"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Misty Step",
+            "level": 2,
+            "school": "Conjuration",
+            "casting_time": "1 reaction",
+            "range": "Self",
+            "components": {
+              "verbal": true,
+              "somatic": false,
+              "material": false
+            },
+            "duration": "instantaneous",
+            "description": "Briefly surrounded by silvery mist, you teleport up to 30 feet to an unoccupied space that you can see.",
+            "concentration": false,
+            "ritual": false,
+            "tags": [
+              "Teleportation"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          }
+        ],
+        "7th_level": [
+          {
+            "name": "Plane Shift",
+            "level": 7,
+            "school": "Conjuration",
+            "casting_time": "1 action",
+            "range": "Touch",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": "a forked, metal rod worth at least 250 gp, attuned to a particular plane of existence"
+            },
+            "duration": "instantaneous",
+            "description": "You and up to eight willing creatures who link hands in a circle are transported to a different plane of existence. You can specify a target destination in general terms, such as the City of Brass on the Elemental Plane of Fire or the palace of Dispater on the second level of the Nine Hells, and you appear in or near that destination. If you are trying to reach the City of Brass, for example, you might arrive in its Street of Steel, before its Gate of Ashes, or looking at the city from across the Sea of Fire, at the GM's discretion. Alternatively, if you know the sigil sequence of a teleportation circle on another plane of existence, this spell can take you to that circle. If the teleportation circle is too small to hold all the creatures you transported, they appear in the closest unoccupied spaces next to the circle. You can use this spell to banish an unwilling creature to another plane. Choose a creature within your reach and make a melee spell attack against it. On a hit, the creature must make a Charisma saving throw. If the creature fails this save, it is transported to a random location on the plane of existence you specify. A creature so transported must find its own way back to your current plane of existence.",
+            "concentration": false,
+            "ritual": false,
+            "tags": [
+              "Teleportation",
+              "Banishment"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Divine Word",
+            "level": 7,
+            "school": "Evocation",
+            "casting_time": "1 reaction",
+            "range": "30 feet",
+            "components": {
+              "verbal": true,
+              "somatic": false,
+              "material": false
+            },
+            "duration": "instantaneous",
+            "description": "You utter a divine word, imbued with the power that shaped the world at the dawn of creation. Choose any number of creatures you can see within range. Each creature that can hear you must make a Charisma saving throw. On a failed save, a creature suffers an effect based on its current hit points: 50 hit points or fewer: deafened for 1 minute 40 hit points or fewer: deafened and blinded for 10 minutes 30 hit points or fewer: blinded, deafened, and stunned for 1 hour 20 hit points or fewer: killed instantly Regardless of its current hit points, a celestial, an elemental, a fey, or a fiend that fails its save is forced back to its plane of origin (if it isn't there already) and can't return to your current plane for 24 hours by any means short of a wish spell.",
+            "concentration": false,
+            "ritual": false,
+            "tags": [
+              "Control",
+              "Debuff",
+              "Banishment"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Finger of Death",
+            "level": 7,
+            "school": "Necromancy",
+            "casting_time": "1 action",
+            "range": "60 feet",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            },
+            "duration": "instantaneous",
+            "description": "You send negative energy coursing through a creature that you can see within range, causing it searing pain. The target must make a Constitution saving throw. It takes 7d8 + 30 necrotic damage on a failed save, or half as much damage on a successful one. A humanoid killed by this spell rises at the start of your next turn as a zombie that is permanently under your command, following your verbal orders to the best of its ability.",
+            "concentration": false,
+            "ritual": false,
+            "tags": [
+              "Creation",
+              "Damage",
+              "Control"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          }
+        ],
+        "4th_level": [
+          {
+            "name": "Greater Invisibility",
+            "level": 4,
+            "school": "Illusion",
+            "casting_time": "1 action",
+            "range": "Touch",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            },
+            "duration": "Concentration, up to 1 minute",
+            "description": "A creature you touch has the Invisible condition until the spell ends.",
+            "concentration": true,
+            "ritual": false,
+            "tags": [
+              "Buff"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          }
+        ]
+      },
+      "Paladin": {
+        "2nd_level": [
+          {
+            "name": "Zone of Truth",
+            "level": 2,
+            "school": "Enchantment",
+            "casting_time": "1 action",
+            "range": "60 feet (15-foot sphere)",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            },
+            "duration": "10 minutes",
+            "description": "You create a magical zone that guards against deception in a 15-foot-radius Sphere centered on a point within range. Until the spell ends, a creature that enters the spell\u2019s area for the first time on a turn or starts its turn there makes a Charisma saving throw. On a failed save, a creature can\u2019t speak a deliberate lie while in the radius. You know whether a creature succeeds or fails on this save. An affected creature is aware of the spell and can avoid answering questions to which it would normally respond with a lie. Such a creature can be evasive yet must be truthful.",
+            "concentration": false,
+            "ritual": false,
+            "tags": [
+              "Control"
+            ],
+            "area": "15-foot sphere",
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Shining Smite",
+            "level": 2,
+            "school": "Transmutation",
+            "casting_time": "1 reaction",
+            "range": "Self",
+            "components": {
+              "verbal": true,
+              "somatic": false,
+              "material": false
+            },
+            "duration": "Concentration, up to 1 minute",
+            "description": "The target hit by the strike takes an extra 2d6 Radiant damage from the attack. Until the spell ends, the target sheds Bright Light in a 5-foot radius, attack rolls against it have Advantage, and it can\u2019t benefit from the Invisible condition. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 2.",
+            "concentration": true,
+            "ritual": false,
+            "tags": [],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Find Steed",
+            "level": 2,
+            "school": "Conjuration",
+            "casting_time": "1 action",
+            "range": "30 feet",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            },
+            "duration": "instantaneous",
+            "description": "You summon an otherworldly being that appears as a loyal steed in an unoccupied space of your choice within range. This creature uses the Otherworldly Steed stat block. If you already have a steed from this spell, the steed is replaced by the new one. The steed resembles a Large, rideable animal of your choice, such as a horse, a camel, a dire wolf, or an elk. Whenever you cast the spell, choose the steed\u2019s creature type\u2014Celestial, Fey, or Fiend\u2014which determines certain traits in the stat block. Combat. The steed is an ally to you and your allies. In combat, it shares your Initiative count, and it functions as a controlled mount while you ride it (as defined in the rules on mounted combat). If you have the Incapacitated condition, the steed takes its turn immediately after yours and acts independently, focusing on protecting you. Disappearance of the Steed. The steed disappears if it drops to 0 Hit Points or if you die. When it disappears, it leaves behind anything it was wearing or carrying. If you cast this spell again, you decide whether you summon the steed that disappeared or a different one. Using a Higher-Level Spell Slot. Use the spell slot\u2019s level for the spell\u2019s level in the stat block. Otherworldly Steed Large Celestial, Fey, or Fiend (Your Choice), Neutral AC 10 + 1 per spell level HP 5 + 10 per spell level (the steed has a number of Hit Dice [d10s] equal to the spell\u2019s level) Speed 60 ft., Fly 60 ft. (requires level 4+ spell) Mod Save STR 18 +4 +4 DEX 12 +1 +1 CON 14 +2 +2 Mod Save INT 6 \u22122 \u22122 WIS 12 +1 +1 CHA 8 \u22121 \u22121 Senses Passive Perception 11 Languages Telepathy 1 mile (works only with you) CR None (XP 0; PB equals your Proficiency Bonus) Traits Life Bond. When you regain Hit Points from a level 1+ spell, the steed regains the same number of Hit Points if you\u2019re within 5 feet of it. Actions Otherworldly Slam. Melee Attack Roll: Bonus equals your spell attack modifier, reach 5 ft. Hit: 1d8 plus the spell\u2019s level of Radiant (Celestial), Psychic (Fey), or Necrotic (Fiend) damage. Bonus Actions Fell Glare (Fiend Only; Recharges after a Long Rest). Wisdom Saving Throw: DC equals your spell save DC, one creature within 60 feet the steed can see. Failure: The target has the Frightened condition until the end of your next turn. Fey Step (Fey Only; Recharges after a Long Rest). The steed teleports, along with its rider, to an unoccupied space of your choice up to 60 feet away from itself. Healing Touch (Celestial Only; Recharges after a Long Rest). One creature within 5 feet of the steed regains a number of Hit Points equal to 2d8 plus the spell\u2019s level.",
+            "concentration": false,
+            "ritual": false,
+            "tags": [
+              "Summoning"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Prayer of Healing",
+            "level": 2,
+            "school": "Abjuration",
+            "casting_time": "10 hours",
+            "range": "30 feet",
+            "components": {
+              "verbal": true,
+              "somatic": false,
+              "material": false
+            },
+            "duration": "instantaneous",
+            "description": "Up to five creatures of your choice who remain within range for the spell\u2019s entire casting gain the benefits of a Short Rest and also regain 2d8 Hit Points. A creature can\u2019t be affected by this spell again until that creature finishes a Long Rest. Using a Higher-Level Spell Slot. The healing increases by 1d8 for each spell slot level above 2.",
+            "concentration": false,
+            "ritual": false,
+            "tags": [
+              "Healing"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Locate Object",
+            "level": 2,
+            "school": "Divination",
+            "casting_time": "1 action",
+            "range": "Self",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": "a forked twig"
+            },
+            "duration": "Concentration, up to 10 minutes",
+            "description": "Describe or name an object that is familiar to you. You sense the direction to the object\u2019s location if that object is within 1,000 feet of you. If the object is in motion, you know the direction of its movement. The spell can locate a specific object known to you if you have seen it up close\u2014within 30 feet\u2014at least once. Alternatively, the spell can locate the nearest object of a particular kind, such as a certain kind of apparel, jewelry, furniture, tool, or weapon. This spell can\u2019t locate an object if any thickness of lead blocks a direct path between you and the object.",
+            "concentration": true,
+            "ritual": false,
+            "tags": [
+              "Detection"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          }
+        ],
+        "1st_level": [
+          {
+            "name": "Shield of Faith",
+            "level": 1,
+            "school": "Abjuration",
+            "casting_time": "1 reaction",
+            "range": "60 feet",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": "a prayer scroll"
+            },
+            "duration": "Concentration, up to 10 minutes",
+            "description": "A shimmering field surrounds a creature of your choice within range, granting it a +2 bonus to AC for the duration.",
+            "concentration": true,
+            "ritual": false,
+            "tags": [
+              "Buff",
+              "Warding"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Detect Magic",
+            "level": 1,
+            "school": "Divination",
+            "casting_time": "1 action",
+            "range": "Self (30-foot sphere)",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": false
+            },
+            "duration": "Concentration, up to 10 minutes",
+            "description": "For the duration, you sense the presence of magical effects within 30 feet of yourself. If you sense such effects, you can take the Magic action to see a faint aura around any visible creature or object in the area that bears the magic, and if an effect was created by a spell, you learn the spell\u2019s school of magic. The spell is blocked by 1 foot of stone, dirt, or wood; 1 inch of metal; or a thin sheet of lead.",
+            "concentration": true,
+            "ritual": true,
+            "tags": [
+              "Detection"
+            ],
+            "area": "30-foot sphere",
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Detect Poison and Disease",
+            "level": 1,
+            "school": "Divination",
+            "casting_time": "1 action",
+            "range": "Self (30-foot sphere)",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": "a yew leaf"
+            },
+            "duration": "Concentration, up to 10 minutes",
+            "description": "For the duration, you sense the location of poisons, poisonous or venomous creatures, and magical contagions within 30 feet of yourself. You sense the kind of poison, creature, or contagion in each case. The spell is blocked by 1 foot of stone, dirt, or wood; 1 inch of metal; or a thin sheet of lead.",
+            "concentration": true,
+            "ritual": true,
+            "tags": [
+              "Detection"
+            ],
+            "area": "30-foot sphere",
+            "rites": null,
+            "charges": null
+          },
+          {
+            "name": "Ceremony",
+            "level": 1,
+            "school": "Abjuration",
+            "casting_time": "8 hours",
+            "range": "Touch",
+            "components": {
+              "verbal": true,
+              "somatic": true,
+              "material": "25 gp worth of powdered silver, which the spell consumes"
+            },
+            "duration": "instantaneous",
+            "description": "You perform a special religious ceremony that is infused with magic. When you cast the spell, choose one of the following rites, the target of which must be within 10 feet of you throughout the casting. Atonement. You touch one willing creature whose alignment has changed, and you make a DC 20 Wisdom (Insight) check. On a successful check, you restore the target to its original alignment. Bless Water. You touch one vial of water and cause it to become holy water. Coming of Age. You touch one humanoid who is a young adult. For the next 24 hours, whenever the target makes an ability check, it can roll a d4 and add the number rolled to the ability check. A creature can benefit from this rite only once. Dedication. You touch one humanoid who wishes to be dedicated to your god\u2019s service. For the next 24 hours, whenever the target makes a saving throw, it can roll a d4 and add the number rolled to the save. A creature can benefit from this rite only once. Funeral Rite. You touch one corpse, and for the next 7 days, the target can\u2019t become undead by any means short of a wish spell. Wedding. You touch adult humanoids willing to be bonded together in marriage. For the next 7 days, each target gains a +2 bonus to AC while they are within 30 feet of each other. A creature can benefit from this rite again only if widowed.",
+            "concentration": false,
+            "ritual": true,
+            "tags": [
+              "Buff",
+              "Utility"
+            ],
+            "area": null,
+            "rites": null,
+            "charges": null
+          }
+        ]
+      }
+    }
+  },
+  "objectives_and_contracts": {
+    "active_contracts": [],
+    "current_objectives": [],
+    "completed_objectives": [],
+    "contract_templates": {},
+    "metadata": {}
+  },
+  "notes": {},
+  "created_date": "2026-01-13T21:55:16.453032",
+  "last_updated": "2026-01-13T21:55:16.453047"
+}

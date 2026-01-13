@@ -7,9 +7,8 @@ Supports both database (primary) and pickle file (fallback) storage.
 
 import logging
 import json
-import pickle
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any
 from datetime import datetime
 
 from google.cloud.firestore_v1 import AsyncClient
@@ -21,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class CharacterManager:
-    """Manager for saving and loading Character objects from database or files."""
+    """Manager for saving and loading Character objects from database or JSON files."""
     
     def __init__(
         self,
@@ -32,7 +31,7 @@ class CharacterManager:
         Create a CharacterManager that persists Character objects to disk and optionally to a database.
         
         Parameters:
-            save_directory (str): Filesystem path where pickle files will be stored; the directory is created if it does not exist.
+            save_directory (str): Filesystem path where JSON files will be stored; the directory is created if it does not exist.
             db_session (Optional[Any]): Optional database session; if provided a CharacterRepository is instantiated for database operations.
         """
         self.save_directory = Path(save_directory)
@@ -44,6 +43,33 @@ class CharacterManager:
         if db_session:
             from api.database.repositories.character_repo import CharacterRepository
             self._repository = CharacterRepository(db_session)
+
+    @staticmethod
+    def _convert_datetimes(obj: Any) -> Any:
+        """Recursively convert datetime ISO strings to datetime objects."""
+        if isinstance(obj, dict):
+            return {k: CharacterManager._convert_datetimes(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [CharacterManager._convert_datetimes(item) for item in obj]
+        elif isinstance(obj, str):
+            # Try to parse ISO datetime strings
+            if len(obj) >= 19 and 'T' in obj:
+                try:
+                    return datetime.fromisoformat(obj.replace('Z', '+00:00'))
+                except ValueError:
+                    return obj
+            return obj
+        elif isinstance(obj, datetime):
+            # Already a datetime, keep as-is
+            return obj
+        return obj
+
+    @staticmethod
+    def _serialize_datetime(obj: Any) -> Any:
+        """JSON default handler for datetime objects."""
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        raise TypeError(f"Type {type(obj)} not serializable")
     
     async def load_character_from_db(self, name: str) -> Optional[Character]:
         """
@@ -63,27 +89,7 @@ class CharacterManager:
             return None
         
         data = db_character.data
-        
-        # Helper to recursively convert datetime ISO strings to datetime objects
-        def convert_datetimes(obj):
-            if isinstance(obj, dict):
-                return {k: convert_datetimes(v) for k, v in obj.items()}
-            elif isinstance(obj, list):
-                return [convert_datetimes(item) for item in obj]
-            elif isinstance(obj, str):
-                # Try to parse ISO datetime strings
-                if len(obj) >= 19 and 'T' in obj:
-                    try:
-                        return datetime.fromisoformat(obj.replace('Z', '+00:00'))
-                    except ValueError:
-                        return obj
-                return obj
-            elif isinstance(obj, datetime):
-                # Already a datetime, keep as-is
-                return obj
-            return obj
-        
-        data = convert_datetimes(data)
+        data = self._convert_datetimes(data)
         
         # Character is a Pydantic model - use model_validate
         try:
@@ -198,7 +204,7 @@ class CharacterManager:
     
     async def load_character_async(self, name: str) -> Character:
         """
-        Load a Character object from database (preferred) or pickle file (fallback).
+        Load a Character object from database (preferred) or JSON file (fallback).
         
         Args:
             name: The character name to load
@@ -215,12 +221,12 @@ class CharacterManager:
             if character:
                 return character
         
-        # Fallback to pickle file
+        # Fallback to JSON file
         return self.load_character(name)
     
     def save_character(self, character: Character, filename: Optional[str] = None) -> str:
         """
-        Save a Character object to a pickle file.
+        Save a Character object to a JSON file.
         
         Args:
             character: The Character object to save
@@ -232,24 +238,33 @@ class CharacterManager:
         if filename is None:
             # Use character name as filename, sanitized for filesystem
             safe_name = "".join(c for c in character.character_base.name if c.isalnum() or c in (' ', '-', '_')).rstrip()
-            filename = f"{safe_name}.pkl"
+            filename = f"{safe_name}.json"
         
-        if not filename.endswith('.pkl'):
-            filename += '.pkl'
+        # Handle legacy .pkl extension in filename argument
+        if filename.endswith('.pkl'):
+            filename = filename[:-4] + '.json'
+
+        if not filename.endswith('.json'):
+            filename += '.json'
             
         filepath = self.save_directory / filename
         
         # Update the last_updated timestamp
         character.last_updated = datetime.now()
         
-        with open(filepath, 'wb') as f:
-            pickle.dump(character, f)
+        with open(filepath, 'w') as f:
+            json.dump(
+                character.model_dump(),
+                f,
+                indent=2,
+                default=self._serialize_datetime
+            )
             
         return str(filepath)
     
     def load_character(self, filename: str) -> Character:
         """
-        Load a Character object from a pickle file.
+        Load a Character object from a JSON file.
         
         Args:
             filename: The filename to load from
@@ -260,29 +275,37 @@ class CharacterManager:
         Raises:
             FileNotFoundError: If the file doesn't exist
         """
-        if not filename.endswith('.pkl'):
-            filename += '.pkl'
+        # Handle legacy .pkl extension in filename argument
+        if filename.endswith('.pkl'):
+            filename = filename[:-4] + '.json'
+
+        if not filename.endswith('.json'):
+            filename += '.json'
             
         filepath = self.save_directory / filename
         
         if not filepath.exists():
             raise FileNotFoundError(f"Character file not found: {filepath}")
         
-        with open(filepath, 'rb') as f:
-            character = pickle.load(f)
-            
-        return character
+        with open(filepath, 'r') as f:
+            data = json.load(f)
+
+        # Convert datetimes
+        data = self._convert_datetimes(data)
+
+        # Validate and return
+        return Character.model_validate(data)
     
     def list_saved_characters(self) -> list[str]:
         """
         List all saved character files.
         
         Returns:
-            List of character filenames (without .pkl extension)
+            List of character filenames (without .json extension)
         """
         character_files = []
-        for pkl_file in self.save_directory.glob("*.pkl"):
-            character_files.append(pkl_file.stem)
+        for json_file in self.save_directory.glob("*.json"):
+            character_files.append(json_file.stem)
         
         return sorted(character_files)
     
@@ -296,8 +319,12 @@ class CharacterManager:
         Returns:
             True if deleted successfully, False if file didn't exist
         """
-        if not filename.endswith('.pkl'):
-            filename += '.pkl'
+        # Handle legacy .pkl extension in filename argument
+        if filename.endswith('.pkl'):
+            filename = filename[:-4] + '.json'
+
+        if not filename.endswith('.json'):
+            filename += '.json'
             
         filepath = self.save_directory / filename
         
