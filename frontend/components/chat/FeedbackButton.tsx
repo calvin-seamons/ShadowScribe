@@ -56,7 +56,7 @@ export default function FeedbackButton({ feedbackId, predictedTools, onOpenModal
 
   if (status === 'correct') {
     return (
-      <span className="text-xs text-green-500 flex items-center gap-1">
+      <span role="status" aria-live="polite" className="text-xs text-green-500 flex items-center gap-1">
         <Check className="w-3 h-3" />
         Thanks!
       </span>
@@ -65,7 +65,7 @@ export default function FeedbackButton({ feedbackId, predictedTools, onOpenModal
 
   if (status === 'submitted') {
     return (
-      <span className="text-xs text-blue-500">Feedback submitted</span>
+      <span role="status" aria-live="polite" className="text-xs text-blue-500">Feedback submitted</span>
     )
   }
 

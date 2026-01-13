@@ -59,6 +59,7 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
             disabled={isDisabled}
             className="flex-1 bg-transparent px-3 py-2 text-[15px] resize-none focus:outline-none disabled:opacity-50 placeholder:text-muted-foreground/60 min-h-[44px] max-h-[150px]"
             rows={1}
+            aria-label="Message Input"
           />
 
           {/* Send button */}
@@ -79,18 +80,20 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
         {/* Helper text */}
         <div className="flex items-center justify-between mt-2 px-2 text-xs text-muted-foreground/60">
           <span>Press Enter to send, Shift+Enter for new line</span>
-          {!isBackendReady && !isStreaming && (
-            <span className="flex items-center gap-1.5 text-amber-500">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-              Backend initializing...
-            </span>
-          )}
-          {isStreaming && (
-            <span className="flex items-center gap-1.5 text-primary">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              Generating response...
-            </span>
-          )}
+          <div role="status" aria-live="polite" className="flex justify-end">
+            {!isBackendReady && !isStreaming && (
+              <span className="flex items-center gap-1.5 text-amber-500">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                Backend initializing...
+              </span>
+            )}
+            {isStreaming && (
+              <span className="flex items-center gap-1.5 text-primary">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                Generating response...
+              </span>
+            )}
+          </div>
         </div>
       </form>
     </div>
