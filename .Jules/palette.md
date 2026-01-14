@@ -1,7 +1,3 @@
-## 2024-05-23 - [Inaccessible Feedback Controls]
-**Learning:** Icon-only buttons without accessible labels exclude screen reader users from providing feedback on AI responses.
-**Action:** Always pair `lucide-react` icons with `aria-label` for interactive elements, not just `title`.
-
-## 2024-05-23 - [Scope Containment]
-**Learning:** Avoid "fixing" lint configs or dependencies in a UX PR. It bloats the diff and distracts from the actual improvement.
-**Action:** Stick strictly to the component files unless explicitly asked to upgrade tooling.
+## 2024-05-24 - Accessibility Patterns in Chat Interface
+**Learning:** Chat inputs with dynamic status updates (like "Connecting..." or "Generating...") require specific ARIA patterns to be accessible. A `textarea` needs `aria-describedby` pointing to the helper text, and the status updates themselves must be inside a container with `role="status"` and `aria-live="polite"` to be announced by screen readers without stealing focus.
+**Action:** When implementing chat interfaces or any form with real-time status feedback, always wrap the status text in a live region and explicitly associate helper text with the input field.

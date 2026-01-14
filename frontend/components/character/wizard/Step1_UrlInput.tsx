@@ -62,7 +62,7 @@ export function Step1_UrlInput() {
             Import from D&D Beyond
           </h2>
           <p className="text-muted-foreground">
-            Enter your character's URL to begin the import process
+            Enter your character&apos;s URL to begin the import process
           </p>
         </div>
 
@@ -128,11 +128,11 @@ export function Step1_UrlInput() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-                  <span>Copy the URL from your browser's address bar</span>
+                  <span>Copy the URL from your browser&apos;s address bar</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
-                  <span>Paste it above and click "Fetch Character"</span>
+                  <span>Paste it above and click &quot;Fetch Character&quot;</span>
                 </li>
               </ol>
             </div>

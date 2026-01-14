@@ -123,7 +123,7 @@ export default function FeedbackModal({ onClose, onSubmit }: FeedbackModalProps)
 
           {/* Model's Prediction */}
           <div className="mb-4">
-            <label className="text-sm font-medium text-muted-foreground">Model's Routing</label>
+            <label className="text-sm font-medium text-muted-foreground">Model&apos;s Routing</label>
             <div className="mt-1 space-y-2">
               {selectedRecord.predicted_tools.map((tool: ToolPrediction, index: number) => (
                 <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-lg">
