@@ -339,7 +339,7 @@ export function Step8_Review() {
             </div>
           </div>
           {backstory?.title && (
-            <p className="mt-3 text-sm text-muted-foreground italic">"{backstory.title}"</p>
+            <p className="mt-3 text-sm text-muted-foreground italic">&quot;{backstory.title}&quot;</p>
           )}
         </div>
       </div>

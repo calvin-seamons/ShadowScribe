@@ -165,7 +165,7 @@ function WelcomeScreen({ onSelectCharacter }: WelcomeScreenProps) {
         </div>
 
         <p className="text-lg text-foreground/80 mb-10 leading-relaxed max-w-lg mx-auto">
-          Consult the ancient tomes of your character's knowledge. Ask about abilities,
+          Consult the ancient tomes of your character&apos;s knowledge. Ask about abilities,
           spells, backstory, and the rules that govern your adventures.
         </p>
 
@@ -310,7 +310,7 @@ function CharacterSelectView({ onSelect, onBack }: CharacterSelectViewProps) {
               </div>
               <p className="text-foreground font-medium mb-2">No Characters Found</p>
               <p className="text-sm text-muted-foreground mb-6">
-                You haven't created any characters yet. Import one from D&D Beyond to get started.
+                You haven&apos;t created any characters yet. Import one from D&D Beyond to get started.
               </p>
               <Link href="/characters/create" className="btn-primary inline-flex items-center gap-2">
                 <Plus className="w-4 h-4" />
@@ -350,7 +350,7 @@ function CharacterSelectView({ onSelect, onBack }: CharacterSelectViewProps) {
         {characters.length > 0 && (
           <div className="text-center mt-6">
             <p className="text-sm text-muted-foreground mb-3">
-              Don't see your character?
+              Don&apos;t see your character?
             </p>
             <Link
               href="/characters/create"
