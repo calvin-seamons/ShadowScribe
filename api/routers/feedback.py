@@ -3,8 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from google.cloud.firestore_v1 import AsyncClient
 import uuid
 
+from api.auth import get_current_user
 from api.database.firestore_client import get_db
-from api.database.firestore_models import QueryLogDocument
+from api.database.firestore_models import QueryLogDocument, UserDocument
 from api.database.repositories.feedback_repo import QueryLogRepository
 from api.schemas.feedback import (
     QueryLogRecord, QueryLogResponse, FeedbackSubmission,
@@ -17,7 +18,9 @@ router = APIRouter(prefix="/query-logs", tags=["query-logs"])
 
 
 @router.get("/tools", response_model=ToolIntentionOptions)
-async def get_tool_intentions():
+async def get_tool_intentions(
+    current_user: UserDocument = Depends(get_current_user)
+):
     """Get available tools and their valid intentions for the feedback UI."""
     return ToolIntentionOptions(tools=TOOL_INTENTIONS)
 
@@ -25,7 +28,8 @@ async def get_tool_intentions():
 @router.post("/record", response_model=QueryLogResponse)
 async def create_query_log(
     record: QueryLogRecord,
-    db: AsyncClient = Depends(get_db)
+    db: AsyncClient = Depends(get_db),
+    current_user: UserDocument = Depends(get_current_user)
 ):
     """
     Record a query log for later review.
@@ -65,7 +69,8 @@ async def create_query_log(
 @router.get("/pending", response_model=list[QueryLogResponse])
 async def get_pending_logs(
     limit: int = 50,
-    db: AsyncClient = Depends(get_db)
+    db: AsyncClient = Depends(get_db),
+    current_user: UserDocument = Depends(get_current_user)
 ):
     """Get query logs pending user review."""
     repo = QueryLogRepository(db)
@@ -76,7 +81,8 @@ async def get_pending_logs(
 @router.get("/recent", response_model=list[QueryLogResponse])
 async def get_recent_logs(
     limit: int = 100,
-    db: AsyncClient = Depends(get_db)
+    db: AsyncClient = Depends(get_db),
+    current_user: UserDocument = Depends(get_current_user)
 ):
     """Get most recent query logs."""
     repo = QueryLogRepository(db)
@@ -85,7 +91,10 @@ async def get_recent_logs(
 
 
 @router.get("/stats", response_model=QueryLogStats)
-async def get_query_log_stats(db: AsyncClient = Depends(get_db)):
+async def get_query_log_stats(
+    db: AsyncClient = Depends(get_db),
+    current_user: UserDocument = Depends(get_current_user)
+):
     """Get statistics about collected query logs."""
     repo = QueryLogRepository(db)
     stats = await repo.get_stats()
@@ -95,7 +104,8 @@ async def get_query_log_stats(db: AsyncClient = Depends(get_db)):
 @router.get("/{log_id}", response_model=QueryLogResponse)
 async def get_query_log(
     log_id: str,
-    db: AsyncClient = Depends(get_db)
+    db: AsyncClient = Depends(get_db),
+    current_user: UserDocument = Depends(get_current_user)
 ):
     """Get a specific query log by ID."""
     repo = QueryLogRepository(db)
@@ -111,7 +121,8 @@ async def get_query_log(
 async def submit_feedback(
     log_id: str,
     submission: FeedbackSubmission,
-    db: AsyncClient = Depends(get_db)
+    db: AsyncClient = Depends(get_db),
+    current_user: UserDocument = Depends(get_current_user)
 ):
     """
     Submit user feedback on a query log's routing decision.
@@ -158,7 +169,8 @@ async def submit_feedback(
 @router.post("/export", response_model=TrainingExportResponse)
 async def export_training_data(
     request: TrainingExportRequest,
-    db: AsyncClient = Depends(get_db)
+    db: AsyncClient = Depends(get_db),
+    current_user: UserDocument = Depends(get_current_user)
 ):
     """
     Export query log data in training format for fine-tuning.
