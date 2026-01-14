@@ -3,9 +3,12 @@
 import { useEffect, useRef } from 'react'
 import { useChatStore } from '@/lib/stores/chatStore'
 import MessageBubble from './MessageBubble'
+import { StreamingMessage } from './StreamingMessage'
 
 export default function MessageList() {
-  const { messages, isStreaming, currentStreamingMessage, error } = useChatStore()
+  const messages = useChatStore(state => state.messages)
+  const isStreaming = useChatStore(state => state.isStreaming)
+  const error = useChatStore(state => state.error)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   
   const scrollToBottom = () => {
@@ -14,7 +17,7 @@ export default function MessageList() {
   
   useEffect(() => {
     scrollToBottom()
-  }, [messages, currentStreamingMessage])
+  }, [messages])
   
   return (
     <div className="h-full overflow-y-auto p-4 space-y-4">
@@ -31,17 +34,7 @@ export default function MessageList() {
         <MessageBubble key={message.id} message={message} />
       ))}
       
-      {isStreaming && currentStreamingMessage && (
-        <MessageBubble 
-          message={{
-            id: 'streaming',
-            role: 'assistant',
-            content: currentStreamingMessage,
-            timestamp: new Date()
-          }}
-          isStreaming
-        />
-      )}
+      {isStreaming && <StreamingMessage />}
       
       {error && (
         <div className="rounded-lg bg-destructive/10 border border-destructive p-4 text-destructive">
