@@ -6,7 +6,7 @@ from typing import List, Dict, Optional, Set, Tuple
 import re
 import os
 import json
-import pickle
+import numpy as np
 from pathlib import Path
 import hashlib
 from dataclasses import dataclass, field
@@ -260,45 +260,67 @@ class RulebookStorage:
         
         print("Embedding generation complete")
     
-    def save_to_disk(self, filename: str = "rulebook_storage.pkl") -> None:
-        """Save the entire storage system to disk"""
+    def save_to_disk(self, filename: str = "rulebook_storage.json") -> None:
+        """Save the entire storage system to disk as JSON"""
         filepath = self.storage_path / filename
         
+        # Helper to handle numpy arrays
+        def convert_numpy(obj):
+            if hasattr(obj, 'tolist'):
+                return obj.tolist()
+            return obj
+
+        sections_dict = {}
+        for sid, section in self.sections.items():
+            s_dict = section.to_dict()
+            if s_dict.get('vector') is not None:
+                s_dict['vector'] = convert_numpy(s_dict['vector'])
+            sections_dict[sid] = s_dict
+
         # Prepare data for serialization
         save_data = {
-            'sections': {sid: section.to_dict() for sid, section in self.sections.items()},
+            'sections': sections_dict,
             'category_index': {cat.value: list(section_ids) for cat, section_ids in self.category_index.items()},
             'embedding_model': self.embedding_model
         }
         
-        print(f"Saving rulebook storage to: {filepath}")
-        with open(filepath, 'wb') as f:
-            pickle.dump(save_data, f)
+        print(f"Saving rulebook storage to JSON: {filepath}")
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(save_data, f, indent=2)
         
         print(f"Saved {len(self.sections)} sections to disk")
-    
-    def load_from_disk(self, filename: str = "rulebook_storage.pkl") -> bool:
-        """Load the storage system from disk"""
+
+    def load_from_disk(self, filename: str = "rulebook_storage.json") -> bool:
+        """Load the storage system from disk as JSON"""
         filepath = self.storage_path / filename
         
         if not filepath.exists():
             print(f"Storage file not found: {filepath}")
             return False
         
-        print(f"Loading rulebook storage from: {filepath}")
-        with open(filepath, 'rb') as f:
-            save_data = pickle.load(f)
+        print(f"Loading rulebook storage from JSON: {filepath}")
+        with open(filepath, 'r', encoding='utf-8') as f:
+            save_data = json.load(f)
         
         # Restore sections
         self.sections = {}
         for sid, section_data in save_data['sections'].items():
-            self.sections[sid] = RulebookSection.from_dict(section_data)
+            section = RulebookSection.from_dict(section_data)
+            # Convert vector back to numpy array if it exists and is a list
+            if section.vector is not None and isinstance(section.vector, list):
+                section.vector = np.array(section.vector)
+            self.sections[sid] = section
         
         # Restore category index
         self.category_index = {}
-        for cat_value, section_ids in save_data['category_index'].items():
-            category = RulebookCategory(cat_value)
-            self.category_index[category] = set(section_ids)
+        for cat_value_str, section_ids in save_data['category_index'].items():
+            # JSON dict keys are always strings, so convert back to int for Enum
+            try:
+                cat_value = int(cat_value_str)
+                category = RulebookCategory(cat_value)
+                self.category_index[category] = set(section_ids)
+            except (ValueError, TypeError):
+                print(f"Warning: Skipping invalid category key: {cat_value_str}")
         
         self.embedding_model = save_data.get('embedding_model', 'text-embedding-3-large')
         

@@ -30,7 +30,7 @@ def rebuild_embeddings():
     storage = RulebookStorage()
     
     # Check if storage file exists
-    storage_file = storage.storage_path / "rulebook_storage.pkl"
+    storage_file = storage.storage_path / "rulebook_storage.json"
     if not storage_file.exists():
         print("❌ No existing storage file found.")
         print("   Please run: python -m scripts.build_rulebook_storage")
