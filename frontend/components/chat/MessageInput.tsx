@@ -57,6 +57,8 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
               ? "Ask about your character, spells, or the rules..."
               : "Waiting for backend to initialize..."}
             disabled={isDisabled}
+            aria-label="Message input"
+            aria-describedby="message-input-helper"
             className="flex-1 bg-transparent px-3 py-2 text-[15px] resize-none focus:outline-none disabled:opacity-50 placeholder:text-muted-foreground/60 min-h-[44px] max-h-[150px]"
             rows={1}
           />
@@ -77,8 +79,10 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
         </div>
 
         {/* Helper text */}
-        <div className="flex items-center justify-between mt-2 px-2 text-xs text-muted-foreground/60">
-          <span>Press Enter to send, Shift+Enter for new line</span>
+        <div id="message-input-helper" className="flex items-center justify-between mt-2 px-2 text-xs text-muted-foreground/60">
+          <span>
+            Press <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">Enter</kbd> to send, <kbd className="inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">Shift+Enter</kbd> for new line
+          </span>
           {!isBackendReady && !isStreaming && (
             <span className="flex items-center gap-1.5 text-amber-500">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
