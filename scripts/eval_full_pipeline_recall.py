@@ -92,7 +92,7 @@ class PipelineEvaluator:
         
         # Load rulebook storage
         self.rulebook_storage = RulebookStorage()
-        if self.rulebook_storage.load_from_disk("rulebook_storage.pkl"):
+        if self.rulebook_storage.load_from_disk("rulebook_storage.json"):
             print(f"  ✓ Rulebook storage loaded ({len(self.rulebook_storage.sections)} sections)")
         else:
             raise RuntimeError("Could not load rulebook storage!")

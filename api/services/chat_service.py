@@ -52,7 +52,7 @@ class ChatService:
         try:
             # Load rulebook storage (shared across all characters)
             self._rulebook_storage = RulebookStorage()
-            rulebook_path = Path(project_root) / "knowledge_base" / "processed_rulebook" / "rulebook_storage.pkl"
+            rulebook_path = Path(project_root) / "knowledge_base" / "processed_rulebook" / "rulebook_storage.json"
             if rulebook_path.exists():
                 self._rulebook_storage.load_from_disk(str(rulebook_path))
                 print(f"[ChatService] Loaded rulebook storage")

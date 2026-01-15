@@ -139,7 +139,7 @@ def run_evaluation(
     # Initialize router
     print("\nInitializing RulebookStorage and Router...")
     storage = RulebookStorage()
-    if not storage.load_from_disk("rulebook_storage.pkl"):
+    if not storage.load_from_disk("rulebook_storage.json"):
         print("ERROR: Could not load rulebook storage. Run 'uv run python -m scripts.build_rulebook_storage' first.")
         return {}
     router = RulebookQueryRouter(storage)
