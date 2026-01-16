@@ -3,18 +3,34 @@
 import { useEffect, useRef } from 'react'
 import { useChatStore } from '@/lib/stores/chatStore'
 import MessageBubble from './MessageBubble'
+import StreamingMessage from './StreamingMessage'
 
 export default function MessageList() {
-  const { messages, isStreaming, currentStreamingMessage, error } = useChatStore()
+  // Granular selectors to avoid re-renders on streaming updates
+  const messages = useChatStore(state => state.messages)
+  const isStreaming = useChatStore(state => state.isStreaming)
+  const error = useChatStore(state => state.error)
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
   
+  // Scroll when new messages are added
   useEffect(() => {
     scrollToBottom()
-  }, [messages, currentStreamingMessage])
+  }, [messages])
+
+  // Scroll during streaming without triggering re-renders of the list
+  useEffect(() => {
+    const unsub = useChatStore.subscribe((state, prevState) => {
+      if (state.currentStreamingMessage !== prevState.currentStreamingMessage) {
+        scrollToBottom()
+      }
+    })
+    return unsub
+  }, [])
   
   return (
     <div className="h-full overflow-y-auto p-4 space-y-4">
@@ -31,17 +47,7 @@ export default function MessageList() {
         <MessageBubble key={message.id} message={message} />
       ))}
       
-      {isStreaming && currentStreamingMessage && (
-        <MessageBubble 
-          message={{
-            id: 'streaming',
-            role: 'assistant',
-            content: currentStreamingMessage,
-            timestamp: new Date()
-          }}
-          isStreaming
-        />
-      )}
+      <StreamingMessage />
       
       {error && (
         <div className="rounded-lg bg-destructive/10 border border-destructive p-4 text-destructive">
