@@ -5,3 +5,7 @@
 ## 2024-05-23 - [Scope Containment]
 **Learning:** Avoid "fixing" lint configs or dependencies in a UX PR. It bloats the diff and distracts from the actual improvement.
 **Action:** Stick strictly to the component files unless explicitly asked to upgrade tooling.
+
+## 2024-05-24 - [Accessible Helper Text]
+**Learning:** Form inputs with visible helper text (like keyboard shortcuts) are often skipped by screen readers unless explicitly associated.
+**Action:** Use `aria-describedby` on the input to point to the helper text container's ID.

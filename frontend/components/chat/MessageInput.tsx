@@ -59,6 +59,8 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
             disabled={isDisabled}
             className="flex-1 bg-transparent px-3 py-2 text-[15px] resize-none focus:outline-none disabled:opacity-50 placeholder:text-muted-foreground/60 min-h-[44px] max-h-[150px]"
             rows={1}
+            aria-label="Chat message"
+            aria-describedby="message-input-helper"
           />
 
           {/* Send button */}
@@ -77,7 +79,10 @@ export default function MessageInput({ onSendMessage }: MessageInputProps) {
         </div>
 
         {/* Helper text */}
-        <div className="flex items-center justify-between mt-2 px-2 text-xs text-muted-foreground/60">
+        <div
+          id="message-input-helper"
+          className="flex items-center justify-between mt-2 px-2 text-xs text-muted-foreground/60"
+        >
           <span>Press Enter to send, Shift+Enter for new line</span>
           {!isBackendReady && !isStreaming && (
             <span className="flex items-center gap-1.5 text-amber-500">
