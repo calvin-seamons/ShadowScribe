@@ -9,6 +9,7 @@
 
 import { useEffect, useRef, useCallback } from 'react'
 import { websocketService } from '@/lib/services/websocket'
+import { getFirebaseAuth } from '@/lib/firebase'
 import { useWizardStore } from '@/lib/stores/wizardStore'
 import type { CharacterCreationEvent } from '@/lib/types/character'
 
@@ -111,8 +112,12 @@ export function useWizardWebSocket() {
     setStep(2)
 
     try {
+      // Get authentication token
+      const auth = getFirebaseAuth()
+      const token = await auth?.currentUser?.getIdToken()
+
       // This triggers WebSocket connection and character creation
-      await websocketService.createCharacter(url)
+      await websocketService.createCharacter(url, token)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create character'
       setError(errorMessage)

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useChatStore } from '@/lib/stores/chatStore'
 import { useMetadataStore } from '@/lib/stores/metadataStore'
 import { websocketService } from '@/lib/services/websocket'
+import { getFirebaseAuth } from '@/lib/firebase'
 import MessageList from './MessageList'
 import MessageInput from './MessageInput'
 import FeedbackModal from './FeedbackModal'
@@ -105,9 +106,13 @@ export default function ChatContainer({ characterName, conversationId, onConvers
         setConnectionError(null)
         console.log('Attempting to connect WebSocket...')
 
+        // Get authentication token
+        const auth = getFirebaseAuth()
+        const token = await auth?.currentUser?.getIdToken()
+
         // Give it more time on first attempt
         const maxWaitTime = retryCount === 0 ? 10000 : 5000
-        const connectionPromise = websocketService.connect()
+        const connectionPromise = websocketService.connect(token)
         const timeoutPromise = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Connection timeout')), maxWaitTime)
         )
