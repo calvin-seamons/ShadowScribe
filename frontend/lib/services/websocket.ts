@@ -48,6 +48,7 @@ export class WebSocketService {
   private reconnectAttempts = 0
   private maxReconnectAttempts = 5
   private reconnectDelay = 1000
+  private lastToken: string | undefined = undefined
   
   private onMessageHandler: WebSocketMessageHandler | null = null
   private onErrorHandler: WebSocketErrorHandler | null = null
@@ -56,11 +57,13 @@ export class WebSocketService {
   private onFeedbackIdHandler: WebSocketFeedbackIdHandler | null = null
   private onProgressHandler: CharacterCreationProgressHandler | null = null
   
-  connect(): Promise<void> {
+  connect(token?: string): Promise<void> {
+    if (token) this.lastToken = token
     return new Promise((resolve, reject) => {
       try {
         const wsUrl = getWsUrl() // Get URL dynamically on each connect
-        this.ws = new WebSocket(`${wsUrl}/ws/chat`)
+        const url = this.lastToken ? `${wsUrl}/ws/chat?token=${encodeURIComponent(this.lastToken)}` : `${wsUrl}/ws/chat`
+        this.ws = new WebSocket(url)
         
         this.ws.onopen = () => {
           console.log('WebSocket connected')
@@ -210,14 +213,16 @@ export class WebSocketService {
    * Returns Promise that resolves to character summary when complete
    * 
    * @param urlOrJsonData - Either a D&D Beyond URL string or the complete JSON data object
+   * @param token - Optional authentication token
    * @returns Promise<CharacterSummary> - Character summary upon successful creation
    */
-  createCharacter(urlOrJsonData: string | any): Promise<CharacterSummary> {
+  createCharacter(urlOrJsonData: string | any, token?: string): Promise<CharacterSummary> {
     return new Promise((resolve, reject) => {
       try {
         const wsUrl = getWsUrl() // Get URL dynamically on each connect
         // Create separate WebSocket connection for character creation
-        this.characterCreationWs = new WebSocket(`${wsUrl}/ws/character/create`)
+        const url = token ? `${wsUrl}/ws/character/create?token=${encodeURIComponent(token)}` : `${wsUrl}/ws/character/create`
+        this.characterCreationWs = new WebSocket(url)
         
         this.characterCreationWs.onopen = () => {
           console.log('Character creation WebSocket connected')
@@ -294,7 +299,7 @@ export class WebSocketService {
       console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`)
       
       setTimeout(() => {
-        this.connect().catch((error) => {
+        this.connect(this.lastToken).catch((error) => {
           console.error('Reconnection failed:', error)
         })
       }, this.reconnectDelay * this.reconnectAttempts)

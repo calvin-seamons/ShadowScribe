@@ -1,5 +1,5 @@
 """WebSocket router for real-time chat and character creation."""
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, status
 from google.cloud.firestore_v1 import AsyncClient
 import json
 import uuid
@@ -14,9 +14,11 @@ sys.path.insert(0, str(project_root))
 from api.database.firestore_client import get_firestore_client
 from api.database.firestore_models import QueryLogDocument
 from api.database.repositories.feedback_repo import QueryLogRepository
+from api.database.repositories.character_repo import CharacterRepository
 from api.services.chat_service import ChatService
 from api.services.dndbeyond_service import DndBeyondService
 from src.character_creation.async_character_builder import AsyncCharacterBuilder
+from api.auth import verify_firebase_token
 
 router = APIRouter()
 
@@ -25,7 +27,7 @@ active_connections: Dict[str, WebSocket] = {}
 
 
 @router.websocket("/ws/chat")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket, token: str = Query(...)):
     """WebSocket endpoint for real-time chat.
 
     Uses local model for routing and Gazetteer NER for entity extraction.
@@ -59,6 +61,21 @@ async def websocket_endpoint(websocket: WebSocket):
         - performance_metrics: Timing information
         - pong: Keep-alive response
     """
+    # Verify authentication
+    try:
+        decoded_token = await verify_firebase_token(token)
+        if not decoded_token:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+        user_id = decoded_token.get("uid") or decoded_token.get("sub")
+        if not user_id:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+    except Exception as e:
+        print(f"WebSocket auth failed: {e}")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
     await websocket.accept()
 
     connection_id = str(uuid.uuid4())
@@ -143,6 +160,33 @@ async def websocket_endpoint(websocket: WebSocket):
                 await websocket.send_json({
                     'type': 'error',
                     'error': 'Missing required fields: message, character_name'
+                })
+                continue
+
+            # Verify character ownership
+            try:
+                repo = CharacterRepository(db)
+                character = await repo.get_by_name(character_name)
+
+                if not character:
+                    await websocket.send_json({
+                        'type': 'error',
+                        'error': 'Character not found'
+                    })
+                    continue
+
+                if character.user_id != user_id:
+                    print(f"Unauthorized access attempt to character {character_name} by user {user_id}")
+                    await websocket.send_json({
+                        'type': 'error',
+                        'error': 'Unauthorized access to character'
+                    })
+                    continue
+            except Exception as e:
+                print(f"Error verifying character ownership: {e}")
+                await websocket.send_json({
+                    'type': 'error',
+                    'error': 'Internal server error during authorization'
                 })
                 continue
 
@@ -250,7 +294,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 @router.websocket("/ws/character/create")
-async def character_creation_websocket(websocket: WebSocket):
+async def character_creation_websocket(websocket: WebSocket, token: str = Query(...)):
     """
     Handle the WebSocket endpoint for creating characters and sending real-time progress events and final character data.
     
@@ -259,6 +303,17 @@ async def character_creation_websocket(websocket: WebSocket):
     Parameters:
         websocket (WebSocket): Active WebSocket connection to the client.
     """
+    # Verify authentication
+    try:
+        decoded_token = await verify_firebase_token(token)
+        if not decoded_token:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+    except Exception as e:
+        print(f"WebSocket auth failed: {e}")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
     await websocket.accept()
 
     connection_id = str(uuid.uuid4())
