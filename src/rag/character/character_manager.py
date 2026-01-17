@@ -1,8 +1,9 @@
 """
 Character Manager
 
-A class for saving and loading Character objects from database or pickle files.
-Supports both database (primary) and pickle file (fallback) storage.
+A class for saving and loading Character objects from database or JSON files.
+Supports both database (primary) and JSON file (fallback) storage.
+Includes migration support for legacy pickle files.
 """
 
 import logging
@@ -32,7 +33,7 @@ class CharacterManager:
         Create a CharacterManager that persists Character objects to disk and optionally to a database.
         
         Parameters:
-            save_directory (str): Filesystem path where pickle files will be stored; the directory is created if it does not exist.
+            save_directory (str): Filesystem path where JSON files will be stored; the directory is created if it does not exist.
             db_session (Optional[Any]): Optional database session; if provided a CharacterRepository is instantiated for database operations.
         """
         self.save_directory = Path(save_directory)
@@ -65,6 +66,7 @@ class CharacterManager:
         data = db_character.data
         
         # Helper to recursively convert datetime ISO strings to datetime objects
+        # Required for DB dictionary data which doesn't use Pydantic's JSON logic directly
         def convert_datetimes(obj):
             if isinstance(obj, dict):
                 return {k: convert_datetimes(v) for k, v in obj.items()}
@@ -198,7 +200,7 @@ class CharacterManager:
     
     async def load_character_async(self, name: str) -> Character:
         """
-        Load a Character object from database (preferred) or pickle file (fallback).
+        Load a Character object from database (preferred) or JSON file (fallback).
         
         Args:
             name: The character name to load
@@ -215,12 +217,12 @@ class CharacterManager:
             if character:
                 return character
         
-        # Fallback to pickle file
+        # Fallback to JSON file
         return self.load_character(name)
     
     def save_character(self, character: Character, filename: Optional[str] = None) -> str:
         """
-        Save a Character object to a pickle file.
+        Save a Character object to a JSON file.
         
         Args:
             character: The Character object to save
@@ -232,24 +234,25 @@ class CharacterManager:
         if filename is None:
             # Use character name as filename, sanitized for filesystem
             safe_name = "".join(c for c in character.character_base.name if c.isalnum() or c in (' ', '-', '_')).rstrip()
-            filename = f"{safe_name}.pkl"
+            filename = f"{safe_name}.json"
         
-        if not filename.endswith('.pkl'):
-            filename += '.pkl'
+        if not filename.endswith('.json'):
+            filename += '.json'
             
         filepath = self.save_directory / filename
         
         # Update the last_updated timestamp
         character.last_updated = datetime.now()
         
-        with open(filepath, 'wb') as f:
-            pickle.dump(character, f)
+        with open(filepath, 'w') as f:
+            f.write(character.model_dump_json(indent=2))
             
         return str(filepath)
     
     def load_character(self, filename: str) -> Character:
         """
-        Load a Character object from a pickle file.
+        Load a Character object from a JSON file.
+        Also supports migrating legacy .pkl files to .json.
         
         Args:
             filename: The filename to load from
@@ -260,35 +263,67 @@ class CharacterManager:
         Raises:
             FileNotFoundError: If the file doesn't exist
         """
-        if not filename.endswith('.pkl'):
-            filename += '.pkl'
-            
-        filepath = self.save_directory / filename
+        # Strip extension if present to handle logic uniformly
+        if filename.endswith('.pkl'):
+            filename = filename[:-4]
+        if filename.endswith('.json'):
+            filename = filename[:-5]
+
+        json_path = self.save_directory / f"{filename}.json"
+        pkl_path = self.save_directory / f"{filename}.pkl"
+
+        # 1. Try JSON (preferred)
+        if json_path.exists():
+            with open(json_path, 'r') as f:
+                json_content = f.read()
+            return Character.model_validate_json(json_content)
         
-        if not filepath.exists():
-            raise FileNotFoundError(f"Character file not found: {filepath}")
-        
-        with open(filepath, 'rb') as f:
-            character = pickle.load(f)
+        # 2. Try Pickle (migration)
+        if pkl_path.exists():
+            logger.warning(f"Migrating legacy pickle character file: {pkl_path}")
+            try:
+                with open(pkl_path, 'rb') as f:
+                    character = pickle.load(f)
+
+                # Verify it's a Character object
+                if not isinstance(character, Character):
+                    raise ValueError(f"Invalid character object in pickle: {type(character)}")
+
+                # Save as JSON immediately
+                self.save_character(character, f"{filename}.json")
+                logger.info(f"Successfully migrated {filename} to JSON")
+
+                # Return the character
+                return character
+            except Exception as e:
+                logger.error(f"Failed to migrate pickle file {pkl_path}: {e}")
+                raise
             
-        return character
+        raise FileNotFoundError(f"Character file not found: {filename} (checked .json and .pkl)")
     
     def list_saved_characters(self) -> list[str]:
         """
         List all saved character files.
+        Returns unique character names from both .json and .pkl files.
         
         Returns:
-            List of character filenames (without .pkl extension)
+            List of character filenames (without extension)
         """
-        character_files = []
+        characters = set()
+
+        # Find JSON files
+        for json_file in self.save_directory.glob("*.json"):
+            characters.add(json_file.stem)
+
+        # Find Pickle files (legacy)
         for pkl_file in self.save_directory.glob("*.pkl"):
-            character_files.append(pkl_file.stem)
+            characters.add(pkl_file.stem)
         
-        return sorted(character_files)
+        return sorted(list(characters))
     
     def delete_character(self, filename: str) -> bool:
         """
-        Delete a saved character file.
+        Delete a saved character file (removes both .json and .pkl if present).
         
         Args:
             filename: The filename to delete
@@ -296,13 +331,23 @@ class CharacterManager:
         Returns:
             True if deleted successfully, False if file didn't exist
         """
-        if not filename.endswith('.pkl'):
-            filename += '.pkl'
+        # Strip extension
+        if filename.endswith('.pkl'):
+            filename = filename[:-4]
+        if filename.endswith('.json'):
+            filename = filename[:-5]
             
-        filepath = self.save_directory / filename
+        json_path = self.save_directory / f"{filename}.json"
+        pkl_path = self.save_directory / f"{filename}.pkl"
         
-        if filepath.exists():
-            filepath.unlink()
-            return True
+        deleted = False
+
+        if json_path.exists():
+            json_path.unlink()
+            deleted = True
+
+        if pkl_path.exists():
+            pkl_path.unlink()
+            deleted = True
         
-        return False
+        return deleted
