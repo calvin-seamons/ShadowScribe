@@ -1,20 +1,36 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, memo } from 'react'
 import { useChatStore } from '@/lib/stores/chatStore'
 import MessageBubble from './MessageBubble'
+import StreamingMessage from './StreamingMessage'
 
-export default function MessageList() {
-  const { messages, isStreaming, currentStreamingMessage, error } = useChatStore()
+function MessageList() {
+  // Use granular selectors to avoid re-rendering on every store update (especially streaming)
+  const messages = useChatStore(state => state.messages)
+  const isStreaming = useChatStore(state => state.isStreaming)
+  const error = useChatStore(state => state.error)
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
   
+  // Scroll on new messages
   useEffect(() => {
     scrollToBottom()
-  }, [messages, currentStreamingMessage])
+  }, [messages])
+
+  // Subscribe to streaming updates for auto-scrolling without triggering re-renders
+  useEffect(() => {
+    const unsub = useChatStore.subscribe((state, prevState) => {
+      if (state.currentStreamingMessage !== prevState.currentStreamingMessage) {
+        scrollToBottom()
+      }
+    })
+    return unsub
+  }, [])
   
   return (
     <div className="h-full overflow-y-auto p-4 space-y-4">
@@ -31,16 +47,8 @@ export default function MessageList() {
         <MessageBubble key={message.id} message={message} />
       ))}
       
-      {isStreaming && currentStreamingMessage && (
-        <MessageBubble 
-          message={{
-            id: 'streaming',
-            role: 'assistant',
-            content: currentStreamingMessage,
-            timestamp: new Date()
-          }}
-          isStreaming
-        />
+      {isStreaming && (
+        <StreamingMessage />
       )}
       
       {error && (
@@ -54,3 +62,5 @@ export default function MessageList() {
     </div>
   )
 }
+
+export default memo(MessageList)
